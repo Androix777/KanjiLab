@@ -9,7 +9,7 @@
 			const words = await databaseService.getRandomWords(1);
 			word = words[0].text;
 		} catch (error) {
-			console.error('Ошибка при получении слов:', error);
+			console.error(error);
 		}
 	}
 
