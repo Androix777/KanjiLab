@@ -1,2 +1,20 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<script lang="ts">
+	import DatabaseService from '$lib/databaseService';
+
+	let word = $state('Word');
+
+	async function generateWord() {
+		try {
+			const databaseService = await DatabaseService.getInstance();
+			const words = await databaseService.getRandomWords(1);
+			word = words[0].text;
+		} catch (error) {
+			console.error('Ошибка при получении слов:', error);
+		}
+	}
+
+	generateWord();
+</script>
+
+<h1>{word}</h1>
+<button onclick={generateWord}>Generate Word</button>
