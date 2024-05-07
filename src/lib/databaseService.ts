@@ -1,6 +1,6 @@
-import Database from 'tauri-plugin-sql-api';
-import type { Word } from './types';
-import { invoke } from '@tauri-apps/api/tauri';
+import Database from "tauri-plugin-sql-api";
+import type { Word } from "./types";
+import { invoke } from "@tauri-apps/api/tauri";
 
 class DatabaseService 
 {
@@ -14,34 +14,39 @@ class DatabaseService
 
 	public static async getInstance(): Promise<DatabaseService> 
 	{
-		if (!DatabaseService.instance) 
+		try 
 		{
-			try 
-			{
-				const path: string = await invoke('get_executable_file_path');
-				const dbPath = `${path}\\words.db`;
-				const db = await Database.load(`sqlite:${dbPath}`);
-				DatabaseService.instance = new DatabaseService(db);
-			} 
-			catch (error) 
-			{
-				console.error('Failed to load database:', error);
-				throw error;
-			}
+			const path: string = await invoke("get_executable_file_path");
+			const dbPath = `${path}\\words.db`;
+			const db = await Database.load(`sqlite:${dbPath}`);
+			DatabaseService.instance = new DatabaseService(db);
+		} 
+		catch (error) 
+		{
+			console.error("Failed to load database:", error);
+			throw error;
 		}
 		return DatabaseService.instance;
 	}
 
 	async getRandomWords(count: number): Promise<Word[]> 
 	{
-		const query = `SELECT * FROM words ORDER BY RANDOM() LIMIT $1`;
+		const query = "SELECT * FROM words ORDER BY RANDOM() LIMIT $1";
 		try 
 		{
 			return await this.db.select(query, [count]);
 		} 
-		catch (error) 
+		catch (error: unknown) 
 		{
-			throw new Error(`${error}`);
+			if (error instanceof Error)
+			{
+				throw new Error(error.message);
+			}
+			else
+			{
+				throw new Error("Error");
+			}
+			
 		}
 	}
 }

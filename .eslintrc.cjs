@@ -2,16 +2,16 @@
 module.exports = {
 	root: true,
 	extends: [
-		'eslint:recommended',
-		'plugin:@typescript-eslint/recommended',
-		'plugin:svelte/recommended'
+		"eslint:recommended",
+		"plugin:@typescript-eslint/strict",
+		"plugin:svelte/recommended",
 	],
-	parser: '@typescript-eslint/parser',
-	plugins: ['@typescript-eslint'],
+	parser: "@typescript-eslint/parser",
+	plugins: ["@typescript-eslint", "@stylistic/ts", "@stylistic/js"],
 	parserOptions: {
-		sourceType: 'module',
+		sourceType: "module",
 		ecmaVersion: 2020,
-		extraFileExtensions: ['.svelte']
+		extraFileExtensions: [".svelte"]
 	},
 	env: {
 		browser: true,
@@ -20,16 +20,35 @@ module.exports = {
 	},
 	overrides: [
 		{
-			files: ['*.svelte'],
-			parser: 'svelte-eslint-parser',
+			files: ["*.svelte"],
+			parser: "svelte-eslint-parser",
+
+			extends: [
+				"plugin:@typescript-eslint/strict-type-checked"
+			],
+
 			parserOptions: {
-				parser: '@typescript-eslint/parser'
+				parser: "@typescript-eslint/parser",
+				project: ["./tsconfig.json"],
 			}
+		},
+		{
+			files: ["*.ts", "*.tsx"], 
+
+			extends: [
+				"plugin:@typescript-eslint/strict-type-checked"
+			],
+
+			parserOptions: {
+				project: ["./tsconfig.json"],
+			},
 		}
 	],
 	rules: {
-		"@typescript-eslint/brace-style": ['warn', 'allman', { allowSingleLine: true }],
-		"@typescript-eslint/indent": ["warn", "tab"],
-		"@typescript-eslint/semi": ["warn", "always"]
+		"@stylistic/ts/brace-style": ["warn", "allman", { allowSingleLine: true }],
+		"@stylistic/ts/indent": ["warn", "tab"],
+		"@stylistic/ts/semi": ["warn"],
+		"@stylistic/js/array-bracket-spacing": ["warn"],
+		"@stylistic/js/quotes": ["warn", "double"],
 	}
 };

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import DatabaseService from "$lib/databaseService";
 
-	let word = $state('Word');
+	let word = $state("Word");
 
 	async function generateWord()
 	{
@@ -17,7 +17,7 @@
 		}
 	}
 
-	generateWord();
+	void generateWord();
 	</script>
 
 <h1>{word}</h1>
