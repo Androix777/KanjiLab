@@ -1,5 +1,6 @@
 import Database from 'tauri-plugin-sql-api';
 import type { Word } from './types';
+import { invoke } from '@tauri-apps/api/tauri';
 
 class DatabaseService {
 	private static instance: DatabaseService;
@@ -11,8 +12,15 @@ class DatabaseService {
 
 	public static async getInstance(): Promise<DatabaseService> {
 		if (!DatabaseService.instance) {
-			const db = await Database.load('sqlite:words.db');
-			DatabaseService.instance = new DatabaseService(db);
+			try {
+				const path: string = await invoke('get_executable_file_path');
+				const dbPath = `${path}\\words.db`;
+				const db = await Database.load(`sqlite:${dbPath}`);
+				DatabaseService.instance = new DatabaseService(db);
+			} catch (error) {
+				console.error('Failed to load database:', error);
+				throw error;
+			}
 		}
 		return DatabaseService.instance;
 	}
