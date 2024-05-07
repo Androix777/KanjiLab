@@ -4,8 +4,7 @@ module.exports = {
 	extends: [
 		'eslint:recommended',
 		'plugin:@typescript-eslint/recommended',
-		'plugin:svelte/recommended',
-		'prettier'
+		'plugin:svelte/recommended'
 	],
 	parser: '@typescript-eslint/parser',
 	plugins: ['@typescript-eslint'],
@@ -27,5 +26,10 @@ module.exports = {
 				parser: '@typescript-eslint/parser'
 			}
 		}
-	]
+	],
+	rules: {
+		"@typescript-eslint/brace-style": ['warn', 'allman', { allowSingleLine: true }],
+		"@typescript-eslint/indent": ["warn", "tab"],
+		"@typescript-eslint/semi": ["warn", "always"]
+	}
 };
