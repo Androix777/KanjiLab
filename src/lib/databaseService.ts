@@ -2,26 +2,26 @@ import Database from "tauri-plugin-sql-api";
 import type { Word } from "./types";
 import { invoke } from "@tauri-apps/api/tauri";
 
-class DatabaseService 
+class DatabaseService
 {
 	private static instance: DatabaseService;
 	private db: Database;
 
-	private constructor(db: Database) 
+	private constructor(db: Database)
 	{
 		this.db = db;
 	}
 
-	public static async getInstance(): Promise<DatabaseService> 
+	public static async getInstance(): Promise<DatabaseService>
 	{
-		try 
+		try
 		{
 			const path: string = await invoke("get_executable_file_path");
 			const dbPath = `${path}\\words.db`;
 			const db = await Database.load(`sqlite:${dbPath}`);
 			DatabaseService.instance = new DatabaseService(db);
-		} 
-		catch (error) 
+		}
+		catch (error)
 		{
 			console.error("Failed to load database:", error);
 			throw error;
@@ -29,24 +29,16 @@ class DatabaseService
 		return DatabaseService.instance;
 	}
 
-	async getRandomWords(count: number): Promise<Word[]> 
+	async getRandomWords(count: number): Promise<Word[]>
 	{
 		const query = "SELECT * FROM words ORDER BY RANDOM() LIMIT $1";
-		try 
+		try
 		{
 			return await this.db.select(query, [count]);
-		} 
-		catch (error: unknown) 
+		}
+		catch (error: unknown)
 		{
-			if (error instanceof Error)
-			{
-				throw new Error(error.message);
-			}
-			else
-			{
-				throw new Error("Error");
-			}
-			
+			throw new Error((error as Error).message || "Unknown error occurred");
 		}
 	}
 }

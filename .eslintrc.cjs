@@ -1,4 +1,16 @@
 /** @type { import("eslint").Linter.Config } */
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const stylistic = require("@stylistic/eslint-plugin");
+
+const customized = stylistic.configs.customize({
+	indent: "tab",
+	quotes: "double",
+	semi: true,
+	jsx: false,
+	braceStyle: "allman",
+});
+
 module.exports = {
 	root: true,
 	extends: [
@@ -7,16 +19,16 @@ module.exports = {
 		"plugin:svelte/recommended",
 	],
 	parser: "@typescript-eslint/parser",
-	plugins: ["@typescript-eslint", "@stylistic/ts", "@stylistic/js"],
+	plugins: ["@typescript-eslint", "@stylistic/ts", "@stylistic/js", "@stylistic"],
 	parserOptions: {
 		sourceType: "module",
 		ecmaVersion: 2020,
-		extraFileExtensions: [".svelte"]
+		extraFileExtensions: [".svelte"],
 	},
 	env: {
 		browser: true,
 		es2017: true,
-		node: true
+		node: true,
 	},
 	overrides: [
 		{
@@ -24,31 +36,27 @@ module.exports = {
 			parser: "svelte-eslint-parser",
 
 			extends: [
-				"plugin:@typescript-eslint/strict-type-checked"
+				"plugin:@typescript-eslint/strict-type-checked",
 			],
 
 			parserOptions: {
 				parser: "@typescript-eslint/parser",
 				project: ["./tsconfig.json"],
-			}
+			},
 		},
 		{
-			files: ["*.ts", "*.tsx"], 
+			files: ["*.ts", "*.tsx"],
 
 			extends: [
-				"plugin:@typescript-eslint/strict-type-checked"
+				"plugin:@typescript-eslint/strict-type-checked",
 			],
 
 			parserOptions: {
 				project: ["./tsconfig.json"],
 			},
-		}
+		},
 	],
 	rules: {
-		"@stylistic/ts/brace-style": ["warn", "allman", { allowSingleLine: true }],
-		"@stylistic/ts/indent": ["warn", "tab"],
-		"@stylistic/ts/semi": ["warn"],
-		"@stylistic/js/array-bracket-spacing": ["warn"],
-		"@stylistic/js/quotes": ["warn", "double"],
-	}
+		...customized.rules,
+	},
 };

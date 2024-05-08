@@ -5,13 +5,13 @@
 
 	async function generateWord()
 	{
-		try 
+		try
 		{
 			const databaseService = await DatabaseService.getInstance();
 			const words = await databaseService.getRandomWords(1);
 			word = words[0].text;
 		}
-		catch (error) 
+		catch (error)
 		{
 			console.error(error);
 		}

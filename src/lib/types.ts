@@ -1,4 +1,4 @@
-export interface Word 
+export interface Word
 {
 	id: number;
 	text: string;
