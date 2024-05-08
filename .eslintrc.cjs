@@ -13,9 +13,10 @@ const customized = stylistic.configs.customize({
 
 module.exports = {
 	root: true,
+	ignorePatterns: [".eslintrc.cjs", "svelte.config.js"],
 	extends: [
 		"eslint:recommended",
-		"plugin:@typescript-eslint/strict",
+		"plugin:@typescript-eslint/strict-type-checked",
 		"plugin:svelte/recommended",
 	],
 	parser: "@typescript-eslint/parser",
@@ -24,6 +25,7 @@ module.exports = {
 		sourceType: "module",
 		ecmaVersion: 2020,
 		extraFileExtensions: [".svelte"],
+		project: ["./tsconfig.json"],
 	},
 	env: {
 		browser: true,
@@ -35,24 +37,8 @@ module.exports = {
 			files: ["*.svelte"],
 			parser: "svelte-eslint-parser",
 
-			extends: [
-				"plugin:@typescript-eslint/strict-type-checked",
-			],
-
 			parserOptions: {
 				parser: "@typescript-eslint/parser",
-				project: ["./tsconfig.json"],
-			},
-		},
-		{
-			files: ["*.ts", "*.tsx"],
-
-			extends: [
-				"plugin:@typescript-eslint/strict-type-checked",
-			],
-
-			parserOptions: {
-				project: ["./tsconfig.json"],
 			},
 		},
 	],
