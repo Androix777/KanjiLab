@@ -1,6 +1,5 @@
 /** @type { import("eslint").Linter.Config } */
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const stylistic = require("@stylistic/eslint-plugin");
 
 const customized = stylistic.configs.customize({
