@@ -19,7 +19,7 @@ module.exports = {
 		"plugin:svelte/recommended",
 	],
 	parser: "@typescript-eslint/parser",
-	plugins: ["@typescript-eslint", "@stylistic/ts", "@stylistic/js", "@stylistic"],
+	plugins: ["@typescript-eslint", "@stylistic"],
 	parserOptions: {
 		sourceType: "module",
 		ecmaVersion: 2020,
