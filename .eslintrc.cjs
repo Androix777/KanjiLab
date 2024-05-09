@@ -4,7 +4,7 @@ const stylistic = require("@stylistic/eslint-plugin");
 
 const customized = stylistic.configs.customize({
 	indent: "tab",
-	quotes: "double",
+	quotes: "backtick",
 	semi: true,
 	jsx: false,
 	braceStyle: "allman",
