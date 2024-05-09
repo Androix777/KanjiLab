@@ -1,6 +1,10 @@
 export function WordWithReadingsSQLMap(sql: WordWithReadingsSQL)
 {
-	const result: WordWithReadings = { word: sql.word, wordReadings: sql.wordReadings.split(`,`) };
+	const result: WordWithReadings =
+	{
+		word: sql.word,
+		wordReadings: sql.wordReadings.split(`,`),
+	};
 	return result;
 }
 
