@@ -35,6 +35,7 @@ class DatabaseService
 		const query = `SELECT word.word, GROUP_CONCAT(word_reading.word_reading, ',') AS wordReadings
 			FROM word
 			JOIN word_reading ON word.id = word_reading.word_id
+			WHERE word.frequency < 10000
 			GROUP BY word.word
 			ORDER BY RANDOM()
 			LIMIT $1`;

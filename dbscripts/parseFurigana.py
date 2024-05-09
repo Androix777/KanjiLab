@@ -5,12 +5,14 @@ def load_json(file_path):
     with open(file_path, 'r', encoding='utf-8-sig') as file:
         return json.load(file)
 
+
 def create_tables(conn):
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            word TEXT UNIQUE
+            word TEXT UNIQUE,
+            frequency INTEGER
         );
     ''')
     cursor.execute('''
@@ -38,6 +40,14 @@ def create_tables(conn):
             PRIMARY KEY (word_reading_id, word_part_reading_id)
         );
     ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS test_freq (
+            freq_id INTEGER,
+            word TEXT,
+            value INTEGER,
+            PRIMARY KEY (freq_id)
+        );
+    ''')
     conn.commit()
 
 def insert_data(conn, data):
@@ -62,12 +72,41 @@ def insert_data(conn, data):
     
     conn.commit()
 
+def insert_freq_data(conn, data):
+    cursor = conn.cursor()
+
+    for item in data:
+        
+        if "㋕" in str(item):
+            continue
+        
+        cursor.execute('SELECT word, frequency FROM word WHERE word = ?', (item[0],))
+        result = cursor.fetchone()
+        if not result:
+            continue
+        word, frequency = result
+        
+        new_frequency = (item[2]['value'] if 'value' in item[2] else item[2]['frequency']['value'])
+
+        if frequency == None or frequency > new_frequency:
+            cursor.execute('UPDATE word SET frequency = ? WHERE word = ?', (new_frequency, word))
+        
+        #cursor.execute('INSERT OR IGNORE INTO test_freq (word, value) VALUES (?, ?)', (item[0], item[2]['value'] if 'value' in item[2] else item[2]['frequency']['value']))
+
+    conn.commit()
+
 def main():
-    data = load_json('./data/JmdictFurigana.json')
-    conn = sqlite3.connect('./data/words.db')
+    data = load_json('./dbscripts/data/JmdictFurigana.json')
+    conn = sqlite3.connect('./dbscripts/data/words.db')
     create_tables(conn)
     insert_data(conn, data)
+    print('data 1 inserted')
+    data2 = load_json('./dbscripts/data/term_meta_bank_1.json')
+    insert_freq_data(conn, data2)
     conn.close()
 
 if __name__ == "__main__":
+    import os
+    os.remove("./dbscripts/data/words.db")
     main()
+    

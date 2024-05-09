@@ -4,6 +4,9 @@
 	let word = $state(`Word`);
 	let readings: string[] = $state([]);
 
+	let previousWord = $state(`Word`);
+	let previousReadings: string[] = $state([]);
+
 	let readingInput = $state(`Hello World`);
 	let answerStatus = $state(`No answer`);
 
@@ -24,6 +27,8 @@
 
 	async function checkWord()
 	{
+		previousWord = word;
+		previousReadings = readings;
 		if (readings.includes(readingInput))
 		{
 			answerStatus = `Correct`;
@@ -50,8 +55,8 @@
 	{answerStatus}
 </div>
 <div>
-	{word}
+	{previousWord}
 </div>
 <div>
-	{readings.join(` `)}
+	{previousReadings.join(` `)}
 </div>
