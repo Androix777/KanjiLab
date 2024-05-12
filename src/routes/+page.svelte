@@ -1,14 +1,17 @@
 <script lang="ts">
 	import DatabaseService from "$lib/databaseService";
+	import * as wanakana from 'wanakana';
 
-	let word = $state(`Word`);
+	let inputElement: HTMLInputElement;
+
+	let word = $state(``);
 	let readings: string[] = $state([]);
 
-	let previousWord = $state(`Word`);
+	let previousWord = $state(``);
 	let previousReadings: string[] = $state([]);
 
-	let readingInput = $state(`Hello World`);
-	let answerStatus = $state(`No answer`);
+	let readingInput = $state(``);
+	let answerStatus = $state(``);
 
 	async function generateWord()
 	{
@@ -25,11 +28,17 @@
 		}
 	}
 
-	async function checkWord()
+	async function checkWord(e: KeyboardEvent)
 	{
+		const realInput: string = inputElement.value;
+
+		if (e.key != `Enter` && e.key != ` `)
+		{
+			return;
+		}
 		previousWord = word;
 		previousReadings = readings;
-		if (readings.includes(readingInput))
+		if (readings.includes(realInput))
 		{
 			answerStatus = `Correct`;
 		}
@@ -38,18 +47,26 @@
 			answerStatus = `Wrong`;
 		}
 		await generateWord();
+		readingInput = ``;
 		return 0;
 	}
 
-	void generateWord();
+	$effect(() =>
+	{
+		inputElement.focus();
+		wanakana.bind(inputElement);
+		void generateWord();
+	});
 </script>
 
 <h1>{word}</h1>
 <div>
-	<input bind:value={readingInput} />
-</div>
-<div>
-	<button onclick={checkWord}>Check Word</button>
+	<input bind:value={readingInput} onkeydown={checkWord} bind:this={inputElement}
+	style="
+		font-family: 'Yu Gothic UI';
+		font-size: 24px;
+		padding: 10px;
+		width: 75%;"/>
 </div>
 <div>
 	{answerStatus}

@@ -31,6 +31,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"tauri-plugin-sql-api": "github:tauri-apps/tauri-plugin-sql#v1"
+		"tauri-plugin-sql-api": "github:tauri-apps/tauri-plugin-sql#v1",
+		"wanakana": "^5.3.1"
 	}
 }
