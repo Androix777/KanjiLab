@@ -50,6 +50,16 @@ def create_tables(conn):
             PRIMARY KEY (word_reading_id, word_part_reading_id)
         );
     ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS word_answer_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            word_reading_id BLOB,
+            is_correct INTEGER,
+            answer_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(word_reading_id) REFERENCES word_reading(id)
+        );
+    ''')
+    
     conn.commit()
 
 def insert_jmdict_data(conn, data):

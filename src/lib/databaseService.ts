@@ -1,6 +1,5 @@
 import Database from "tauri-plugin-sql-api";
 import type { WordWithReadings, WordWithReadingsSQL } from "./types";
-import { WordWithReadingsSQLMap } from "./types";
 import { invoke } from "@tauri-apps/api/tauri";
 
 class DatabaseService
@@ -32,20 +31,53 @@ class DatabaseService
 
 	async getRandomWords(count: number): Promise<WordWithReadings[]>
 	{
-		const query = `SELECT word.word, GROUP_CONCAT(word_reading.word_reading, ',') AS wordReadings
-			FROM word
-			JOIN word_reading ON word.id = word_reading.word_id
-			WHERE word.frequency < 10000
-			GROUP BY word.word
-			ORDER BY RANDOM()
-			LIMIT $1`;
+		const query = `
+			SELECT 
+				w.id AS word_id, 
+				w.word, 
+				wr.id AS reading_id, 
+				wr.word_reading
+			FROM (
+				SELECT id, word 
+				FROM word 
+				WHERE frequency < 10000 
+				ORDER BY RANDOM() 
+				LIMIT ?
+			) AS w
+			JOIN word_reading AS wr ON w.id = wr.word_id;
+		`;
+
 		try
 		{
-			const result: WordWithReadingsSQL[] = await this.db.select(query, [count]);
-			return result.map((x) =>
+			const data: WordWithReadingsSQL[] = await this.db.select(query, [count]);
+			const wordsMap: Map<string, WordWithReadings> = new Map();
+			console.log(data);
+			data.forEach((result) =>
 			{
-				return WordWithReadingsSQLMap(x);
+				const wordIdKey = result.word_id.toString();
+
+				if (!wordsMap.has(wordIdKey))
+				{
+					wordsMap.set(wordIdKey, {
+						id: result.word_id,
+						word: result.word,
+						wordReadings: [],
+					});
+				}
+
+				const wordWithReadings = wordsMap.get(wordIdKey);
+				if (wordWithReadings)
+				{
+					wordWithReadings.wordReadings.push({
+						id: result.reading_id,
+						reading: result.word_reading,
+					});
+				}
 			});
+
+			console.log(Array.from(wordsMap.values()));
+
+			return Array.from(wordsMap.values());
 		}
 		catch (error: unknown)
 		{

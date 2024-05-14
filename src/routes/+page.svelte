@@ -20,7 +20,7 @@
 			const databaseService = await DatabaseService.getInstance();
 			const words = await databaseService.getRandomWords(1);
 			word = words[0].word;
-			readings = words[0].wordReadings;
+			readings = words[0].wordReadings.map(reading => reading.reading);
 		}
 		catch (error)
 		{

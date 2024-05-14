@@ -1,27 +1,12 @@
-export function WordWithReadingsSQLMap(sql: WordWithReadingsSQL)
-{
-	const result: WordWithReadings =
-	{
-		word: sql.word,
-		wordReadings: sql.wordReadings.split(`,`),
-	};
-	return result;
-}
-
-export type Word =
-{
-	id: number;
-	text: string;
+export type WordWithReadings = {
+	id: Uint8Array;
+	word: string;
+	wordReadings: { id: Uint8Array; reading: string }[];
 };
 
-export type WordWithReadings =
-{
+export type WordWithReadingsSQL = {
+	word_id: Uint8Array;
 	word: string;
-	wordReadings: string[];
-};
-
-export type WordWithReadingsSQL =
-{
-	word: string;
-	wordReadings: string;
+	reading_id: Uint8Array;
+	word_reading: string;
 };
