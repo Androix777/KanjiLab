@@ -1,6 +1,6 @@
-import Database from "tauri-plugin-sql-api";
+import Database from "@tauri-apps/plugin-sql";
 import type { WordWithReadings, WordWithReadingsSQL } from "./types";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 
 class DatabaseService
 {

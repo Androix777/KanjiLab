@@ -1,11 +1,14 @@
 .DS_Store
 node_modules
 /build
+/src-tauri
 /.svelte-kit
 /package
 .env
 .env.*
 !.env.example
+.eslintrc.cjs
+svelte.config.js
 
 # Ignore files for PNPM, NPM and YARN
 pnpm-lock.yaml

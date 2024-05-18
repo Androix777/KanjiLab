@@ -14,7 +14,6 @@ customized.rules["@stylistic/operator-linebreak"] = ['error', 'after']
 
 module.exports = {
 	root: true,
-	ignorePatterns: [".eslintrc.cjs", "svelte.config.js"],
 	extends: [
 		"eslint:recommended",
 		"plugin:@typescript-eslint/strict-type-checked",
