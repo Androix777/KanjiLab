@@ -67,14 +67,12 @@
 </div>
 
 <div class="flex flex-col min-h-screen">
-    <!-- Верхняя половина -->
     <div class="flex items-center justify-center flex-grow bg-base-200">
         <div class="text-7xl">
             {word}
         </div>
     </div>
 
-    <!-- Нижняя половина -->
     <div class="flex flex-col items-center justify-center flex-grow space-y-4 bg-base-100 p-4">
         <div class="w-full flex justify-center">
             <input
