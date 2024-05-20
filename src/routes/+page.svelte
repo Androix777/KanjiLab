@@ -4,10 +4,13 @@
 	import { themeChange } from 'theme-change';
     import ThemeSelect from "$lib/components/ThemeSelect.svelte";
     import AnswerCard from "$lib/components/AnswerCard.svelte";
+	import { FontLoader } from '$lib/FontLoader';
 
 	let inputElement: HTMLInputElement;
+	let fontLoader: FontLoader = new FontLoader();
 
 	let word = $state(``);
+	let wordFont = $state(``);
 	let readings: string[] = $state([]);
 
 	let previousWord = $state(``);
@@ -15,6 +18,12 @@
 
 	let readingInput = $state(``);
 	let answerStatus = $state(``);
+
+	async function loadFonts()
+	{
+		await fontLoader.initialize();
+		await fontLoader.loadFonts();
+	}
 
 	async function generateWord()
 	{
@@ -24,6 +33,7 @@
 			const words = await databaseService.getRandomWords(1);
 			word = words[0].word;
 			readings = words[0].wordReadings.map(reading => reading.reading);
+			wordFont = fontLoader.getRandomFont() ?? ``;
 		}
 		catch (error)
 		{
@@ -60,6 +70,8 @@
 		wanakana.bind(inputElement);
 		void generateWord();
 		themeChange(false);
+
+		void loadFonts();
 	});
 </script>
 
@@ -69,7 +81,7 @@
 
 <div class="flex flex-col min-h-screen">
     <div class="flex items-center justify-center flex-grow bg-base-200">
-        <div class="text-7xl">
+        <div class="text-7xl" style="font-family:'{wordFont}'">
             {word}
         </div>
     </div>

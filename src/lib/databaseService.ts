@@ -1,6 +1,7 @@
 import Database from "@tauri-apps/plugin-sql";
 import type { WordWithReadings, WordWithReadingsSQL } from "./types";
 import { invoke } from "@tauri-apps/api/core";
+import { GET_EXECUTABLE_FILE_PATH } from "./turiFunctions";
 
 class DatabaseService
 {
@@ -16,7 +17,7 @@ class DatabaseService
 	{
 		try
 		{
-			const path: string = await invoke(`get_executable_file_path`);
+			const path: string = await invoke(GET_EXECUTABLE_FILE_PATH);
 			const dbPath = `${path}\\words.db`;
 			const db = await Database.load(`sqlite:${dbPath}`);
 			DatabaseService.instance = new DatabaseService(db);
@@ -40,7 +41,7 @@ class DatabaseService
 			FROM (
 				SELECT id, word 
 				FROM word 
-				WHERE frequency < 10000 
+				WHERE frequency < 10000
 				ORDER BY RANDOM() 
 				LIMIT ?
 			) AS w
@@ -51,7 +52,6 @@ class DatabaseService
 		{
 			const data: WordWithReadingsSQL[] = await this.db.select(query, [count]);
 			const wordsMap: Map<string, WordWithReadings> = new Map();
-			console.log(data);
 			data.forEach((result) =>
 			{
 				const wordIdKey = result.word_id.toString();
@@ -74,8 +74,6 @@ class DatabaseService
 					});
 				}
 			});
-
-			console.log(Array.from(wordsMap.values()));
 
 			return Array.from(wordsMap.values());
 		}

@@ -36,6 +36,7 @@
 	"type": "module",
 	"dependencies": {
 		"@tauri-apps/api": "^2.0.0-beta.11",
+		"@tauri-apps/plugin-fs": "^2.0.0-beta.3",
 		"@tauri-apps/plugin-sql": "^2.0.0-beta.3",
 		"theme-change": "^2.5.0",
 		"wanakana": "^5.3.1"
