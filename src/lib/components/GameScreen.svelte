@@ -5,8 +5,17 @@
     import AnswerCard from "$lib/components/AnswerCard.svelte";
 	import { FontLoader } from '$lib/FontLoader';
 
+	type Props = {
+		fontLoader: FontLoader;
+	};
+
+	const
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		{
+			fontLoader,
+		}: Props = $props();
+
 	let inputElement: HTMLInputElement;
-	let fontLoader: FontLoader = new FontLoader();
 
 	let word = $state(``);
 	let wordFont = $state(``);
