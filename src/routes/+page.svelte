@@ -34,7 +34,7 @@
 	</div>
 	<div class="flex-1 bg-base-100">
 		{#if currentScreenType === `Game`}
-		<GameScreen />
+			<GameScreen />
 		{:else if currentScreenType === `Settings`}
 			<SettingsScreen />
 		{/if}
