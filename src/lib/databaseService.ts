@@ -5,7 +5,7 @@ import { GET_EXECUTABLE_FILE_PATH } from "./turiFunctions";
 
 class DatabaseService
 {
-	private static instance: DatabaseService;
+	private static instance: DatabaseService | null;
 	private db: Database;
 
 	private constructor(db: Database)
@@ -15,6 +15,7 @@ class DatabaseService
 
 	public static async getInstance(): Promise<DatabaseService>
 	{
+		if (this.instance != null) return this.instance;
 		try
 		{
 			const path: string = await invoke(GET_EXECUTABLE_FILE_PATH);
@@ -81,6 +82,27 @@ class DatabaseService
 		{
 			throw new Error((error as Error).message || `Unknown error occurred`);
 		}
+	}
+
+	uint8ArrayToHexString(uint8Array: Uint8Array): string
+	{
+		const hexString = Array.from(uint8Array)
+			.map(byte => byte.toString(16).padStart(2, `0`))
+			.join(``);
+		return `X'${hexString}'`;
+	}
+
+	async addAnswerResult(wordId: Uint8Array, wordReadingId: Uint8Array | null): Promise<void>
+	{
+		console.log(wordId);
+		console.log(wordReadingId);
+
+		const query = `
+        INSERT INTO word_answer_results (word_id, word_reading_id)
+        VALUES (${this.uint8ArrayToHexString(wordId)}, ${wordReadingId == null ? `null` : this.uint8ArrayToHexString(wordReadingId)});
+		`;
+
+		await this.db.execute(query);
 	}
 }
 
