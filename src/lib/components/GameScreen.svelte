@@ -3,8 +3,8 @@
 	import * as wanakana from "wanakana";
 	import { themeChange } from 'theme-change';
     import AnswerCard from "$lib/components/AnswerCard.svelte";
-	import { FontLoader } from '$lib/FontLoader';
-    import type { WordWithReadings } from "$lib/types";
+	import { FontLoader } from '$lib/fontLoader';
+    import type { WordInfo } from "$lib/types";
 
 	type Props = {
 		fontLoader: FontLoader;
@@ -18,7 +18,7 @@
 
 	let inputElement: HTMLInputElement;
 
-	let lastWord: WordWithReadings | undefined = $state();
+	let lastWord: WordInfo | undefined = $state();
 	let wordFont = $state(``);
 	let readings: string[] = $state([]);
 

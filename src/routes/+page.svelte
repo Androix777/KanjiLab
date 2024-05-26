@@ -1,9 +1,11 @@
 <script lang="ts">
     import GameScreen from "$lib/components/GameScreen.svelte";
     import SettingsScreen from "$lib/components/SettingsScreen.svelte";
-	import { FontLoader } from '$lib/FontLoader';
+    import StatsScreen from "$lib/components/StatsScreen.svelte";
+	import { FontLoader } from '$lib/fontLoader';
+	import { themeChange } from 'theme-change';
 
-	type ScreenType = `Game` | `Settings`;
+	type ScreenType = `Game` | `Settings` | `Stats`;
 	let currentScreenType: ScreenType = $state(`Settings`);
 	let fontLoader: FontLoader = new FontLoader();
 
@@ -11,7 +13,7 @@
 	{
 		currentScreenType = screenType;
 	}
-	setScreen(`Settings`);
+	setScreen(`Stats`);
 
 	async function loadFonts()
 	{
@@ -21,6 +23,7 @@
 
 	$effect(() =>
 	{
+		themeChange(false);
 		void loadFonts();
 	});
 </script>
@@ -29,11 +32,14 @@
 	<div class="w-16 min-h-full text-center bg-base-300">
 		<ul class="">
 			<button class="btn btn-primary" onclick={() => { setScreen(`Game`); }}>G</button>
+			<button class="btn btn-primary" onclick={() => { setScreen(`Stats`); }}>St</button>
 			<button class="btn btn-primary" onclick={() => { setScreen(`Settings`); }}>S</button>
 		</ul>
 	</div>
 	<div class="flex-1 bg-base-100">
-		{#if currentScreenType === `Game`}
+		{#if currentScreenType === `Stats`}
+			<StatsScreen />
+		{:else if currentScreenType === `Game`}
 			<GameScreen fontLoader = {fontLoader} />
 		{:else if currentScreenType === `Settings`}
 			<SettingsScreen />

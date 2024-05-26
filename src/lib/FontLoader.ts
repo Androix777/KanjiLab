@@ -1,6 +1,6 @@
 import { exists, readFile, readDir, type DirEntry } from '@tauri-apps/plugin-fs';
 import { invoke } from "@tauri-apps/api/core";
-import { GET_EXECUTABLE_FILE_PATH } from "$lib/turiFunctions";
+import { GET_EXECUTABLE_FILE_PATH } from "$lib/tauriFunctions";
 
 export class FontLoader
 {
@@ -31,7 +31,6 @@ export class FontLoader
 		try
 		{
 			const entries: DirEntry[] = await readDir(this.fontDirectory);
-			console.log(entries);
 
 			for (const entry of entries)
 			{

@@ -1,7 +1,8 @@
 import Database from "@tauri-apps/plugin-sql";
-import type { WordWithReadings, WordWithReadingsSQL } from "./types";
+import type { WordInfo, WordInfoSQL } from "$lib/types";
 import { invoke } from "@tauri-apps/api/core";
-import { GET_EXECUTABLE_FILE_PATH } from "./turiFunctions";
+import { GET_EXECUTABLE_FILE_PATH } from "$lib/tauriFunctions";
+import type { StatsInfo } from "$lib/types";
 
 class DatabaseService
 {
@@ -31,7 +32,7 @@ class DatabaseService
 		return DatabaseService.instance;
 	}
 
-	async getRandomWords(count: number): Promise<WordWithReadings[]>
+	async getRandomWords(count: number): Promise<WordInfo[]>
 	{
 		const query = `
 			SELECT 
@@ -51,8 +52,8 @@ class DatabaseService
 
 		try
 		{
-			const data: WordWithReadingsSQL[] = await this.db.select(query, [count]);
-			const wordsMap: Map<string, WordWithReadings> = new Map();
+			const data: WordInfoSQL[] = await this.db.select(query, [count]);
+			const wordsMap: Map<string, WordInfo> = new Map();
 			data.forEach((result) =>
 			{
 				const wordIdKey = result.word_id.toString();
@@ -94,15 +95,24 @@ class DatabaseService
 
 	async addAnswerResult(wordId: Uint8Array, wordReadingId: Uint8Array | null): Promise<void>
 	{
-		console.log(wordId);
-		console.log(wordReadingId);
-
 		const query = `
         INSERT INTO word_answer_results (word_id, word_reading_id)
         VALUES (${this.uint8ArrayToHexString(wordId)}, ${wordReadingId == null ? `null` : this.uint8ArrayToHexString(wordReadingId)});
 		`;
 
 		await this.db.execute(query);
+	}
+
+	async getStats(): Promise<StatsInfo>
+	{
+		const query = `
+        SELECT sum(CASE WHEN word_reading_id NOT NULL THEN 1 ELSE 0 END) AS correctCount, sum(CASE WHEN word_reading_id NOT NULL THEN 0 ELSE 1 END) as wrongCount
+		FROM word_answer_results
+		`;
+
+		const data: StatsInfo[] = await this.db.select(query);
+
+		return data[0];
 	}
 }
 
