@@ -1,15 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import * as d3 from "d3";
-interface PieChartOptions
-{
-	colors?: string[] | Record<string, string>;
-	width?: number;
-	height?: number;
-	innerRadius?: number;
-	outerRadius?: number;
-	padAngle?: number;
-	useTooltips?: boolean;
-}
 
 const BASE_100: string = `oklch(var(--b1))`;
 const BASE_200: string = `oklch(var(--b2))`;
