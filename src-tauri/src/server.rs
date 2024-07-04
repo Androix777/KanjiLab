@@ -30,7 +30,6 @@ struct ClientListPayload {
 
 #[derive(Serialize)]
 struct ClientInfo {
-    id: String,
     name: String,
 }
 
@@ -67,58 +66,40 @@ async fn handle_connection(stream: tokio::net::TcpStream, clients: ClientList) {
     let mut registered_client_id: Option<String> = None;
 
     while let Some(message) = read.next().await {
-        let message = message.unwrap();
-        let message_str = message.to_text().unwrap();
-
-        if let Ok(incoming_message) = serde_json::from_str::<BaseMessage>(message_str) {
-            match incoming_message.message_type.as_str() {
-                "registerClient" => {
-                    if registered_client_id.is_none() {
-                        if let Ok(payload) =
-                            serde_json::from_value::<RegisterClientPayload>(incoming_message.payload)
-                        {
-                            let response = register_client(&clients, payload, incoming_message.correlation_id);
-                            registered_client_id = Some(response.payload["client_id"].as_str().unwrap().to_string());
-                            let response_json = serde_json::to_string(&response).unwrap();
-                            write.send(response_json.into()).await.unwrap();
-                        } else {
-                            let response = send_error(incoming_message.correlation_id);
-                            let response_json = serde_json::to_string(&response).unwrap();
-                            write.send(response_json.into()).await.unwrap();
-                            println!("Wrong payload");
-                        }
-                    } else {
-                        let response = send_error(incoming_message.correlation_id);
-                        let response_json = serde_json::to_string(&response).unwrap();
-                        write.send(response_json.into()).await.unwrap();
-                        println!("Client already registered");
-                    }
-                }
-                "getClientList" => {
-                    if registered_client_id.is_some() {
-                        let response = get_client_list(&clients, incoming_message.correlation_id);
-                        let response_json = serde_json::to_string(&response).unwrap();
-                        write.send(response_json.into()).await.unwrap();
-                    } else {
-                        let response = send_error(incoming_message.correlation_id);
-                        let response_json = serde_json::to_string(&response).unwrap();
-                        write.send(response_json.into()).await.unwrap();
-                        println!("Received getClientList message before client registration");
-                    }
-                }
-                _ => {
-                    let response = send_error(incoming_message.correlation_id);
-                    let response_json = serde_json::to_string(&response).unwrap();
-                    write.send(response_json.into()).await.unwrap();
-                    println!(
-                        "Received unknown message type: {}",
-                        incoming_message.message_type
-                    );
-                }
+        let message = match message {
+            Ok(msg) => msg,
+            Err(_) => {
+                println!("Error receiving message");
+                continue;
             }
-        } else {
-            println!("Received invalid JSON message");
-        }
+        };
+
+        let message_str = match message.to_text() {
+            Ok(text) => text,
+            Err(_) => {
+                println!("Received invalid text message");
+                continue;
+            }
+        };
+
+        let incoming_message = match serde_json::from_str::<BaseMessage>(message_str) {
+            Ok(msg) => msg,
+            Err(_) => {
+                println!("Received invalid JSON message");
+                continue;
+            }
+        };
+
+        let response = match incoming_message.message_type.as_str() {
+            "registerClient" => handle_register_client(
+                &clients, &mut registered_client_id, incoming_message).await,
+            "getClientList" => handle_get_client_list(
+                &clients, &registered_client_id, incoming_message).await,
+            _ => handle_unknown_message(incoming_message),
+        };
+
+        let response_json = serde_json::to_string(&response).unwrap();
+        write.send(response_json.into()).await.unwrap();
     }
 
     if let Some(client_id) = registered_client_id {
@@ -129,55 +110,85 @@ async fn handle_connection(stream: tokio::net::TcpStream, clients: ClientList) {
     println!("WebSocket connection closed");
 }
 
-fn register_client(
+async fn handle_register_client(
     clients: &ClientList,
-    payload: RegisterClientPayload,
-    correlation_id: String,
+    registered_client_id: &mut Option<String>,
+    incoming_message: BaseMessage
 ) -> BaseMessage {
-    let client_id = Uuid::new_v4().to_string();
-    let client = Client {
-        id: client_id.clone(),
-        name: payload.name.clone(),
-    };
+    if registered_client_id.is_none() {
+        match serde_json::from_value::<RegisterClientPayload>(incoming_message.payload) {
+            Ok(payload) => {
+                let client_id = Uuid::new_v4().to_string();
+                let client = Client {
+                    id: client_id.clone(),
+                    name: payload.name.clone(),
+                };
 
-    clients.lock().unwrap().insert(client_id.clone(), client);
+                clients.lock().unwrap().insert(client_id.clone(), client);
 
-    let response_payload = serde_json::json!({
-        "status": "success",
-        "client_id": client_id,
-    });
+                let response_payload = StatusPayload {
+                    status: "success".to_string(),
+                };
 
-    let response = BaseMessage {
-        correlation_id,
-        message_type: "status".to_string(),
-        payload: response_payload,
-    };
+                let response = BaseMessage {
+                    correlation_id: incoming_message.correlation_id,
+                    message_type: "status".to_string(),
+                    payload: serde_json::to_value(response_payload).unwrap(),
+                };
 
-    println!("Registered client: {} (ID: {})", payload.name, client_id);
-    print_client_list(clients);
+                println!("Registered client: {} (ID: {})", payload.name, client_id);
+                print_client_list(clients);
 
-    response
+                *registered_client_id = Some(client_id);
+                response
+            }
+            Err(_) => {
+                println!("Wrong payload");
+                send_error(incoming_message.correlation_id)
+            }
+        }
+    } else {
+        println!("Client already registered");
+        send_error(incoming_message.correlation_id)
+    }
 }
 
-fn get_client_list(clients: &ClientList, correlation_id: String) -> BaseMessage {
-    let clients_lock = clients.lock().unwrap();
-    let client_list: Vec<ClientInfo> = clients_lock
-        .iter()
-        .map(|(_, client)| ClientInfo {
-            id: client.id.clone(),
-            name: client.name.clone(),
-        })
-        .collect();
 
-    let response_payload = ClientListPayload { clients: client_list };
+async fn handle_get_client_list(
+    clients: &ClientList,
+    registered_client_id: &Option<String>,
+    incoming_message: BaseMessage
+) -> BaseMessage {
+    if registered_client_id.is_some() {
+        let clients_lock = clients.lock().unwrap();
+        let client_list: Vec<ClientInfo> = clients_lock
+            .iter()
+            .map(|(_, client)| ClientInfo {
+                name: client.name.clone(),
+            })
+            .collect();
 
-    let response = BaseMessage {
-        correlation_id,
-        message_type: "clientList".to_string(),
-        payload: serde_json::to_value(response_payload).unwrap(),
-    };
+        let response_payload = ClientListPayload { clients: client_list };
 
-    response
+        let response = BaseMessage {
+            correlation_id: incoming_message.correlation_id,
+            message_type: "clientList".to_string(),
+            payload: serde_json::to_value(response_payload).unwrap(),
+        };
+
+        response
+    } else {
+        println!("Received getClientList message before client registration");
+        send_error(incoming_message.correlation_id)
+    }
+}
+
+fn handle_unknown_message(incoming_message: BaseMessage) -> BaseMessage {
+    println!(
+        "Received unknown message type: {}",
+        incoming_message.message_type
+    );
+    send_error(incoming_message.correlation_id)
 }
 
 fn print_client_list(clients: &ClientList) {
