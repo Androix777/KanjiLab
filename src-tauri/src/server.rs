@@ -1,13 +1,23 @@
 use futures_util::{SinkExt, StreamExt};
 use serde_json;
 use tokio::net::TcpListener;
+use tokio::runtime::Runtime;
 use tokio_tungstenite::accept_async;
-use app_lib::server_logic::{add_client, get_client_list, remove_client, initialize, CLIENT_LIST, ClientList};
-use app_lib::structures::{BaseMessage, RegisterClientPayload, StatusPayload, ClientListPayload, ClientInfo};
+use crate::server_logic::{add_client, get_client_list, remove_client, initialize, CLIENT_LIST, ClientList};
+use crate::structures::{BaseMessage, RegisterClientPayload, StatusPayload, ClientListPayload, ClientInfo};
 use colored::*;
 
-#[tokio::main]
-pub async fn main() {
+pub fn call_launch_server()
+{
+	let rt = Runtime::new().unwrap();
+	std::thread::spawn(move || {
+		rt.block_on(async {
+			launch_server().await;
+		});
+	});
+}
+
+pub async fn launch_server() {
     initialize();
     let listener = TcpListener::bind("0.0.0.0:8080")
         .await

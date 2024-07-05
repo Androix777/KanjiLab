@@ -4,6 +4,13 @@
     import StatsScreen from "$lib/components/StatsScreen.svelte";
 	import { FontLoader } from '$lib/fontLoader';
 	import { themeChange } from 'theme-change';
+	import { LAUNCH_SERVER } from "$lib/tauriFunctions";
+    import { invoke } from "@tauri-apps/api/core";
+
+	async function launchServer()
+	{
+		await invoke(LAUNCH_SERVER);
+	}
 
 	type ScreenType = `Game` | `Settings` | `Stats`;
 	let currentScreenType: ScreenType = $state(`Settings`);
@@ -23,6 +30,7 @@
 
 	$effect(() =>
 	{
+		void launchServer();
 		themeChange(false);
 		void loadFonts();
 	});
