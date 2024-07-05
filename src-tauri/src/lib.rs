@@ -1,4 +1,6 @@
 use std::path::PathBuf;
+pub mod server_logic;
+pub mod structures;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
