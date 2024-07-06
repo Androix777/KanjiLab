@@ -7,7 +7,7 @@ pub mod server;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
-        .invoke_handler(tauri::generate_handler![get_executable_file_path, launch_server])
+        .invoke_handler(tauri::generate_handler![get_executable_file_path, launch_server, stop_server])
         .plugin(tauri_plugin_sql::Builder::default().build())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -27,4 +27,9 @@ fn get_executable_file_path() -> Result<PathBuf, String> {
 #[tauri::command]
 fn launch_server() {
     server::call_launch_server();
+}
+
+#[tauri::command]
+fn stop_server() {
+    server::call_stop_server();
 }

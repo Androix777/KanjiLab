@@ -2,31 +2,53 @@ use futures_util::{SinkExt, StreamExt};
 use serde_json;
 use tokio::net::TcpListener;
 use tokio::runtime::Runtime;
+use tokio::sync::oneshot;
 use tokio_tungstenite::accept_async;
 use crate::server_logic::{add_client, get_client_list, remove_client, initialize, CLIENT_LIST, ClientList};
 use crate::structures::{BaseMessage, RegisterClientPayload, StatusPayload, ClientListPayload, ClientInfo};
 use colored::*;
 
-pub fn call_launch_server()
-{
-	let rt = Runtime::new().unwrap();
-	std::thread::spawn(move || {
-		rt.block_on(async {
-			launch_server().await;
-		});
-	});
+static mut SERVER_HANDLE: Option<oneshot::Sender<()>> = None;
+
+pub fn call_launch_server() {
+    let rt = Runtime::new().unwrap();
+    let (tx, rx) = oneshot::channel();
+    unsafe {
+        SERVER_HANDLE = Some(tx);
+    }
+
+    std::thread::spawn(move || {
+        rt.block_on(async {
+            launch_server(rx).await;
+        });
+    });
 }
 
-pub async fn launch_server() {
+pub fn call_stop_server() {
+    unsafe {
+        if let Some(tx) = SERVER_HANDLE.take() {
+            let _ = tx.send(());
+        }
+    }
+}
+
+pub async fn launch_server(stop_signal: oneshot::Receiver<()>) {
     initialize();
     let listener = TcpListener::bind("0.0.0.0:8080")
         .await
         .expect("Failed to bind");
     println!("WebSocket server listening on ws://0.0.0.0:8080");
 
-    while let Ok((stream, _)) = listener.accept().await {
-        let clients = CLIENT_LIST.get().unwrap().clone();
-        tokio::spawn(handle_connection(stream, clients));
+    tokio::select! {
+        _ = async {
+            while let Ok((stream, _)) = listener.accept().await {
+                let clients = CLIENT_LIST.get().unwrap().clone();
+                tokio::spawn(handle_connection(stream, clients));
+            }
+        } => {},
+        _ = stop_signal => {
+            println!("Received stop signal. Shutting down server.");
+        },
     }
 }
 

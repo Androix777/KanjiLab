@@ -1,5 +1,3 @@
-// src/server_logic.rs
-
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -14,8 +12,14 @@ pub type ClientList = Arc<Mutex<HashMap<String, Client>>>;
 pub static CLIENT_LIST: OnceLock<ClientList> = OnceLock::new();
 
 pub fn initialize() {
-    CLIENT_LIST.set(Arc::new(Mutex::new(HashMap::new()))).unwrap();
+    if CLIENT_LIST.get().is_none() {
+        CLIENT_LIST.set(Arc::new(Mutex::new(HashMap::new()))).unwrap();
+    } else {
+        let clients = CLIENT_LIST.get().unwrap();
+        clients.lock().unwrap().clear();
+    }
 }
+
 
 pub fn add_client(clients: &ClientList, name: String) -> String {
     let client_id = uuid::Uuid::new_v4().to_string();
