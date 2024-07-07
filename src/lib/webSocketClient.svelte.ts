@@ -6,6 +6,8 @@ class WebSocketClient
 	private static instance: WebSocketClient | null;
 	private webSocket: WebSocket | null = null;
 
+	public connectionStatus: `Disconnected` | `Connecting` | `Connected` = $state(`Disconnected`);
+
 	public static getInstance()
 	{
 		if (this.instance != null) return this.instance;
@@ -20,6 +22,7 @@ class WebSocketClient
 		this.webSocket.onopen = () =>
 		{
 			console.log(`socket open`);
+			this.connectionStatus = `Connected`;
 			if (this.webSocket)
 			{
 				this.sendRegisterClientMessage(this.webSocket);
@@ -35,16 +38,19 @@ class WebSocketClient
 		this.webSocket.onclose = () =>
 		{
 			console.log(`socket close`);
+			this.disconnect();
 		};
 		this.webSocket.onerror = () =>
 		{
 			console.log(`socket error`);
 		};
+		this.connectionStatus = `Connecting`;
 	}
 
 	public disconnect()
 	{
 		this.webSocket?.close();
+		this.connectionStatus = `Disconnected`;
 	}
 
 	public sendRegisterClientMessage(webSocket: WebSocket)

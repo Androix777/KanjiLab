@@ -1,55 +1,59 @@
 <script lang="ts">
-		import { LAUNCH_SERVER, STOP_SERVER } from "$lib/tauriFunctions";
-		import { invoke } from "@tauri-apps/api/core";
-		import { getSettings } from "$lib/globalSettings.svelte";
-		import WebSocketClient from "$lib/webSocketClient";
+	import { LAUNCH_SERVER, STOP_SERVER } from "$lib/tauriFunctions";
+	import { invoke } from "@tauri-apps/api/core";
+	import { getSettings } from "$lib/globalSettings.svelte";
+	import WebSocketClient from "$lib/webSocketClient.svelte";
+    import { onMount } from "svelte";
 
-		let isServerStarted: boolean = $state(false);
-		let isJoinServerStarted: boolean = $state(false);
-		let ipAddress: string = $state(`ws://127.0.0.1:8080`);
+	let ipAddress: string = $state(`ws://127.0.0.1:8080`);
+	let webSocketClient: WebSocketClient | null = $state(null);
 
-		async function launchServer()
-		{
-			isServerStarted = true;
-			await invoke(LAUNCH_SERVER);
-			let webSocketClient = WebSocketClient.getInstance();
-			webSocketClient.connect(`ws://127.0.0.1:8080`);
-		}
+	async function launchServer()
+	{
+		getSettings().setIsConnectedToSelf(true);
+		await invoke(LAUNCH_SERVER);
+		webSocketClient = WebSocketClient.getInstance();
+		webSocketClient.connect(`ws://127.0.0.1:8080`);
+	}
 
-		async function stopServer()
-		{
-			isServerStarted = false;
-			leaveServer();
-			await invoke(STOP_SERVER);
-		}
+	async function stopServer()
+	{
+		getSettings().setIsConnectedToSelf(false);
+		leaveServer();
+		await invoke(STOP_SERVER);
+	}
 
-		function joinServer()
-		{
-			isJoinServerStarted = true;
-			let webSocketClient = WebSocketClient.getInstance();
-			webSocketClient.connect(ipAddress);
-		}
+	function joinServer()
+	{
+		webSocketClient?.connect(ipAddress);
+	}
 
-		function leaveServer()
-		{
-			isJoinServerStarted = false;
-			let webSocketClient = WebSocketClient.getInstance();
-			webSocketClient.disconnect();
-		}
+	function leaveServer()
+	{
+		webSocketClient?.disconnect();
+	}
 
+	onMount(() =>
+	{
+		webSocketClient = WebSocketClient.getInstance();
+	});
 </script>
 
 <div class="h-screen flex flex-col">
 
 	<div class="flex-none">
 		<div class="flex justify-between h-12">
-			{#if isServerStarted}
+			{#if getSettings().isConnectedToSelf && webSocketClient?.connectionStatus == `Connected`}
 				<div class="w-2/5 border text-center">
 					<button class="btn btn-error w-full h-full rounded-none" onclick={() => { void stopServer(); }}>Stop Server</button>
 				</div>
-			{:else if isJoinServerStarted}
+			{:else if webSocketClient?.connectionStatus == `Connected`}
 				<div class="w-2/5 border text-center">
 					<button class="btn btn-error w-full h-full rounded-none" onclick={() => { leaveServer(); }}>Leave Server</button>
+				</div>
+			{:else if webSocketClient?.connectionStatus == `Connecting`}
+				<div class="w-2/5 border text-center">
+					<div class="w-full h-full items-center justify-center flex">Please wait...</div>
 				</div>
 			{:else}
 				<div class="w-1/5 border text-center">
