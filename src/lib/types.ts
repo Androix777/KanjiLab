@@ -15,3 +15,15 @@ export type StatsInfo = {
 	correctCount: number;
 	wrongCount: number;
 };
+
+export type BaseMessage<T, M extends string> = {
+	message_type: M;
+	correlation_id: string;
+	payload: T;
+};
+
+export type RegisterClientPayload = {
+	name: string;
+};
+
+export type RegisterClientMessage = BaseMessage<RegisterClientPayload, `registerClient`>;
