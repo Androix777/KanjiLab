@@ -21,11 +21,25 @@ class WebSocketClient
 	{
 		this.disconnect();
 		this.webSocket = new WebSocket(ipAddress);
-		this.webSocket.onopen = () =>
+		this.webSocket.onopen = async () =>
 		{
 			console.log(`socket open`);
 			this.connectionStatus = `Connected`;
-			this.sendRegisterClientMessage();
+			try
+			{
+				if (await this.sendRegisterClientMessage())
+				{
+					this.sendGetClientListMessage();
+				}
+				else
+				{
+					console.log(`Registration: failed`);
+				}
+			}
+			catch
+			{
+				console.log(`Registration: no response`);
+			}
 		};
 		this.webSocket.onmessage = (event) =>
 		{
@@ -62,7 +76,7 @@ class WebSocketClient
 		this.connectionStatus = `Disconnected`;
 	}
 
-	public sendRegisterClientMessage()
+	public async sendRegisterClientMessage()
 	{
 		if (!this.webSocket) return;
 		const correlation_id = crypto.randomUUID();
@@ -74,17 +88,33 @@ class WebSocketClient
 			},
 		};
 
+		let resolvePromise: (resolve: boolean) => void;
+		let rejectPromise: (reject: boolean) => void;
+		const registered: Promise<boolean> = new Promise((resolve, reject) =>
+		{
+			resolvePromise = resolve;
+			rejectPromise = reject;
+		});
 		this.messagePool.set(correlation_id, (message) =>
 		{
 			const statusMessage = <StatusMessage>message;
 
 			if (statusMessage.payload.status == `success`)
 			{
-				this.sendGetClientListMessage();
+				resolvePromise(true);
+			}
+			else
+			{
+				resolvePromise(false);
 			}
 		});
-
+		setTimeout(() =>
+		{
+			rejectPromise(false);
+		}, 5000);
 		this.webSocket.send(JSON.stringify(registerClientMessage));
+		const result = await registered;
+		return result;
 	}
 
 	public sendGetClientListMessage()
