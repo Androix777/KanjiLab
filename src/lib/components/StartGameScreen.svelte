@@ -4,6 +4,7 @@
 	import { getSettings } from "$lib/globalSettings.svelte";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
     import { onMount } from "svelte";
+    import PlayerListCard from "./PlayerListCard.svelte";
 
 	let ipAddress: string = $state(`ws://127.0.0.1:8080`);
 	let webSocketClient: WebSocketClient | null = $state(null);
@@ -76,7 +77,13 @@
 			</div>
 		</div>
 		<div class="w-2/5 flex flex-col">
-			<div class="flex-1 border text-center">Players</div>
+			<div class="flex-1 border text-center overflow-y-auto">
+				{#if webSocketClient && webSocketClient.clientList}
+					{#each webSocketClient.clientList as client}
+						<PlayerListCard playerName={client.name} />
+					{/each}
+				{/if}
+			</div>
 			<div class="flex-1 border text-center flex flex-col">
 				<div class="flex-grow flex flex-col">
 					<div>{getSettings().userName}</div>

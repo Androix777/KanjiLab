@@ -16,7 +16,7 @@ export type StatsInfo = {
 	wrongCount: number;
 };
 
-export type BaseMessage<T, M extends string> = {
+export type BaseMessage<T extends object, M extends string> = {
 	message_type: M;
 	correlation_id: string;
 	payload: T;
@@ -27,3 +27,20 @@ export type RegisterClientPayload = {
 };
 
 export type RegisterClientMessage = BaseMessage<RegisterClientPayload, `registerClient`>;
+
+export type GetClientListPayload = object;
+
+export type GetClientListMessage = BaseMessage<GetClientListPayload, `getClientList`>;
+
+export type StatusPayload = {
+	status: string;
+	info: string | null;
+};
+
+export type StatusMessage = BaseMessage<StatusPayload, `status`>;
+
+export type ClientListPayload = {
+	clients: { name: string }[];
+};
+
+export type ClientListMessage = BaseMessage<ClientListPayload, `clientList`>;
