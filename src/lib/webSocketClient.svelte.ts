@@ -4,11 +4,11 @@ import { getSettings } from "./globalSettings.svelte";
 class WebSocketClient
 {
 	private static instance: WebSocketClient | null;
-	private webSocket: WebSocket | null = null;
-	private messagePool: Map<string, (message: BaseMessage<object, string>) => void> = new Map();
+	private serverConnector: ServerConnector | null = null;
 	public clientList: Array<{ name: string }> = $state([]);
 
 	public connectionStatus: `Disconnected` | `Connecting` | `Connected` = $state(`Disconnected`);
+	private updateInterval: number | null = null;
 
 	public static getInstance()
 	{
@@ -17,29 +17,67 @@ class WebSocketClient
 		return WebSocketClient.instance;
 	}
 
-	public connect(ipAddress: string)
+	public async connectToServer(ipAddress: string)
+	{
+		this.connectionStatus = `Connecting`;
+		this.serverConnector = new ServerConnector();
+		await this.serverConnector.connect(ipAddress);
+
+		this.connectionStatus = `Connected`;
+		this.serverConnector.addEventListener(`socketClosed`, () =>
+		{
+			this.disconnectFromServer();
+		});
+
+		await this.updateClientList();
+
+		this.updateInterval = setInterval(() =>
+		{
+			void this.updateClientList();
+		}, 2000);
+	}
+
+	public disconnectFromServer()
+	{
+		this.serverConnector?.disconnect();
+		this.connectionStatus = `Disconnected`;
+		this.clientList = [];
+		if (this.updateInterval)
+		{
+			clearInterval(this.updateInterval);
+		}
+	}
+
+	public async updateClientList()
+	{
+		if (!this.serverConnector) return;
+
+		const newClientList = await this.serverConnector.getClientList();
+		if (newClientList)
+		{
+			this.clientList = newClientList;
+		}
+		else
+		{
+			console.log(`Failed to get clientList`);
+		}
+	}
+}
+
+class ServerConnector extends EventTarget
+{
+	private webSocket: WebSocket | null = null;
+	private messagePool: Map<string, (message: BaseMessage<object, string>) => void> = new Map();
+
+	public async connect(ipAddress: string)
 	{
 		this.disconnect();
 		this.webSocket = new WebSocket(ipAddress);
 		this.webSocket.onopen = async () =>
 		{
 			console.log(`socket open`);
-			this.connectionStatus = `Connected`;
-			try
-			{
-				if (await this.sendRegisterClientMessage())
-				{
-					this.sendGetClientListMessage();
-				}
-				else
-				{
-					console.log(`Registration: failed`);
-				}
-			}
-			catch
-			{
-				console.log(`Registration: no response`);
-			}
+			await this.register();
+			resolvePromise(true);
 		};
 		this.webSocket.onmessage = (event) =>
 		{
@@ -60,25 +98,69 @@ class WebSocketClient
 		this.webSocket.onclose = () =>
 		{
 			console.log(`socket close`);
+			this.dispatchEvent(new Event(`socketClosed`));
 			this.disconnect();
 		};
 		this.webSocket.onerror = () =>
 		{
 			console.log(`socket error`);
 		};
-		this.connectionStatus = `Connecting`;
+
+		let resolvePromise: (result: boolean) => void;
+		let rejectPromise: () => void;
+		const resultPromise: Promise<boolean> = new Promise((resolve, reject) =>
+		{
+			resolvePromise = resolve;
+			rejectPromise = reject;
+		});
+
+		setTimeout(() =>
+		{
+			rejectPromise();
+		}, 5000);
+
+		return await resultPromise;
 	}
 
 	public disconnect()
 	{
 		this.webSocket?.close();
-		this.clientList = [];
-		this.connectionStatus = `Disconnected`;
+	}
+
+	public async register()
+	{
+		try
+		{
+			if (await this.sendRegisterClientMessage())
+			{
+				console.log(`Registration: complete`);
+			}
+			else
+			{
+				console.log(`Registration: failed`);
+			}
+		}
+		catch
+		{
+			console.log(`Registration: no response`);
+		}
+	}
+
+	public async getClientList()
+	{
+		try
+		{
+			return await this.sendGetClientListMessage();
+		}
+		catch
+		{
+			return false;
+		}
 	}
 
 	public async sendRegisterClientMessage()
 	{
-		if (!this.webSocket) return;
+		if (!this.webSocket) return false;
 		const correlation_id = crypto.randomUUID();
 		const registerClientMessage: RegisterClientMessage = {
 			message_type: `registerClient`,
@@ -88,13 +170,14 @@ class WebSocketClient
 			},
 		};
 
-		let resolvePromise: (resolve: boolean) => void;
-		let rejectPromise: (reject: boolean) => void;
-		const registered: Promise<boolean> = new Promise((resolve, reject) =>
+		let resolvePromise: (result: boolean) => void;
+		let rejectPromise: () => void;
+		const resultPromise: Promise<boolean> = new Promise((resolve, reject) =>
 		{
 			resolvePromise = resolve;
 			rejectPromise = reject;
 		});
+
 		this.messagePool.set(correlation_id, (message) =>
 		{
 			const statusMessage = <StatusMessage>message;
@@ -108,18 +191,20 @@ class WebSocketClient
 				resolvePromise(false);
 			}
 		});
+
 		setTimeout(() =>
 		{
-			rejectPromise(false);
+			rejectPromise();
 		}, 5000);
+
 		this.webSocket.send(JSON.stringify(registerClientMessage));
-		const result = await registered;
+		const result = await resultPromise;
 		return result;
 	}
 
-	public sendGetClientListMessage()
+	public async sendGetClientListMessage()
 	{
-		if (!this.webSocket) return;
+		if (!this.webSocket) return false;
 		const correlation_id = crypto.randomUUID();
 		const getClientListMessage: GetClientListMessage = {
 			message_type: `getClientList`,
@@ -127,14 +212,28 @@ class WebSocketClient
 			payload: {},
 		};
 
+		let resolvePromise: (clientList: Array<{ name: string }>) => void;
+		let rejectPromise: () => void;
+		const resultPromise: Promise<Array<{ name: string }>> = new Promise((resolve, reject) =>
+		{
+			resolvePromise = resolve;
+			rejectPromise = reject;
+		});
+
 		this.messagePool.set(correlation_id, (message) =>
 		{
 			const clientListMessage = <ClientListMessage>message;
-
-			this.clientList = clientListMessage.payload.clients;
+			resolvePromise(clientListMessage.payload.clients);
 		});
 
+		setTimeout(() =>
+		{
+			rejectPromise();
+		}, 5000);
+
 		this.webSocket.send(JSON.stringify(getClientListMessage));
+		const result = await resultPromise;
+		return result;
 	}
 }
 

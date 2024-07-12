@@ -14,7 +14,7 @@
 		getSettings().setIsConnectedToSelf(true);
 		await invoke(LAUNCH_SERVER);
 		webSocketClient = WebSocketClient.getInstance();
-		webSocketClient.connect(`ws://127.0.0.1:8080`);
+		await webSocketClient.connectToServer(`ws://127.0.0.1:8080`);
 	}
 
 	async function stopServer()
@@ -24,14 +24,14 @@
 		await invoke(STOP_SERVER);
 	}
 
-	function joinServer()
+	async function joinServer()
 	{
-		webSocketClient?.connect(ipAddress);
+		await webSocketClient?.connectToServer(ipAddress);
 	}
 
 	function leaveServer()
 	{
-		webSocketClient?.disconnect();
+		webSocketClient?.disconnectFromServer();
 	}
 
 	onMount(() =>
@@ -61,7 +61,7 @@
 					<button class="btn btn-primary w-full h-full rounded-none" onclick={() => { void launchServer(); }}>Host Game</button>
 				</div>
 				<div class="w-1/5 border text-center">
-					<button class="btn btn-primary w-full h-full rounded-none" onclick={() => { joinServer(); }}>Join Game</button>
+					<button class="btn btn-primary w-full h-full rounded-none" onclick={() => { void joinServer(); }}>Join Game</button>
 				</div>
 			{/if}
 			<div class="w-3/5 border text-center">
