@@ -47,6 +47,19 @@ pub fn call_stop_server() {
     }
 }
 
+async fn disconnect_all_clients() {
+    let connections = clients_connections();
+    let mut connections_lock = connections.lock().await;
+
+    for (client_id, client_write) in connections_lock.drain() {
+        let mut write = client_write.lock().await;
+        if let Err(e) = write.send(Message::Close(None)).await {
+            eprintln!("Error sending close message to {}: {}", client_id, e);
+        }
+    }
+}
+
+
 pub async fn launch_server(stop_signal: oneshot::Receiver<()>) {
     initialize();
     let listener = TcpListener::bind("0.0.0.0:8080")
@@ -62,9 +75,11 @@ pub async fn launch_server(stop_signal: oneshot::Receiver<()>) {
         } => {},
         _ = stop_signal => {
             println!("Received stop signal. Shutting down server.");
+            disconnect_all_clients().await;
         },
     }
 }
+
 
 async fn handle_connection(stream: tokio::net::TcpStream) {
     let ws_stream = accept_async(stream).await.expect("Failed to accept");
