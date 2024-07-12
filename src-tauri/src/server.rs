@@ -1,14 +1,29 @@
+use std::collections::HashMap;
+use std::sync::{Arc, OnceLock};
+use futures_util::stream::SplitSink;
 use futures_util::{SinkExt, StreamExt};
 use serde_json;
-use tokio::net::TcpListener;
+use tokio::net::{TcpListener, TcpStream};
 use tokio::runtime::Runtime;
-use tokio::sync::oneshot;
-use tokio_tungstenite::accept_async;
-use crate::server_logic::{add_client, get_client_list, remove_client, initialize, CLIENT_LIST, ClientList};
-use crate::structures::{BaseMessage, RegisterClientPayload, StatusPayload, ClientListPayload, ClientInfo};
+use tokio::sync::{oneshot, Mutex};
+use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::{accept_async, WebSocketStream};
+use uuid::Uuid;
+use crate::server_logic::{add_client, client_exists, get_client, get_client_list, initialize, remove_client};
+use crate::structures::{BaseMessage, ClientInfo, ClientListPayload, ClientRegisteredPayload, RegisterClientPayload, StatusPayload};
 use colored::*;
 
 static mut SERVER_HANDLE: Option<oneshot::Sender<()>> = None;
+
+pub type ClientWrite = Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, Message>>>;
+pub type ClientsConnections = Arc<Mutex<HashMap<String, ClientWrite>>>;
+
+fn clients_connections() -> &'static ClientsConnections {
+    static CLIENTS_CONNECTIONS: OnceLock<ClientsConnections> = OnceLock::new();
+    CLIENTS_CONNECTIONS.get_or_init(|| {
+        Arc::new(Mutex::new(HashMap::new()))
+    })
+}
 
 pub fn call_launch_server() {
     let rt = Runtime::new().unwrap();
@@ -42,8 +57,7 @@ pub async fn launch_server(stop_signal: oneshot::Receiver<()>) {
     tokio::select! {
         _ = async {
             while let Ok((stream, _)) = listener.accept().await {
-                let clients = CLIENT_LIST.get().unwrap().clone();
-                tokio::spawn(handle_connection(stream, clients));
+                tokio::spawn(handle_connection(stream));
             }
         } => {},
         _ = stop_signal => {
@@ -52,22 +66,20 @@ pub async fn launch_server(stop_signal: oneshot::Receiver<()>) {
     }
 }
 
-async fn handle_connection(stream: tokio::net::TcpStream, clients: ClientList) {
+async fn handle_connection(stream: tokio::net::TcpStream) {
     let ws_stream = accept_async(stream).await.expect("Failed to accept");
     let peer_addr = ws_stream.get_ref().peer_addr().unwrap();
     log("???", "connected", &peer_addr.to_string());
 
-    let (mut write, mut read) = ws_stream.split();
-    let mut registered_client_id: Option<String> = None;
-    let mut registered_client_name: Option<String> = None;
+    let (write, mut read) = ws_stream.split();
+    let client_id = Uuid::new_v4().to_string();
+    clients_connections().lock().await.insert(client_id.clone(), Arc::new(Mutex::new(write)));
 
     while let Some(message) = read.next().await {
         let message = match message {
             Ok(msg) => msg,
             Err(_) => {
-                let error_message = create_error_message(String::new(), "Error receiving message".to_string());
-                let error_json = serde_json::to_string(&error_message).unwrap();
-                let _ = write.send(error_json.into()).await;
+                send_error(&client_id, &String::new(), "Error receiving message").await;
                 continue;
             }
         };
@@ -75,9 +87,7 @@ async fn handle_connection(stream: tokio::net::TcpStream, clients: ClientList) {
         let message_str = match message.to_text() {
             Ok(text) => text,
             Err(_) => {
-                let error_message = create_error_message(String::new(), "Received invalid text message".to_string());
-                let error_json = serde_json::to_string(&error_message).unwrap();
-                let _ = write.send(error_json.into()).await;
+                send_error(&client_id, &String::new(), "Received invalid text message").await;
                 continue;
             }
         };
@@ -85,119 +95,165 @@ async fn handle_connection(stream: tokio::net::TcpStream, clients: ClientList) {
         let incoming_message = match serde_json::from_str::<BaseMessage>(message_str) {
             Ok(msg) => msg,
             Err(_) => {
-                let error_message = create_error_message(String::new(), "Received invalid JSON message".to_string());
-                let error_json = serde_json::to_string(&error_message).unwrap();
-                let _ = write.send(error_json.into()).await;
+                send_error(&client_id, &String::new(), "Received invalid JSON message").await;
                 continue;
             }
         };
 
-        if let Some(client_name) = &registered_client_name {
-            log(client_name, &incoming_message.message_type, &peer_addr.to_string());
+        if let Some(client) = get_client(&client_id) {
+            log(&client.name, &incoming_message.message_type, &peer_addr.to_string());
         } else {
             log("???", &incoming_message.message_type, &peer_addr.to_string());
         }
 
-        let response = match incoming_message.message_type.as_str() {
+        match incoming_message.message_type.as_str() {
             "registerClient" => handle_register_client(
-                &clients, &mut registered_client_id, &mut registered_client_name, incoming_message).await,
+                &client_id, incoming_message).await,
             "getClientList" => handle_get_client_list(
-                &clients, &registered_client_id, incoming_message).await,
-            _ => handle_unknown_message(incoming_message),
+                &client_id, incoming_message).await,
+            _ => handle_unknown_message(&client_id, incoming_message).await,
         };
-
-        let response_json = serde_json::to_string(&response).unwrap();
-        let _ = write.send(response_json.into()).await;
     }
 
-    if let Some(client_id) = registered_client_id {
-        remove_client(&clients, &client_id);
-    }
+	remove_client(&client_id);
+	clients_connections().lock().await.remove(&client_id);
 
-    if let Some(client_name) = registered_client_name {
-        log(&client_name, "disconnected", &peer_addr.to_string());
+    if let Some(client) = get_client(&client_id) {
+        log(&client.name, "disconnected", &peer_addr.to_string());
     } else {
         log("???", "disconnected", &peer_addr.to_string());
     }
 }
 
 async fn handle_register_client(
-    clients: &ClientList,
-    registered_client_id: &mut Option<String>,
-    registered_client_name: &mut Option<String>,
+    client_id: &str,
     incoming_message: BaseMessage
-) -> BaseMessage {
-    if registered_client_id.is_none() {
-        match incoming_message.payload {
-            Some(payload) => {
-                match serde_json::from_value::<RegisterClientPayload>(payload) {
-                    Ok(payload) => {
-                        let client_id = add_client(clients, payload.name.clone());
+) {
+	match incoming_message.payload {
+		Some(payload) => {
+			match serde_json::from_value::<RegisterClientPayload>(payload) {
+				Ok(payload) => {
+					let is_added = add_client(client_id, &payload.name);
 
-                        let response_payload = StatusPayload {
-                            status: "success".to_string(),
-                            info: None,
-                        };
+					if !is_added {
+						send_error(client_id, &incoming_message.correlation_id, "Client already registered").await;
+						return;
+					}
 
-                        let response = BaseMessage {
-                            correlation_id: incoming_message.correlation_id,
-                            message_type: "status".to_string(),
-                            payload: Some(serde_json::to_value(response_payload).unwrap()),
-                        };
+					let response_payload = StatusPayload {
+						status: "success".to_string(),
+						info: None,
+					};
 
-                        *registered_client_id = Some(client_id);
-                        *registered_client_name = Some(payload.name);
-                        response
-                    }
-                    Err(_) => create_error_message(incoming_message.correlation_id, "Wrong payload".to_string()),
-                }
-            }
-            None => create_error_message(incoming_message.correlation_id, "Missing payload".to_string()),
-        }
-    } else {
-        create_error_message(incoming_message.correlation_id, "Client already registered".to_string())
-    }
+					let response = BaseMessage {
+						correlation_id: incoming_message.correlation_id,
+						message_type: "status".to_string(),
+						payload: Some(serde_json::to_value(response_payload).unwrap()),
+					};
+
+					let response_json = serde_json::to_string(&response).unwrap();
+					let _ = send(&client_id, &response_json).await;
+
+
+
+
+
+					let event_payload = ClientRegisteredPayload {
+						name: payload.name.clone(),
+					};
+
+					let event = BaseMessage {
+						correlation_id: Uuid::new_v4().to_string(),
+						message_type: "ClientRegistered".to_string(),
+						payload: Some(serde_json::to_value(event_payload).unwrap()),
+					};
+
+					let response_json = serde_json::to_string(&event).unwrap();
+					let _ = send_all(&response_json).await;
+				}
+				Err(_) => 
+				{
+					send_error(client_id, &incoming_message.correlation_id, "Wrong payload").await;
+				},
+			}
+		}
+		None => {
+			send_error(client_id, &incoming_message.correlation_id, "Missing payload").await;
+		},
+	}
 }
 
 async fn handle_get_client_list(
-    clients: &ClientList,
-    registered_client_id: &Option<String>,
+	client_id: &str,
     incoming_message: BaseMessage
-) -> BaseMessage {
-    if registered_client_id.is_some() {
-        let client_list = get_client_list(clients)
-            .into_iter()
-            .map(|client| ClientInfo { name: client.name })
-            .collect();
+) {
+	if !client_exists(client_id){
+		send_error(client_id, &incoming_message.correlation_id, "Received getClientList message before client registration").await;
+		return;
+	}
 
-        let response_payload = ClientListPayload { clients: client_list };
+    let client_list = get_client_list()
+        .into_iter()
+        .map(|client| ClientInfo { name: client.name })
+        .collect();
 
-        let response = BaseMessage {
-            correlation_id: incoming_message.correlation_id,
-            message_type: "clientList".to_string(),
-            payload: Some(serde_json::to_value(response_payload).unwrap()),
-        };
+    let response_payload = ClientListPayload { clients: client_list };
 
-        response
+    let response = BaseMessage {
+        correlation_id: incoming_message.correlation_id.clone(),
+        message_type: "clientList".to_string(),
+        payload: Some(serde_json::to_value(response_payload).unwrap()),
+    };
+
+    let response_json = serde_json::to_string(&response).unwrap();
+	let _ = send(&client_id, &response_json).await;
+}
+
+
+async fn handle_unknown_message(
+	client_id: &str,
+	incoming_message: BaseMessage
+) {
+    send_error(client_id, &incoming_message.correlation_id, "Unknown message type").await;
+}
+
+async fn send_error(client_id: &str, correlation_id: &str, info: &str) {
+    let response_payload = StatusPayload {
+        status: "error".to_string(),
+        info: Some(info.to_string()),
+    };
+
+    let message = BaseMessage {
+        correlation_id: correlation_id.to_string(),
+        message_type: "status".to_string(),
+        payload: Some(serde_json::to_value(response_payload).unwrap()),
+    };
+
+	let response_json = serde_json::to_string(&message).unwrap();
+	let _ = send(&client_id, &response_json).await;
+}
+
+async fn send(client_id: &str, message: &str) -> Result<(), String> {
+    let connections = clients_connections();
+    let connections_lock = connections.lock().await;
+
+    if let Some(client_write) = connections_lock.get(client_id) {
+        let mut write = client_write.lock().await;
+        write.send(Message::text(message)).await.map_err(|e| e.to_string())
     } else {
-        create_error_message(incoming_message.correlation_id, "Received getClientList message before client registration".to_string())
+        Err(format!("Client with ID {} not found", client_id))
     }
 }
 
-fn handle_unknown_message(incoming_message: BaseMessage) -> BaseMessage {
-    create_error_message(incoming_message.correlation_id, "Unknown message type".to_string())
-}
+async fn send_all(message: &str) {
+    let connections = clients_connections();
+    let connections_lock = connections.lock().await;
 
-fn create_error_message(correlation_id: String, info: String) -> BaseMessage {
-    let response_payload = StatusPayload {
-        status: "error".to_string(),
-        info: Some(info),
-    };
-
-    BaseMessage {
-        correlation_id,
-        message_type: "status".to_string(),
-        payload: Some(serde_json::to_value(response_payload).unwrap()),
+    for (client_id, client_write) in connections_lock.iter() {
+        let mut write = client_write.lock().await;
+        if let Err(e) = write.send(Message::text(message)).await {
+            eprintln!("Error sending message to {}: {}", client_id, e);
+        }
     }
 }
 

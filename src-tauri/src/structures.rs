@@ -13,6 +13,11 @@ pub struct RegisterClientPayload {
 }
 
 #[derive(Serialize)]
+pub struct ClientRegisteredPayload {
+    pub name: String,
+}
+
+#[derive(Serialize)]
 pub struct StatusPayload {
     pub status: String,
     pub info: Option<String>,

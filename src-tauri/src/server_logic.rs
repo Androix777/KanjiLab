@@ -20,23 +20,44 @@ pub fn initialize() {
     }
 }
 
-
-pub fn add_client(clients: &ClientList, name: String) -> String {
-    let client_id = uuid::Uuid::new_v4().to_string();
-    let client = Client {
-        id: client_id.clone(),
-        name: name.clone(),
-    };
-
-    clients.lock().unwrap().insert(client_id.clone(), client);
-    client_id
+pub fn client_exists(id: &str) -> bool {
+    let clients = CLIENT_LIST.get().unwrap();
+    let clients_lock = clients.lock().unwrap();
+    clients_lock.contains_key(id)
 }
 
-pub fn remove_client(clients: &ClientList, client_id: &String) {
+pub fn add_client(id: &str, name: &str) -> bool {
+    if client_exists(id) {
+        return false;
+    }
+
+    let client = Client {
+        id: id.to_string(),
+        name: name.to_string(),
+    };
+
+    let clients = CLIENT_LIST.get().unwrap();
+    clients.lock().unwrap().insert(id.to_string(), client);
+    true
+}
+
+pub fn remove_client(client_id: &str) {
+    let clients = CLIENT_LIST.get().unwrap();
     clients.lock().unwrap().remove(client_id);
 }
 
-pub fn get_client_list(clients: &ClientList) -> Vec<Client> {
+pub fn get_client_list() -> Vec<Client> {
+    let clients = CLIENT_LIST.get().unwrap();
     let clients_lock = clients.lock().unwrap();
     clients_lock.values().cloned().collect()
+}
+
+pub fn get_client(client_id: &str) -> Option<Client> {
+    let client_list = get_client_list();
+    for client in client_list {
+        if client.id == client_id {
+            return Some(client.clone());
+        }
+    }
+    None
 }
