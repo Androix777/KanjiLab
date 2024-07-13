@@ -41,6 +41,15 @@
 		chatMessage = ``;
 	}
 
+	function chatOnKeyDown(event: KeyboardEvent)
+	{
+		if (event.key != `Enter`)
+		{
+			return;
+		}
+		sendChatMessage();
+	}
+
 	onMount(() =>
 	{
 		webSocketClient = WebSocketClient.getInstance();
@@ -101,7 +110,7 @@
 					{/if}
 				</div>
 				<div class="flex justify-between h-12">
-					<input bind:value={chatMessage} class="input input-bordered text-center w-full rounded-none"/>
+					<input bind:value={chatMessage} onkeydown={chatOnKeyDown} class="input input-bordered text-center w-full rounded-none"/>
 					<button class="btn btn-primary w-12 rounded-none" onclick={() => { sendChatMessage(); }}>Send</button>
 				</div>
 			</div>
