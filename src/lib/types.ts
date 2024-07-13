@@ -58,3 +58,16 @@ export type ClientDisconnectedPayload = {
 export type ClientRegisteredMessage = BaseMessage<ClientRegisteredPayload, `clientRegistered`>;
 
 export type ClientDisconnectedMessage = BaseMessage<ClientDisconnectedPayload, `clientDisconnected`>;
+
+export type SendChatPayload = {
+	message: string;
+};
+
+export type SendChatMessage = BaseMessage<SendChatPayload, `sendChat`>;
+
+export type ChatSentPayload = {
+	id: string;
+	message: string;
+};
+
+export type ChatSentMessage = BaseMessage<ChatSentPayload, `chatSent`>;

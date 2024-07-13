@@ -8,6 +8,7 @@
 
 	let ipAddress: string = $state(`ws://127.0.0.1:8080`);
 	let webSocketClient: WebSocketClient | null = $state(null);
+	let chatMessage: string = $state(``);
 
 	async function launchServer()
 	{
@@ -32,6 +33,12 @@
 	function leaveServer()
 	{
 		webSocketClient?.disconnectFromServer();
+	}
+
+	function sendChatMessage()
+	{
+		webSocketClient?.sendChatMessage(chatMessage);
+		chatMessage = ``;
 	}
 
 	onMount(() =>
@@ -87,11 +94,15 @@
 			<div class="flex-1 border text-center flex flex-col">
 				<div class="flex-grow flex flex-col">
 					<div>{getSettings().userName}</div>
-					<div>test message</div>
+					{#if webSocketClient && webSocketClient.chatList}
+						{#each webSocketClient.chatList as chatMessage}
+							<div>{`${webSocketClient.getClient(chatMessage.id).name}: ${chatMessage.message}`}</div>
+						{/each}
+					{/if}
 				</div>
 				<div class="flex justify-between h-12">
-					<input class="input input-bordered text-center w-full rounded-none"/>
-					<button class="btn btn-primary w-12 rounded-none" onclick={() => {}}>Send</button>
+					<input bind:value={chatMessage} class="input input-bordered text-center w-full rounded-none"/>
+					<button class="btn btn-primary w-12 rounded-none" onclick={() => { sendChatMessage(); }}>Send</button>
 				</div>
 			</div>
 		</div>

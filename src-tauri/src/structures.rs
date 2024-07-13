@@ -40,3 +40,14 @@ pub struct ClientInfo {
     pub id: String,
     pub name: String,
 }
+
+#[derive(Serialize)]
+pub struct ChatSentPayload {
+	pub id: String,
+	pub message: String,
+}
+
+#[derive(Deserialize)]
+pub struct SendChatPayload {
+	pub message: String,
+}

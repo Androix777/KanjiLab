@@ -1,5 +1,5 @@
 import { getSettings } from "./globalSettings.svelte";
-import { type ClientRegisteredPayload, type BaseMessage, type ClientListMessage, type ClientRegisteredMessage, type GetClientListMessage, type RegisterClientMessage, type StatusMessage } from "./types";
+import { type ClientRegisteredPayload, type BaseMessage, type ClientListMessage, type ClientRegisteredMessage, type GetClientListMessage, type RegisterClientMessage, type StatusMessage, type SendChatMessage, type ChatSentMessage, type ChatSentPayload } from "./types";
 
 export class ServerConnector extends EventTarget
 {
@@ -146,6 +146,19 @@ export class ServerConnector extends EventTarget
 		return result;
 	}
 
+	public sendChatMessage(message: string)
+	{
+		if (!this.webSocket) return false;
+		const correlation_id = crypto.randomUUID();
+		const sendChatMessage: SendChatMessage = {
+			message_type: `sendChat`,
+			correlation_id: correlation_id,
+			payload: { message: message },
+		};
+
+		this.webSocket.send(JSON.stringify(sendChatMessage));
+	}
+
 	private handleReceivedMessage(message: BaseMessage<object, string>)
 	{
 		switch (message.message_type)
@@ -161,6 +174,13 @@ export class ServerConnector extends EventTarget
 			{
 				const clientDisconnectedMessage = <ClientRegisteredMessage>message;
 				const event = new CustomEvent<ClientRegisteredPayload>(`clientDisconnected`, { detail: clientDisconnectedMessage.payload });
+				this.dispatchEvent(event);
+				break;
+			}
+			case `chatSent`:
+			{
+				const chatSentMessage = <ChatSentMessage>message;
+				const event = new CustomEvent<ChatSentPayload>(`chatSent`, { detail: chatSentMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}

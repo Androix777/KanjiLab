@@ -1,11 +1,12 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { ClientDisconnectedPayload, ClientRegisteredPayload } from "./types";
+import type { ChatSentPayload, ClientDisconnectedPayload, ClientRegisteredPayload } from "./types";
 
 class WebSocketClient
 {
 	private static instance: WebSocketClient | null;
 	private serverConnector: ServerConnector | null = null;
 	public clientList: Array<{ id: string; name: string }> = $state([]);
+	public chatList: Array<{ id: string; message: string }> = $state([]);
 
 	public connectionStatus: `Disconnected` | `Connecting` | `Connected` = $state(`Disconnected`);
 
@@ -46,6 +47,11 @@ class WebSocketClient
 			const customEvent: CustomEvent<ClientDisconnectedPayload> = <CustomEvent<ClientDisconnectedPayload>>event;
 			this.clientList = this.clientList.filter(client => client.id != customEvent.detail.id);
 		});
+		this.serverConnector.addEventListener(`chatSent`, (event) =>
+		{
+			const customEvent: CustomEvent<ChatSentPayload> = <CustomEvent<ChatSentPayload>>event;
+			this.chatList.push({ id: customEvent.detail.id, message: customEvent.detail.message });
+		});
 
 		await this.updateClientList();
 	}
@@ -55,6 +61,7 @@ class WebSocketClient
 		this.serverConnector?.disconnect();
 		this.connectionStatus = `Disconnected`;
 		this.clientList = [];
+		this.chatList = [];
 	}
 
 	public async updateClientList()
@@ -103,6 +110,16 @@ class WebSocketClient
 		{
 			return false;
 		}
+	}
+
+	public sendChatMessage(message: string)
+	{
+		this.serverConnector?.sendChatMessage(message);
+	}
+
+	public getClient(id: string)
+	{
+		return this.clientList.filter(client => client.id == id)[0];
 	}
 }
 

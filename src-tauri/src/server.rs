@@ -2,8 +2,7 @@ use crate::server_logic::{
     add_client, client_exists, get_client, get_client_list, initialize, remove_client, Client,
 };
 use crate::structures::{
-    BaseMessage, ClientDisconnectedPayload, ClientInfo, ClientListPayload, ClientRegisteredPayload,
-    RegisterClientPayload, StatusPayload,
+    BaseMessage, SendChatPayload, ChatSentPayload, ClientDisconnectedPayload, ClientInfo, ClientListPayload, ClientRegisteredPayload, RegisterClientPayload, StatusPayload
 };
 use colored::*;
 use futures_util::stream::SplitSink;
@@ -136,6 +135,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
         match incoming_message.message_type.as_str() {
             "registerClient" => handle_register_client(&client_id, incoming_message).await,
             "getClientList" => handle_get_client_list(&client_id, incoming_message).await,
+			"sendChat" => handle_send_chat(&client_id, incoming_message).await,
             _ => handle_unknown_message(&client_id, incoming_message).await,
         };
     }
@@ -259,6 +259,51 @@ async fn handle_get_client_list(client_id: &str, incoming_message: BaseMessage) 
 
     let response_json = serde_json::to_string(&response).unwrap();
     let _ = send(&client_id, &response_json).await;
+}
+
+async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage)
+{
+	if !client_exists(client_id) {
+        send_error(
+            client_id,
+            &incoming_message.correlation_id,
+            "Received sendChatMessage message before client registration",
+        )
+        .await;
+        return;
+    }
+
+	match incoming_message.payload {
+        Some(payload) => match serde_json::from_value::<SendChatPayload>(payload) {
+            Ok(payload) => {
+
+				let event_payload = ChatSentPayload {
+					id: client_id.to_string(),
+					message: payload.message.clone(),
+				};
+
+				let event = BaseMessage {
+					correlation_id: Uuid::new_v4().to_string(),
+					message_type: "chatSent".to_string(),
+					payload: Some(serde_json::to_value(event_payload).unwrap()),
+				};
+
+				let response_json = serde_json::to_string(&event).unwrap();
+				let _ = send_all(&response_json).await;
+			}
+            Err(_) => {
+                send_error(client_id, &incoming_message.correlation_id, "Wrong payload").await;
+            }
+        },
+        None => {
+            send_error(
+                client_id,
+                &incoming_message.correlation_id,
+                "Missing payload",
+            )
+            .await;
+        }
+    }
 }
 
 async fn handle_unknown_message(client_id: &str, incoming_message: BaseMessage) {
