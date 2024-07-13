@@ -105,7 +105,7 @@
 					<div>{getSettings().userName}</div>
 					{#if webSocketClient && webSocketClient.chatList}
 						{#each webSocketClient.chatList as chatMessage}
-							<div>{`${webSocketClient.getClient(chatMessage.id).name}: ${chatMessage.message}`}</div>
+							<div>{`${chatMessage.name}: ${chatMessage.message}`}</div>
 						{/each}
 					{/if}
 				</div>
