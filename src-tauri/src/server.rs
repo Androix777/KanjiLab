@@ -242,8 +242,8 @@ async fn handle_get_client_list(client_id: &str, incoming_message: BaseMessage) 
     let client_list = get_client_list()
         .into_iter()
         .map(|client| ClientInfo {
-            id: client_id.to_string(),
-            name: client.name,
+            id: client.id.to_string(),
+            name: client.name.clone(),
         })
         .collect();
 
