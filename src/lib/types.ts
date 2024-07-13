@@ -40,7 +40,21 @@ export type StatusPayload = {
 export type StatusMessage = BaseMessage<StatusPayload, `status`>;
 
 export type ClientListPayload = {
-	clients: { name: string }[];
+	clients: { id: string; name: string }[];
 };
 
 export type ClientListMessage = BaseMessage<ClientListPayload, `clientList`>;
+
+export type ClientRegisteredPayload = {
+	id: string;
+	name: string;
+};
+
+export type ClientDisconnectedPayload = {
+	id: string;
+	name: string;
+};
+
+export type ClientRegisteredMessage = BaseMessage<ClientRegisteredPayload, `clientRegistered`>;
+
+export type ClientDisconnectedMessage = BaseMessage<ClientDisconnectedPayload, `clientDisconnected`>;

@@ -14,6 +14,13 @@ pub struct RegisterClientPayload {
 
 #[derive(Serialize)]
 pub struct ClientRegisteredPayload {
+    pub id: String,
+    pub name: String,
+}
+
+#[derive(Serialize)]
+pub struct ClientDisconnectedPayload {
+    pub id: String,
     pub name: String,
 }
 
@@ -30,5 +37,6 @@ pub struct ClientListPayload {
 
 #[derive(Serialize)]
 pub struct ClientInfo {
+    pub id: String,
     pub name: String,
 }
