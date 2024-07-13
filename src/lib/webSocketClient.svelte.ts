@@ -21,7 +21,15 @@ class WebSocketClient
 	{
 		this.connectionStatus = `Connecting`;
 		this.serverConnector = new ServerConnector();
-		await this.serverConnector.connect(ipAddress);
+		try
+		{
+			await this.serverConnector.connect(ipAddress);
+		}
+		catch
+		{
+			this.connectionStatus = `Disconnected`;
+			return;
+		}
 
 		this.connectionStatus = `Connected`;
 
