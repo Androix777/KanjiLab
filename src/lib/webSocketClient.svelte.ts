@@ -50,7 +50,7 @@ class WebSocketClient
 		this.serverConnector.addEventListener(`chatSent`, (event) =>
 		{
 			const customEvent: CustomEvent<ChatSentPayload> = <CustomEvent<ChatSentPayload>>event;
-			this.chatList.push({ name: customEvent.detail.id, message: customEvent.detail.message });
+			this.chatList.push({ name: this.getClient(customEvent.detail.id).name, message: customEvent.detail.message });
 		});
 
 		await this.updateClientList();
@@ -115,6 +115,11 @@ class WebSocketClient
 	public sendChatMessage(message: string)
 	{
 		this.serverConnector?.sendChatMessage(message);
+	}
+
+	public getClient(id: string)
+	{
+		return this.clientList.filter(client => client.id == id)[0];
 	}
 }
 
