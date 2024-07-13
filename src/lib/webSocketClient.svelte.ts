@@ -8,7 +8,6 @@ class WebSocketClient
 	public clientList: Array<{ id: string; name: string }> = $state([]);
 
 	public connectionStatus: `Disconnected` | `Connecting` | `Connected` = $state(`Disconnected`);
-	private updateInterval: number | null = null;
 
 	public static getInstance()
 	{
@@ -27,7 +26,7 @@ class WebSocketClient
 		}
 		catch
 		{
-			this.connectionStatus = `Disconnected`;
+			this.disconnectFromServer();
 			return;
 		}
 
@@ -56,10 +55,6 @@ class WebSocketClient
 		this.serverConnector?.disconnect();
 		this.connectionStatus = `Disconnected`;
 		this.clientList = [];
-		if (this.updateInterval)
-		{
-			clearInterval(this.updateInterval);
-		}
 	}
 
 	public async updateClientList()
