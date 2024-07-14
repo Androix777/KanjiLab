@@ -1,17 +1,28 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
+use uuid::Uuid;
+
 #[derive(Clone, Debug)]
 pub struct Client {
     pub id: String,
     pub name: String,
+	pub is_admin: bool,
 }
 
 pub type ClientList = Arc<Mutex<HashMap<String, Client>>>;
 
 pub static CLIENT_LIST: OnceLock<ClientList> = OnceLock::new();
+pub static ADMIN_PASSWORD: OnceLock<Arc<Mutex<String>>> = OnceLock::new();
 
 pub fn initialize() {
+	if let Some(password) = ADMIN_PASSWORD.get() {
+        let mut password_lock = password.lock().unwrap();
+        *password_lock = Uuid::new_v4().to_string();
+    } else {
+        ADMIN_PASSWORD.set(Arc::new(Mutex::new(Uuid::new_v4().to_string()))).unwrap();
+    }
+	
     if CLIENT_LIST.get().is_none() {
         CLIENT_LIST.set(Arc::new(Mutex::new(HashMap::new()))).unwrap();
     } else {
@@ -34,6 +45,7 @@ pub fn add_client(id: &str, name: &str) -> bool {
     let client = Client {
         id: id.to_string(),
         name: name.to_string(),
+		is_admin: false,
     };
 
     let clients = CLIENT_LIST.get().unwrap();
@@ -60,4 +72,8 @@ pub fn get_client(client_id: &str) -> Option<Client> {
         }
     }
     None
+}
+
+pub fn get_admin_password() -> String {
+    ADMIN_PASSWORD.get().unwrap().lock().unwrap().clone()
 }
