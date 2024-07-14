@@ -1,10 +1,22 @@
 import { getSettings } from "./globalSettings.svelte";
-import { type ClientRegisteredPayload, type BaseMessage, type ClientListMessage, type ClientRegisteredMessage, type GetClientListMessage, type RegisterClientMessage, type StatusMessage, type SendChatMessage, type ChatSentMessage, type ChatSentPayload } from "./types";
+import {
+	type ClientRegisteredPayload,
+	type BaseMessage,
+	type ClientListMessage,
+	type ClientRegisteredMessage,
+	type GetClientListMessage,
+	type RegisterClientMessage,
+	type StatusMessage,
+	type SendChatMessage,
+	type ChatSentMessage,
+	type ChatSentPayload,
+	type MessageType,
+} from "./types";
 
 export class ServerConnector extends EventTarget
 {
 	private webSocket: WebSocket | null = null;
-	private messagePool: Map<string, (message: BaseMessage<object, string>) => void> = new Map();
+	private messagePool: Map<string, (message: BaseMessage<object, MessageType>) => void> = new Map();
 
 	public async connect(ipAddress: string)
 	{
@@ -19,7 +31,7 @@ export class ServerConnector extends EventTarget
 		{
 			if (typeof event.data == `string`)
 			{
-				const message: BaseMessage<object, string> = <BaseMessage<object, string>>JSON.parse(event.data);
+				const message: BaseMessage<object, MessageType> = <BaseMessage<object, MessageType>>JSON.parse(event.data);
 				console.log(`Received message: ` + event.data);
 				if (!message.correlation_id) return;
 
@@ -171,7 +183,7 @@ export class ServerConnector extends EventTarget
 		this.webSocket.send(JSON.stringify(sendChatMessage));
 	}
 
-	private handleReceivedMessage(message: BaseMessage<object, string>)
+	private handleReceivedMessage(message: BaseMessage<object, MessageType>)
 	{
 		switch (message.message_type)
 		{

@@ -16,7 +16,7 @@ export type StatsInfo = {
 	wrongCount: number;
 };
 
-export type BaseMessage<T extends object, M extends string> = {
+export type BaseMessage<T extends object, M extends MessageType> = {
 	message_type: M;
 	correlation_id: string;
 	payload: T;
@@ -25,6 +25,16 @@ export type BaseMessage<T extends object, M extends string> = {
 export type RegisterClientPayload = {
 	name: string;
 };
+
+export type MessageType =
+	| `registerClient`
+	| `getClientList`
+	| `clientList`
+	| `status`
+	| `sendChat`
+	| `clientRegistered`
+	| `clientDisconnected`
+	| `chatSent`;
 
 export type RegisterClientMessage = BaseMessage<RegisterClientPayload, `registerClient`>;
 
