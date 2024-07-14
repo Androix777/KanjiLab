@@ -29,18 +29,21 @@ fn clients_connections() -> &'static ClientsConnections {
     CLIENTS_CONNECTIONS.get_or_init(|| Arc::new(Mutex::new(HashMap::new())))
 }
 
-pub fn call_launch_server() {
+pub async fn call_launch_server() {
     let rt = Runtime::new().unwrap();
-    let (tx, rx) = oneshot::channel();
+    let (stop_tx, stop_rx) = oneshot::channel();
+    let (start_tx, start_rx) = oneshot::channel();
     unsafe {
-        SERVER_HANDLE = Some(tx);
+        SERVER_HANDLE = Some(stop_tx);
     }
 
     std::thread::spawn(move || {
         rt.block_on(async {
-            launch_server(rx).await;
+            launch_server(stop_rx, start_tx).await;
         });
     });
+
+    start_rx.await.expect("Failed to receive start signal");
 }
 
 pub fn call_stop_server() {
@@ -63,12 +66,14 @@ async fn disconnect_all_clients() {
     }
 }
 
-pub async fn launch_server(stop_signal: oneshot::Receiver<()>) {
+pub async fn launch_server(stop_signal: oneshot::Receiver<()>, start_signal: oneshot::Sender<()>) {
     initialize();
     let listener = TcpListener::bind("0.0.0.0:8080")
         .await
         .expect("Failed to bind");
     println!("WebSocket server listening on ws://0.0.0.0:8080");
+
+    start_signal.send(()).unwrap();
 
     tokio::select! {
         _ = async {

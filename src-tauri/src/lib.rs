@@ -25,8 +25,9 @@ fn get_executable_file_path() -> Result<PathBuf, String> {
 }
 
 #[tauri::command]
-fn launch_server() {
-    server::call_launch_server();
+async fn launch_server() -> String {
+    server::call_launch_server().await;
+	server_logic::get_admin_password()
 }
 
 #[tauri::command]
