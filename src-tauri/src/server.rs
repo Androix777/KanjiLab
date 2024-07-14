@@ -165,11 +165,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
             name: client.name.clone(),
         };
 
-        let event = BaseMessage {
-            correlation_id: Uuid::new_v4().to_string(),
-            message_type: "clientDisconnected".to_string(),
-            payload: Some(serde_json::to_value(event_payload).unwrap()),
-        };
+		let event = BaseMessage::new(event_payload, None);
 
         let response_json = serde_json::to_string(&event).unwrap();
         let _ = send_all(&response_json).await;
@@ -203,11 +199,7 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
             name: payload.name.clone(),
         };
 
-        let event = BaseMessage {
-            correlation_id: Uuid::new_v4().to_string(),
-            message_type: "clientRegistered".to_string(),
-            payload: Some(serde_json::to_value(event_payload).unwrap()),
-        };
+        let event = BaseMessage::new(event_payload, None);
 
         let response_json = serde_json::to_string(&event).unwrap();
         let _ = send_all(&response_json).await;
@@ -255,11 +247,7 @@ async fn handle_make_admin(client_id: &str, incoming_message: BaseMessage) {
             id: client_id.to_string(),
         };
 
-        let event = BaseMessage {
-            correlation_id: Uuid::new_v4().to_string(),
-            message_type: "adminMade".to_string(),
-            payload: Some(serde_json::to_value(event_payload).unwrap()),
-        };
+        let event = BaseMessage::new(event_payload, None);
 
         let response_json = serde_json::to_string(&event).unwrap();
         let _ = send_all(&response_json).await;
@@ -283,11 +271,7 @@ async fn handle_get_client_list(client_id: &str, incoming_message: BaseMessage) 
         clients: client_list,
     };
 
-    let response = BaseMessage {
-        correlation_id: incoming_message.correlation_id.clone(),
-        message_type: "clientList".to_string(),
-        payload: Some(serde_json::to_value(response_payload).unwrap()),
-    };
+    let response = BaseMessage::new(response_payload, Some(incoming_message.correlation_id.clone()));
 
     let response_json = serde_json::to_string(&response).unwrap();
     let _ = send(&client_id, &response_json).await;
@@ -310,11 +294,7 @@ async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
             message: payload.message.clone(),
         };
 
-        let event = BaseMessage {
-            correlation_id: Uuid::new_v4().to_string(),
-            message_type: "chatSent".to_string(),
-            payload: Some(serde_json::to_value(event_payload).unwrap()),
-        };
+        let event = BaseMessage::new(event_payload, None);
 
         let response_json = serde_json::to_string(&event).unwrap();
         let _ = send_all(&response_json).await;
@@ -363,11 +343,7 @@ async fn send_status(client_id: &str, correlation_id: &str, status: &str) {
         status: status.to_string(),
     };
 
-    let message = BaseMessage {
-        correlation_id: correlation_id.to_string(),
-        message_type: "status".to_string(),
-        payload: Some(serde_json::to_value(response_payload).unwrap()),
-    };
+    let message = BaseMessage::new(response_payload, Some(correlation_id.to_string()));
 
     let response_json = serde_json::to_string(&message).unwrap();
     let _ = send(&client_id, &response_json).await;
