@@ -167,8 +167,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
 
 		let event = BaseMessage::new(event_payload, None);
 
-        let response_json = serde_json::to_string(&event).unwrap();
-        let _ = send_all(&response_json).await;
+        let _ = send_all(event).await;
     }
 }
 
@@ -201,8 +200,7 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
 
         let event = BaseMessage::new(event_payload, None);
 
-        let response_json = serde_json::to_string(&event).unwrap();
-        let _ = send_all(&response_json).await;
+        let _ = send_all(event).await;
     }
 }
 
@@ -249,8 +247,7 @@ async fn handle_make_admin(client_id: &str, incoming_message: BaseMessage) {
 
         let event = BaseMessage::new(event_payload, None);
 
-        let response_json = serde_json::to_string(&event).unwrap();
-        let _ = send_all(&response_json).await;
+        let _ = send_all(event).await;
     }
 }
 
@@ -273,8 +270,7 @@ async fn handle_get_client_list(client_id: &str, incoming_message: BaseMessage) 
 
     let response = BaseMessage::new(response_payload, Some(incoming_message.correlation_id.clone()));
 
-    let response_json = serde_json::to_string(&response).unwrap();
-    let _ = send(&client_id, &response_json).await;
+    let _ = send(&client_id, response).await;
 }
 
 async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
@@ -296,8 +292,7 @@ async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
 
         let event = BaseMessage::new(event_payload, None);
 
-        let response_json = serde_json::to_string(&event).unwrap();
-        let _ = send_all(&response_json).await;
+        let _ = send_all(event).await;
     }
 }
 
@@ -345,18 +340,18 @@ async fn send_status(client_id: &str, correlation_id: &str, status: &str) {
 
     let message = BaseMessage::new(response_payload, Some(correlation_id.to_string()));
 
-    let response_json = serde_json::to_string(&message).unwrap();
-    let _ = send(&client_id, &response_json).await;
+    let _ = send(&client_id, message).await;
 }
 
-async fn send(client_id: &str, message: &str) -> Result<(), String> {
+async fn send(client_id: &str, message: BaseMessage) -> Result<(), String> {
+	let response_json = serde_json::to_string(&message).unwrap();
     let connections = clients_connections();
     let connections_lock = connections.lock().await;
 
     if let Some(client_write) = connections_lock.get(client_id) {
         let mut write = client_write.lock().await;
         write
-            .send(Message::text(message))
+            .send(Message::text(&response_json))
             .await
             .map_err(|e| e.to_string())
     } else {
@@ -364,13 +359,14 @@ async fn send(client_id: &str, message: &str) -> Result<(), String> {
     }
 }
 
-async fn send_all(message: &str) {
+async fn send_all(message: BaseMessage) {
+	let response_json = serde_json::to_string(&message).unwrap();
     let connections = clients_connections();
     let connections_lock = connections.lock().await;
 
     for (client_id, client_write) in connections_lock.iter() {
         let mut write = client_write.lock().await;
-        if let Err(e) = write.send(Message::text(message)).await {
+        if let Err(e) = write.send(Message::text(&response_json)).await {
             eprintln!("Error sending message to {}: {}", client_id, e);
         }
     }
