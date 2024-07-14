@@ -10,11 +10,10 @@ export class ServerConnector extends EventTarget
 	{
 		this.disconnect();
 		this.webSocket = new WebSocket(ipAddress);
-		this.webSocket.onopen = async () =>
+		this.webSocket.onopen = () =>
 		{
 			console.log(`socket open`);
-			await this.sendRegisterClientMessage();
-			resolvePromise(true);
+			resolvePromise();
 		};
 		this.webSocket.onmessage = (event) =>
 		{
@@ -47,9 +46,9 @@ export class ServerConnector extends EventTarget
 			console.log(`socket error`);
 		};
 
-		let resolvePromise: (result: boolean) => void;
-		let rejectPromise: () => void;
-		const resultPromise: Promise<boolean> = new Promise((resolve, reject) =>
+		let resolvePromise: () => void;
+		let rejectPromise: (error: Error) => void;
+		const resultPromise: Promise<void> = new Promise((resolve, reject) =>
 		{
 			resolvePromise = resolve;
 			rejectPromise = reject;
@@ -57,10 +56,10 @@ export class ServerConnector extends EventTarget
 
 		setTimeout(() =>
 		{
-			rejectPromise();
+			rejectPromise(new Error(`timeoutError`));
 		}, 5000);
 
-		return await resultPromise;
+		await resultPromise;
 	}
 
 	public disconnect()
@@ -70,7 +69,7 @@ export class ServerConnector extends EventTarget
 
 	public async sendRegisterClientMessage()
 	{
-		if (!this.webSocket) return false;
+		if (!this.webSocket) throw new Error(`missingWebsocket`);
 		const correlation_id = crypto.randomUUID();
 		const registerClientMessage: RegisterClientMessage = {
 			message_type: `registerClient`,
@@ -80,9 +79,9 @@ export class ServerConnector extends EventTarget
 			},
 		};
 
-		let resolvePromise: (result: boolean) => void;
-		let rejectPromise: () => void;
-		const resultPromise: Promise<boolean> = new Promise((resolve, reject) =>
+		let resolvePromise: () => void;
+		let rejectPromise: (error: Error) => void;
+		const resultPromise: Promise<void> = new Promise((resolve, reject) =>
 		{
 			resolvePromise = resolve;
 			rejectPromise = reject;
@@ -94,27 +93,26 @@ export class ServerConnector extends EventTarget
 
 			if (statusMessage.payload.status == `success`)
 			{
-				resolvePromise(true);
+				resolvePromise();
 			}
 			else
 			{
-				resolvePromise(false);
+				rejectPromise(new Error(statusMessage.payload.status));
 			}
 		});
 
 		setTimeout(() =>
 		{
-			rejectPromise();
+			rejectPromise(new Error(`timeoutError`));
 		}, 5000);
 
 		this.webSocket.send(JSON.stringify(registerClientMessage));
-		const result = await resultPromise;
-		return result;
+		await resultPromise;
 	}
 
 	public async sendGetClientListMessage()
 	{
-		if (!this.webSocket) return false;
+		if (!this.webSocket) throw new Error(`missingWebsocket`);
 		const correlation_id = crypto.randomUUID();
 		const getClientListMessage: GetClientListMessage = {
 			message_type: `getClientList`,
@@ -123,7 +121,7 @@ export class ServerConnector extends EventTarget
 		};
 
 		let resolvePromise: (clientList: Array<{ id: string; name: string }>) => void;
-		let rejectPromise: () => void;
+		let rejectPromise: (error: Error) => void;
 		const resultPromise: Promise<Array<{ id: string; name: string }>> = new Promise((resolve, reject) =>
 		{
 			resolvePromise = resolve;
@@ -132,23 +130,37 @@ export class ServerConnector extends EventTarget
 
 		this.messagePool.set(correlation_id, (message) =>
 		{
-			const clientListMessage = <ClientListMessage>message;
-			resolvePromise(clientListMessage.payload.clients);
+			switch (message.message_type)
+			{
+				case `clientList`:
+				{
+					const clientListMessage = <ClientListMessage>message;
+					resolvePromise(clientListMessage.payload.clients);
+					break;
+				}
+				case `status`:
+				{
+					const statusMessage = <StatusMessage>message;
+					rejectPromise(new Error(statusMessage.payload.status));
+					break;
+				}
+				default:
+					console.log(`Received unknown message type: ${message.message_type}`);
+			}
 		});
 
 		setTimeout(() =>
 		{
-			rejectPromise();
+			rejectPromise(new Error(`timeoutError`));
 		}, 5000);
 
 		this.webSocket.send(JSON.stringify(getClientListMessage));
-		const result = await resultPromise;
-		return result;
+		return await resultPromise;
 	}
 
 	public sendChatMessage(message: string)
 	{
-		if (!this.webSocket) return false;
+		if (!this.webSocket) throw new Error(`missingWebsocket`);
 		const correlation_id = crypto.randomUUID();
 		const sendChatMessage: SendChatMessage = {
 			message_type: `sendChat`,

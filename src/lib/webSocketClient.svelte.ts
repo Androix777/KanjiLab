@@ -24,9 +24,12 @@ class WebSocketClient
 		try
 		{
 			await this.serverConnector.connect(ipAddress);
+			await this.serverConnector.sendRegisterClientMessage();
+			this.clientList = await this.serverConnector.sendGetClientListMessage();
 		}
-		catch
+		catch (e)
 		{
+			console.log(e);
 			this.disconnectFromServer();
 			return;
 		}
@@ -52,8 +55,6 @@ class WebSocketClient
 			const customEvent: CustomEvent<ChatSentPayload> = <CustomEvent<ChatSentPayload>>event;
 			this.chatList.push({ name: this.getClient(customEvent.detail.id).name, message: customEvent.detail.message });
 		});
-
-		await this.updateClientList();
 	}
 
 	public disconnectFromServer()
@@ -62,54 +63,6 @@ class WebSocketClient
 		this.connectionStatus = `Disconnected`;
 		this.clientList = [];
 		this.chatList = [];
-	}
-
-	public async updateClientList()
-	{
-		if (!this.serverConnector) return;
-
-		const newClientList = await this.getClientList();
-		if (newClientList)
-		{
-			this.clientList = newClientList;
-		}
-		else
-		{
-			console.log(`Failed to get clientList`);
-		}
-	}
-
-	public async register()
-	{
-		if (!this.serverConnector) return;
-		try
-		{
-			if (await this.serverConnector.sendRegisterClientMessage())
-			{
-				console.log(`Registration: complete`);
-			}
-			else
-			{
-				console.log(`Registration: failed`);
-			}
-		}
-		catch
-		{
-			console.log(`Registration: no response`);
-		}
-	}
-
-	public async getClientList()
-	{
-		if (!this.serverConnector) return;
-		try
-		{
-			return await this.serverConnector.sendGetClientListMessage();
-		}
-		catch
-		{
-			return false;
-		}
 	}
 
 	public sendChatMessage(message: string)

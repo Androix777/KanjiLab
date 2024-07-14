@@ -34,7 +34,6 @@ export type GetClientListMessage = BaseMessage<GetClientListPayload, `getClientL
 
 export type StatusPayload = {
 	status: string;
-	info: string | null;
 };
 
 export type StatusMessage = BaseMessage<StatusPayload, `status`>;

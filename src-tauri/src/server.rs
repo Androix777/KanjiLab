@@ -191,7 +191,7 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
             return;
         }
 
-		let _ = send_status(client_id, &incoming_message.correlation_id, "success");
+        let _ = send_status(client_id, &incoming_message.correlation_id, "success").await;
 
         let event_payload = ClientRegisteredPayload {
             id: client_id.to_string(),
