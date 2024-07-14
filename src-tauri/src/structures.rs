@@ -50,3 +50,14 @@ pub struct ChatSentPayload {
 pub struct SendChatPayload {
 	pub message: String,
 }
+
+#[derive(Deserialize)]
+pub struct MakeAdminPayload {
+	pub admin_password: String,
+	pub client_id: String,
+}
+
+#[derive(Serialize)]
+pub struct AdminMadePayload {
+	pub id: String,
+}

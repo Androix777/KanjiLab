@@ -1,9 +1,8 @@
 use crate::server_logic::{
-    add_client, client_exists, get_client, get_client_list, initialize, remove_client, Client,
+    add_client, client_exists, get_admin_password, get_client, get_client_list, initialize, make_admin, remove_client, Client
 };
 use crate::structures::{
-    BaseMessage, ChatSentPayload, ClientDisconnectedPayload, ClientInfo, ClientListPayload,
-    ClientRegisteredPayload, RegisterClientPayload, SendChatPayload, StatusPayload,
+    AdminMadePayload, BaseMessage, ChatSentPayload, ClientDisconnectedPayload, ClientInfo, ClientListPayload, ClientRegisteredPayload, MakeAdminPayload, RegisterClientPayload, SendChatPayload, StatusPayload
 };
 use colored::*;
 use futures_util::stream::SplitSink;
@@ -143,6 +142,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
             "registerClient" => handle_register_client(&client_id, incoming_message).await,
             "getClientList" => handle_get_client_list(&client_id, incoming_message).await,
             "sendChat" => handle_send_chat(&client_id, incoming_message).await,
+			"makeAdmin" => handle_make_admin(&client_id, incoming_message).await,
             _ => handle_unknown_message(&client_id, incoming_message).await,
         };
     }
@@ -206,6 +206,58 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
         let event = BaseMessage {
             correlation_id: Uuid::new_v4().to_string(),
             message_type: "clientRegistered".to_string(),
+            payload: Some(serde_json::to_value(event_payload).unwrap()),
+        };
+
+        let response_json = serde_json::to_string(&event).unwrap();
+        let _ = send_all(&response_json).await;
+    }
+}
+
+async fn handle_make_admin(client_id: &str, incoming_message: BaseMessage) {
+	if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
+        return;
+    }
+
+    if let Ok(payload) = validate_payload::<MakeAdminPayload>(
+        client_id,
+        &incoming_message.correlation_id,
+        incoming_message.payload,
+    )
+    .await
+    {
+		if payload.admin_password != get_admin_password()
+		{
+			send_status(
+                client_id,
+                &incoming_message.correlation_id,
+                "wrongPasswordError",
+            )
+            .await;
+            return;
+		}
+
+        let is_made_admin = make_admin(&payload.client_id);
+
+        if !is_made_admin {
+            send_status(
+                client_id,
+                &incoming_message.correlation_id,
+                "missingClientError",
+            )
+            .await;
+            return;
+        }
+
+        let _ = send_status(client_id, &incoming_message.correlation_id, "success").await;
+
+        let event_payload = AdminMadePayload {
+            id: client_id.to_string(),
+        };
+
+        let event = BaseMessage {
+            correlation_id: Uuid::new_v4().to_string(),
+            message_type: "adminMade".to_string(),
             payload: Some(serde_json::to_value(event_payload).unwrap()),
         };
 

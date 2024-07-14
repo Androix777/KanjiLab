@@ -53,6 +53,18 @@ pub fn add_client(id: &str, name: &str) -> bool {
     true
 }
 
+pub fn make_admin(id: &str) -> bool {
+    let clients = CLIENT_LIST.get().unwrap();
+    let mut clients_lock = clients.lock().unwrap();
+    if let Some(client) = clients_lock.get_mut(id) {
+        client.is_admin = true;
+		return true;
+    }
+	else {
+		return false;
+	}
+}
+
 pub fn remove_client(client_id: &str) {
     let clients = CLIENT_LIST.get().unwrap();
     clients.lock().unwrap().remove(client_id);

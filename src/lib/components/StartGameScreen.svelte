@@ -13,7 +13,7 @@
 	async function launchServer()
 	{
 		getSettings().setIsConnectedToSelf(true);
-		await invoke(LAUNCH_SERVER);
+		console.log(await invoke(LAUNCH_SERVER));
 		webSocketClient = WebSocketClient.getInstance();
 		await webSocketClient.connectToServer(`ws://127.0.0.1:8080`);
 	}
