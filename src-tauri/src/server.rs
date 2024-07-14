@@ -2,12 +2,14 @@ use crate::server_logic::{
     add_client, client_exists, get_client, get_client_list, initialize, remove_client, Client,
 };
 use crate::structures::{
-    BaseMessage, SendChatPayload, ChatSentPayload, ClientDisconnectedPayload, ClientInfo, ClientListPayload, ClientRegisteredPayload, RegisterClientPayload, StatusPayload
+    BaseMessage, ChatSentPayload, ClientDisconnectedPayload, ClientInfo, ClientListPayload,
+    ClientRegisteredPayload, RegisterClientPayload, SendChatPayload, StatusPayload,
 };
 use colored::*;
 use futures_util::stream::SplitSink;
 use futures_util::{SinkExt, StreamExt};
-use serde_json;
+use serde::de::DeserializeOwned;
+use serde_json::{self, Value};
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
 use tokio::net::{TcpListener, TcpStream};
@@ -97,7 +99,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
         let message = match message {
             Ok(msg) => msg,
             Err(_) => {
-                send_error(&client_id, &String::new(), "Error receiving message").await;
+                send_status(&client_id, &String::new(), "receivingMessageError").await;
                 continue;
             }
         };
@@ -105,7 +107,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
         let message_str = match message.to_text() {
             Ok(text) => text,
             Err(_) => {
-                send_error(&client_id, &String::new(), "Received invalid text message").await;
+                send_status(&client_id, &String::new(), "invalidTextError").await;
                 continue;
             }
         };
@@ -113,7 +115,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
         let incoming_message = match serde_json::from_str::<BaseMessage>(message_str) {
             Ok(msg) => msg,
             Err(_) => {
-                send_error(&client_id, &String::new(), "Received invalid JSON message").await;
+                send_status(&client_id, &String::new(), "invalidJSONError").await;
                 continue;
             }
         };
@@ -135,7 +137,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
         match incoming_message.message_type.as_str() {
             "registerClient" => handle_register_client(&client_id, incoming_message).await,
             "getClientList" => handle_get_client_list(&client_id, incoming_message).await,
-			"sendChat" => handle_send_chat(&client_id, incoming_message).await,
+            "sendChat" => handle_send_chat(&client_id, incoming_message).await,
             _ => handle_unknown_message(&client_id, incoming_message).await,
         };
     }
@@ -170,72 +172,45 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
 }
 
 async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) {
-    match incoming_message.payload {
-        Some(payload) => match serde_json::from_value::<RegisterClientPayload>(payload) {
-            Ok(payload) => {
-                let is_added = add_client(client_id, &payload.name);
+    if let Ok(payload) = validate_payload::<RegisterClientPayload>(
+        client_id,
+        &incoming_message.correlation_id,
+        incoming_message.payload,
+    )
+    .await
+    {
+        let is_added = add_client(client_id, &payload.name);
 
-                if !is_added {
-                    send_error(
-                        client_id,
-                        &incoming_message.correlation_id,
-                        "Client already registered",
-                    )
-                    .await;
-                    return;
-                }
-
-                let response_payload = StatusPayload {
-                    status: "success".to_string(),
-                    info: None,
-                };
-
-                let response = BaseMessage {
-                    correlation_id: incoming_message.correlation_id,
-                    message_type: "status".to_string(),
-                    payload: Some(serde_json::to_value(response_payload).unwrap()),
-                };
-
-                let response_json = serde_json::to_string(&response).unwrap();
-                let _ = send(&client_id, &response_json).await;
-
-                let event_payload = ClientRegisteredPayload {
-                    id: client_id.to_string(),
-                    name: payload.name.clone(),
-                };
-
-                let event = BaseMessage {
-                    correlation_id: Uuid::new_v4().to_string(),
-                    message_type: "clientRegistered".to_string(),
-                    payload: Some(serde_json::to_value(event_payload).unwrap()),
-                };
-
-                let response_json = serde_json::to_string(&event).unwrap();
-                let _ = send_all(&response_json).await;
-            }
-            Err(_) => {
-                send_error(client_id, &incoming_message.correlation_id, "Wrong payload").await;
-            }
-        },
-        None => {
-            send_error(
+        if !is_added {
+            send_status(
                 client_id,
                 &incoming_message.correlation_id,
-                "Missing payload",
+                "alreadyRegisteredError",
             )
             .await;
+            return;
         }
+
+		let _ = send_status(client_id, &incoming_message.correlation_id, "success");
+
+        let event_payload = ClientRegisteredPayload {
+            id: client_id.to_string(),
+            name: payload.name.clone(),
+        };
+
+        let event = BaseMessage {
+            correlation_id: Uuid::new_v4().to_string(),
+            message_type: "clientRegistered".to_string(),
+            payload: Some(serde_json::to_value(event_payload).unwrap()),
+        };
+
+        let response_json = serde_json::to_string(&event).unwrap();
+        let _ = send_all(&response_json).await;
     }
 }
 
 async fn handle_get_client_list(client_id: &str, incoming_message: BaseMessage) {
-    if !client_exists(client_id) {
-        send_error(
-            client_id,
-            &incoming_message.correlation_id,
-            "Received getClientList message before client registration",
-        )
-        .await;
+    if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
         return;
     }
 
@@ -261,64 +236,74 @@ async fn handle_get_client_list(client_id: &str, incoming_message: BaseMessage) 
     let _ = send(&client_id, &response_json).await;
 }
 
-async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage)
-{
-	if !client_exists(client_id) {
-        send_error(
-            client_id,
-            &incoming_message.correlation_id,
-            "Received sendChatMessage message before client registration",
-        )
-        .await;
+async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
+    if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
         return;
     }
 
-	match incoming_message.payload {
-        Some(payload) => match serde_json::from_value::<SendChatPayload>(payload) {
-            Ok(payload) => {
+    if let Ok(payload) = validate_payload::<SendChatPayload>(
+        client_id,
+        &incoming_message.correlation_id,
+        incoming_message.payload,
+    )
+    .await
+    {
+        let event_payload = ChatSentPayload {
+            id: client_id.to_string(),
+            message: payload.message.clone(),
+        };
 
-				let event_payload = ChatSentPayload {
-					id: client_id.to_string(),
-					message: payload.message.clone(),
-				};
+        let event = BaseMessage {
+            correlation_id: Uuid::new_v4().to_string(),
+            message_type: "chatSent".to_string(),
+            payload: Some(serde_json::to_value(event_payload).unwrap()),
+        };
 
-				let event = BaseMessage {
-					correlation_id: Uuid::new_v4().to_string(),
-					message_type: "chatSent".to_string(),
-					payload: Some(serde_json::to_value(event_payload).unwrap()),
-				};
-
-				let response_json = serde_json::to_string(&event).unwrap();
-				let _ = send_all(&response_json).await;
-			}
-            Err(_) => {
-                send_error(client_id, &incoming_message.correlation_id, "Wrong payload").await;
-            }
-        },
-        None => {
-            send_error(
-                client_id,
-                &incoming_message.correlation_id,
-                "Missing payload",
-            )
-            .await;
-        }
+        let response_json = serde_json::to_string(&event).unwrap();
+        let _ = send_all(&response_json).await;
     }
 }
 
 async fn handle_unknown_message(client_id: &str, incoming_message: BaseMessage) {
-    send_error(
+    send_status(
         client_id,
         &incoming_message.correlation_id,
-        "Unknown message type",
+        "unknownMessageError",
     )
     .await;
 }
 
-async fn send_error(client_id: &str, correlation_id: &str, info: &str) {
+async fn check_client_exists(client_id: &str, correlation_id: &str) -> Result<(), ()> {
+    if !client_exists(client_id) {
+        send_status(client_id, correlation_id, "notRegisteredError").await;
+        return Err(());
+    }
+    Ok(())
+}
+
+async fn validate_payload<T: DeserializeOwned>(
+    client_id: &str,
+    correlation_id: &str,
+    payload: Option<Value>,
+) -> Result<T, ()> {
+    match payload {
+        Some(payload_value) => match serde_json::from_value::<T>(payload_value) {
+            Ok(valid_payload) => Ok(valid_payload),
+            Err(_) => {
+                send_status(client_id, correlation_id, "wrongPayloadError").await;
+                Err(())
+            }
+        },
+        None => {
+            send_status(client_id, correlation_id, "missingPayloadError").await;
+            Err(())
+        }
+    }
+}
+
+async fn send_status(client_id: &str, correlation_id: &str, status: &str) {
     let response_payload = StatusPayload {
-        status: "error".to_string(),
-        info: Some(info.to_string()),
+        status: status.to_string(),
     };
 
     let message = BaseMessage {

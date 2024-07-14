@@ -27,7 +27,6 @@ pub struct ClientDisconnectedPayload {
 #[derive(Serialize)]
 pub struct StatusPayload {
     pub status: String,
-    pub info: Option<String>,
 }
 
 #[derive(Serialize)]
