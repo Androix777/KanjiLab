@@ -21,7 +21,8 @@ use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{accept_async, WebSocketStream};
 use uuid::Uuid;
 
-static mut SERVER_HANDLE: Option<oneshot::Sender<()>> = None;
+pub static SERVER_HANDLE: LazyLock<Arc<Mutex<Option<oneshot::Sender<()>>>>> =
+    LazyLock::new(|| Arc::new(Mutex::new(None)));
 
 pub type ClientWrite = Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, Message>>>;
 pub type ClientsConnections = Arc<Mutex<HashMap<String, ClientWrite>>>;
@@ -33,9 +34,9 @@ pub async fn call_launch_server() {
     let rt = Runtime::new().unwrap();
     let (stop_tx, stop_rx) = oneshot::channel();
     let (start_tx, start_rx) = oneshot::channel();
-    unsafe {
-        SERVER_HANDLE = Some(stop_tx);
-    }
+
+    let mut handle = SERVER_HANDLE.lock().await;
+    *handle = Some(stop_tx);
 
     std::thread::spawn(move || {
         rt.block_on(async {
@@ -46,11 +47,9 @@ pub async fn call_launch_server() {
     start_rx.await.expect("Failed to receive start signal");
 }
 
-pub fn call_stop_server() {
-    unsafe {
-        if let Some(tx) = SERVER_HANDLE.take() {
-            let _ = tx.send(());
-        }
+pub async fn call_stop_server() {
+    if let Some(tx) = SERVER_HANDLE.lock().await.take() {
+        let _ = tx.send(());
     }
 }
 

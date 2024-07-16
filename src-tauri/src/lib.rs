@@ -31,6 +31,6 @@ async fn launch_server() -> String {
 }
 
 #[tauri::command]
-fn stop_server() {
-    server::call_stop_server();
+async fn stop_server() {
+    server::call_stop_server().await;
 }
