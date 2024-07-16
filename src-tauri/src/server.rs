@@ -1,8 +1,11 @@
 use crate::server_logic::{
-    add_client, client_exists, get_admin_password, get_client, get_client_list, initialize, make_admin, remove_client, Client
+    add_client, client_exists, get_admin_password, get_client, get_client_list, initialize,
+    make_admin, remove_client, Client,
 };
 use crate::structures::{
-    AdminMadePayload, BaseMessage, ChatSentPayload, ClientDisconnectedPayload, ClientInfo, ClientListPayload, ClientRegisteredPayload, MakeAdminPayload, RegisterClientPayload, SendChatPayload, StatusPayload
+    AdminMadePayload, BaseMessage, ChatSentPayload, ClientDisconnectedPayload, ClientInfo,
+    ClientListPayload, ClientRegisteredPayload, MakeAdminPayload, RegisterClientPayload,
+    SendChatPayload, StatusPayload,
 };
 use colored::*;
 use futures_util::stream::SplitSink;
@@ -10,7 +13,7 @@ use futures_util::{SinkExt, StreamExt};
 use serde::de::DeserializeOwned;
 use serde_json::{self, Value};
 use std::collections::HashMap;
-use std::sync::{Arc, OnceLock};
+use std::sync::{Arc, LazyLock};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::runtime::Runtime;
 use tokio::sync::{oneshot, Mutex};
@@ -23,10 +26,8 @@ static mut SERVER_HANDLE: Option<oneshot::Sender<()>> = None;
 pub type ClientWrite = Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, Message>>>;
 pub type ClientsConnections = Arc<Mutex<HashMap<String, ClientWrite>>>;
 
-fn clients_connections() -> &'static ClientsConnections {
-    static CLIENTS_CONNECTIONS: OnceLock<ClientsConnections> = OnceLock::new();
-    CLIENTS_CONNECTIONS.get_or_init(|| Arc::new(Mutex::new(HashMap::new())))
-}
+pub static CLIENTS_CONNECTIONS: LazyLock<ClientsConnections> =
+    LazyLock::new(|| Arc::new(Mutex::new(HashMap::new())));
 
 pub async fn call_launch_server() {
     let rt = Runtime::new().unwrap();
@@ -54,8 +55,7 @@ pub fn call_stop_server() {
 }
 
 async fn disconnect_all_clients() {
-    let connections = clients_connections();
-    let mut connections_lock = connections.lock().await;
+    let mut connections_lock = CLIENTS_CONNECTIONS.lock().await;
 
     for (client_id, client_write) in connections_lock.drain() {
         let mut write = client_write.lock().await;
@@ -94,7 +94,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
 
     let (write, mut read) = ws_stream.split();
     let client_id = Uuid::new_v4().to_string();
-    clients_connections()
+    CLIENTS_CONNECTIONS
         .lock()
         .await
         .insert(client_id.clone(), Arc::new(Mutex::new(write)));
@@ -142,7 +142,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
             "registerClient" => handle_register_client(&client_id, incoming_message).await,
             "getClientList" => handle_get_client_list(&client_id, incoming_message).await,
             "sendChat" => handle_send_chat(&client_id, incoming_message).await,
-			"makeAdmin" => handle_make_admin(&client_id, incoming_message).await,
+            "makeAdmin" => handle_make_admin(&client_id, incoming_message).await,
             _ => handle_unknown_message(&client_id, incoming_message).await,
         };
     }
@@ -157,7 +157,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
     }
 
     remove_client(&client_id);
-    clients_connections().lock().await.remove(&client_id);
+    CLIENTS_CONNECTIONS.lock().await.remove(&client_id);
 
     if let Some(client) = deleted_client {
         let event_payload = ClientDisconnectedPayload {
@@ -165,7 +165,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
             name: client.name.clone(),
         };
 
-		let event = BaseMessage::new(event_payload, None);
+        let event = BaseMessage::new(event_payload, None);
 
         let _ = send_all(event).await;
     }
@@ -205,7 +205,7 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
 }
 
 async fn handle_make_admin(client_id: &str, incoming_message: BaseMessage) {
-	if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
+    if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
         return;
     }
 
@@ -216,16 +216,15 @@ async fn handle_make_admin(client_id: &str, incoming_message: BaseMessage) {
     )
     .await
     {
-		if payload.admin_password != get_admin_password()
-		{
-			send_status(
+        if payload.admin_password != get_admin_password() {
+            send_status(
                 client_id,
                 &incoming_message.correlation_id,
                 "wrongPasswordError",
             )
             .await;
             return;
-		}
+        }
 
         let is_made_admin = make_admin(&payload.client_id);
 
@@ -268,7 +267,10 @@ async fn handle_get_client_list(client_id: &str, incoming_message: BaseMessage) 
         clients: client_list,
     };
 
-    let response = BaseMessage::new(response_payload, Some(incoming_message.correlation_id.clone()));
+    let response = BaseMessage::new(
+        response_payload,
+        Some(incoming_message.correlation_id.clone()),
+    );
 
     let _ = send(&client_id, response).await;
 }
@@ -344,9 +346,8 @@ async fn send_status(client_id: &str, correlation_id: &str, status: &str) {
 }
 
 async fn send(client_id: &str, message: BaseMessage) -> Result<(), String> {
-	let response_json = serde_json::to_string(&message).unwrap();
-    let connections = clients_connections();
-    let connections_lock = connections.lock().await;
+    let response_json = serde_json::to_string(&message).unwrap();
+    let connections_lock = CLIENTS_CONNECTIONS.lock().await;
 
     if let Some(client_write) = connections_lock.get(client_id) {
         let mut write = client_write.lock().await;
@@ -360,9 +361,8 @@ async fn send(client_id: &str, message: BaseMessage) -> Result<(), String> {
 }
 
 async fn send_all(message: BaseMessage) {
-	let response_json = serde_json::to_string(&message).unwrap();
-    let connections = clients_connections();
-    let connections_lock = connections.lock().await;
+    let response_json = serde_json::to_string(&message).unwrap();
+    let connections_lock = CLIENTS_CONNECTIONS.lock().await;
 
     for (client_id, client_write) in connections_lock.iter() {
         let mut write = client_write.lock().await;
