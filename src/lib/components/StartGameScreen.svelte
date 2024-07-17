@@ -6,16 +6,15 @@
     import { onMount } from "svelte";
     import PlayerListCard from "./PlayerListCard.svelte";
 
-	let ipAddress: string = $state(`ws://127.0.0.1:8080`);
 	let webSocketClient: WebSocketClient | null = $state(null);
 	let chatMessage: string = $state(``);
 
 	async function launchServer()
 	{
 		getSettings().setIsConnectedToSelf(true);
-		console.log(await invoke(LAUNCH_SERVER));
+		getSettings().setAdminPassword(await invoke(LAUNCH_SERVER));
 		webSocketClient = WebSocketClient.getInstance();
-		await webSocketClient.connectToServer(`ws://127.0.0.1:8080`);
+		await webSocketClient.connectToServer(getSettings().ipAddress);
 	}
 
 	async function stopServer()
@@ -27,7 +26,7 @@
 
 	async function joinServer()
 	{
-		await webSocketClient?.connectToServer(ipAddress);
+		await webSocketClient?.connectToServer(getSettings().ipAddress);
 	}
 
 	function leaveServer()
@@ -81,7 +80,16 @@
 				</div>
 			{/if}
 			<div class="w-3/5 border text-center">
-				<input class="input input-bordered text-center w-full h-full rounded-none" bind:value={ipAddress}/>
+				<input class="input input-bordered text-center w-full h-full rounded-none"
+				value={getSettings().ipAddress}
+				oninput={(event) =>
+				{
+					if (event.target instanceof HTMLInputElement)
+					{
+						getSettings().setIpAddress(event.target.value);
+					}
+				}}
+				/>
 			</div>
 		</div>
 	</div>
