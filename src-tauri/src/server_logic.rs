@@ -1,6 +1,7 @@
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::sync::LazyLock;
-use std::sync::Mutex;
+use std::sync::RwLock;
 use uuid::Uuid;
 
 #[derive(Clone, Debug)]
@@ -10,43 +11,39 @@ pub struct Client {
     pub is_admin: bool,
 }
 
-pub type ClientList = Mutex<HashMap<String, Client>>;
+pub static CLIENT_LIST: LazyLock<RwLock<HashMap<String, Client>>> = LazyLock::new(Default::default);
 
-pub static CLIENT_LIST: LazyLock<ClientList> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
-
-pub static ADMIN_PASSWORD: LazyLock<Mutex<String>> =
-    LazyLock::new(|| Mutex::new(Uuid::new_v4().to_string()));
+pub static ADMIN_PASSWORD: LazyLock<RwLock<String>> =
+    LazyLock::new(|| RwLock::new(Uuid::new_v4().to_string()));
 
 pub fn initialize() {
-    let mut password_lock = ADMIN_PASSWORD.lock().unwrap();
+    let mut password_lock = ADMIN_PASSWORD.write().unwrap();
     *password_lock = Uuid::new_v4().to_string();
 
-    CLIENT_LIST.lock().unwrap().clear();
+    CLIENT_LIST.write().unwrap().clear();
 }
 
 pub fn client_exists(id: &str) -> bool {
-    CLIENT_LIST.lock().unwrap().contains_key(id)
+    CLIENT_LIST.read().unwrap().contains_key(id)
 }
 
 pub fn add_client(id: &str, name: &str) -> bool {
-    if client_exists(id) {
-        return false;
+    match CLIENT_LIST.write().unwrap().entry(id.to_string()) {
+        Entry::Vacant(entry) => {
+            entry.insert(Client {
+                id: id.to_string(),
+                name: name.to_string(),
+                is_admin: false,
+            });
+            true
+        }
+        Entry::Occupied(_) => false,
     }
-
-    let client = Client {
-        id: id.to_string(),
-        name: name.to_string(),
-        is_admin: false,
-    };
-
-    CLIENT_LIST.lock().unwrap().insert(id.to_string(), client);
-    true
 }
 
+
 pub fn make_admin(id: &str) -> bool {
-    let mut clients_lock = CLIENT_LIST.lock().unwrap();
-    if let Some(client) = clients_lock.get_mut(id) {
+    if let Some(client) = CLIENT_LIST.write().unwrap().get_mut(id) {
         client.is_admin = true;
         true
     } else {
@@ -55,17 +52,17 @@ pub fn make_admin(id: &str) -> bool {
 }
 
 pub fn remove_client(client_id: &str) {
-    CLIENT_LIST.lock().unwrap().remove(client_id);
+    CLIENT_LIST.write().unwrap().remove(client_id);
 }
 
 pub fn get_client_list() -> Vec<Client> {
-    CLIENT_LIST.lock().unwrap().values().cloned().collect()
+    CLIENT_LIST.read().unwrap().values().cloned().collect()
 }
 
 pub fn get_client(client_id: &str) -> Option<Client> {
-    CLIENT_LIST.lock().unwrap().get(client_id).cloned()
+    CLIENT_LIST.read().unwrap().get(client_id).cloned()
 }
 
 pub fn get_admin_password() -> String {
-    ADMIN_PASSWORD.lock().unwrap().clone()
+    ADMIN_PASSWORD.read().unwrap().clone()
 }
