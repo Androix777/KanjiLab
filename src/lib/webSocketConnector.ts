@@ -79,95 +79,89 @@ export class ServerConnector extends EventTarget
 		this.webSocket?.close();
 	}
 
-	public async sendRegisterClientMessage()
+	async sendWebSocketMessage(
+		message: BaseMessage<object, MessageType>,
+		timeout: number = 5000,
+	): Promise<BaseMessage<object, MessageType>>
 	{
 		if (!this.webSocket) throw new Error(`missingWebsocket`);
-		const correlation_id = crypto.randomUUID();
-		const registerClientMessage: RegisterClientMessage = {
+		return new Promise<BaseMessage<object, MessageType>>((resolve, reject) =>
+		{
+			const timeoutId = setTimeout(() =>
+			{
+				reject(new Error(`timeoutError`));
+			}, timeout);
+
+			this.messagePool.set(message.correlation_id, (response: BaseMessage<object, MessageType>) =>
+			{
+				clearTimeout(timeoutId);
+				resolve(response);
+			});
+
+			if (!this.webSocket) throw new Error(`missingWebsocket`);
+			this.webSocket.send(JSON.stringify(message));
+		});
+	}
+
+	public async sendRegisterClientMessage()
+	{
+		const message: RegisterClientMessage = {
 			message_type: `registerClient`,
-			correlation_id: correlation_id,
+			correlation_id: crypto.randomUUID(),
 			payload: {
 				name: getSettings().userName,
 			},
 		};
 
-		let resolvePromise: () => void;
-		let rejectPromise: (error: Error) => void;
-		const resultPromise: Promise<void> = new Promise((resolve, reject) =>
-		{
-			resolvePromise = resolve;
-			rejectPromise = reject;
-		});
+		const response = await this.sendWebSocketMessage(message);
 
-		this.messagePool.set(correlation_id, (message) =>
+		switch (response.message_type)
 		{
-			const statusMessage = <StatusMessage>message;
-
-			if (statusMessage.payload.status == `success`)
+			case `status`:
 			{
-				resolvePromise();
-			}
-			else
-			{
-				rejectPromise(new Error(statusMessage.payload.status));
-			}
-		});
+				const statusMessage = <StatusMessage>response;
 
-		setTimeout(() =>
-		{
-			rejectPromise(new Error(`timeoutError`));
-		}, 5000);
-
-		this.webSocket.send(JSON.stringify(registerClientMessage));
-		await resultPromise;
+				if (statusMessage.payload.status == `success`)
+				{
+					return;
+				}
+				else
+				{
+					throw new Error(statusMessage.payload.status);
+				}
+			}
+			default:
+				console.log(`Received unknown message type: ${message.message_type}`);
+				throw new Error(`unknownMessageType`);
+		}
 	}
 
 	public async sendGetClientListMessage()
 	{
-		if (!this.webSocket) throw new Error(`missingWebsocket`);
-		const correlation_id = crypto.randomUUID();
-		const getClientListMessage: GetClientListMessage = {
+		const message: GetClientListMessage = {
 			message_type: `getClientList`,
-			correlation_id: correlation_id,
+			correlation_id: crypto.randomUUID(),
 			payload: {},
 		};
 
-		let resolvePromise: (clientList: Array<{ id: string; name: string }>) => void;
-		let rejectPromise: (error: Error) => void;
-		const resultPromise: Promise<Array<{ id: string; name: string }>> = new Promise((resolve, reject) =>
-		{
-			resolvePromise = resolve;
-			rejectPromise = reject;
-		});
+		const response = await this.sendWebSocketMessage(message);
 
-		this.messagePool.set(correlation_id, (message) =>
+		switch (response.message_type)
 		{
-			switch (message.message_type)
+			case `clientList`:
 			{
-				case `clientList`:
-				{
-					const clientListMessage = <ClientListMessage>message;
-					resolvePromise(clientListMessage.payload.clients);
-					break;
-				}
-				case `status`:
-				{
-					const statusMessage = <StatusMessage>message;
-					rejectPromise(new Error(statusMessage.payload.status));
-					break;
-				}
-				default:
-					console.log(`Received unknown message type: ${message.message_type}`);
+				const clientListMessage = <ClientListMessage>response;
+				return clientListMessage.payload.clients;
 			}
-		});
-
-		setTimeout(() =>
-		{
-			rejectPromise(new Error(`timeoutError`));
-		}, 5000);
-
-		this.webSocket.send(JSON.stringify(getClientListMessage));
-		return await resultPromise;
+			case `status`:
+			{
+				const statusMessage = <StatusMessage>response;
+				throw new Error(statusMessage.payload.status);
+			}
+			default:
+				console.log(`Received unknown message type: ${message.message_type}`);
+				throw new Error(`unknownMessageType`);
+		}
 	}
 
 	public sendChatMessage(message: string)
