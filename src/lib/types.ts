@@ -33,49 +33,52 @@ export type BaseMessage<T extends object, M extends MessageType> = {
 	payload: T;
 };
 
-export type RegisterClientPayload = {
+// IN REQ
+export type InReqRegisterClientPayload = {
 	name: string;
 };
-export type RegisterClientMessage = BaseMessage<RegisterClientPayload, `IN_REQ_registerClient`>;
+export type InReqRegisterClientMessage = BaseMessage<InReqRegisterClientPayload, `IN_REQ_registerClient`>;
 
-export type GetClientListPayload = object;
-export type GetClientListMessage = BaseMessage<GetClientListPayload, `IN_REQ_getClientList`>;
+export type InReqGetClientListPayload = object;
+export type InReqGetClientListMessage = BaseMessage<InReqGetClientListPayload, `IN_REQ_getClientList`>;
 
-export type StatusPayload = {
-	status: string;
-};
-export type StatusMessage = BaseMessage<StatusPayload, `OUT_RESP_status`>;
-
-export type ClientListPayload = {
-	clients: { id: string; name: string }[];
-};
-export type ClientListMessage = BaseMessage<ClientListPayload, `OUT_RESP_clientList`>;
-
-export type ClientRegisteredPayload = {
-	id: string;
-	name: string;
-};
-export type ClientRegisteredMessage = BaseMessage<ClientRegisteredPayload, `OUT_NOTIF_clientRegistered`>;
-
-export type ClientDisconnectedPayload = {
-	id: string;
-	name: string;
-};
-export type ClientDisconnectedMessage = BaseMessage<ClientDisconnectedPayload, `OUT_NOTIF_clientDisconnected`>;
-
-export type SendChatPayload = {
-	message: string;
-};
-export type SendChatMessage = BaseMessage<SendChatPayload, `IN_REQ_sendChat`>;
-
-export type ChatSentPayload = {
-	id: string;
-	message: string;
-};
-export type ChatSentMessage = BaseMessage<ChatSentPayload, `OUT_NOTIF_chatSent`>;
-
-export type MakeAdminPayload = {
+export type InReqMakeAdminPayload = {
 	admin_password: string;
 	client_id: string;
 };
-export type MakeAdminMessage = BaseMessage<MakeAdminPayload, `IN_REQ_makeAdmin`>;
+export type InReqMakeAdminMessage = BaseMessage<InReqMakeAdminPayload, `IN_REQ_makeAdmin`>;
+
+export type InReqSendChatPayload = {
+	message: string;
+};
+export type InReqSendChatMessage = BaseMessage<InReqSendChatPayload, `IN_REQ_sendChat`>;
+
+// OUT RESP
+export type OutRespStatusPayload = {
+	status: string;
+};
+export type OutRespStatusMessage = BaseMessage<OutRespStatusPayload, `OUT_RESP_status`>;
+
+export type OutRespClientListPayload = {
+	clients: { id: string; name: string }[];
+};
+export type OutRespClientListMessage = BaseMessage<OutRespClientListPayload, `OUT_RESP_clientList`>;
+
+// OUT NOTIF
+export type OutNotifClientRegisteredPayload = {
+	id: string;
+	name: string;
+};
+export type OutNotifClientRegisteredMessage = BaseMessage<OutNotifClientRegisteredPayload, `OUT_NOTIF_clientRegistered`>;
+
+export type OutNotifClientDisconnectedPayload = {
+	id: string;
+	name: string;
+};
+export type OutNotifClientDisconnectedMessage = BaseMessage<OutNotifClientDisconnectedPayload, `OUT_NOTIF_clientDisconnected`>;
+
+export type OutNotifChatSentPayload = {
+	id: string;
+	message: string;
+};
+export type OutNotifChatSentMessage = BaseMessage<OutNotifChatSentPayload, `OUT_NOTIF_chatSent`>;

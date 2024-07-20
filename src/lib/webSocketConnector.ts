@@ -1,17 +1,17 @@
 import { getSettings } from "./globalSettings.svelte";
 import {
-	type ClientRegisteredPayload,
+	type OutNotifClientRegisteredPayload,
 	type BaseMessage,
-	type ClientListMessage,
-	type ClientRegisteredMessage,
-	type GetClientListMessage,
-	type RegisterClientMessage,
-	type StatusMessage,
-	type SendChatMessage,
-	type ChatSentMessage,
-	type ChatSentPayload,
+	type OutRespClientListMessage,
+	type OutNotifClientRegisteredMessage,
+	type InReqGetClientListMessage,
+	type InReqRegisterClientMessage,
+	type OutRespStatusMessage,
+	type InReqSendChatMessage,
+	type OutNotifChatSentMessage,
+	type OutNotifChatSentPayload,
 	type MessageType,
-	type MakeAdminMessage,
+	type InReqMakeAdminMessage,
 } from "./types";
 
 export class ServerConnector extends EventTarget
@@ -106,7 +106,7 @@ export class ServerConnector extends EventTarget
 
 	public async sendRegisterClientMessage()
 	{
-		const message: RegisterClientMessage = {
+		const message: InReqRegisterClientMessage = {
 			message_type: `IN_REQ_registerClient`,
 			correlation_id: crypto.randomUUID(),
 			payload: {
@@ -120,7 +120,7 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_RESP_status`:
 			{
-				const statusMessage = <StatusMessage>response;
+				const statusMessage = <OutRespStatusMessage>response;
 
 				if (statusMessage.payload.status == `success`)
 				{
@@ -139,7 +139,7 @@ export class ServerConnector extends EventTarget
 
 	public async sendGetClientListMessage()
 	{
-		const message: GetClientListMessage = {
+		const message: InReqGetClientListMessage = {
 			message_type: `IN_REQ_getClientList`,
 			correlation_id: crypto.randomUUID(),
 			payload: {},
@@ -151,12 +151,12 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_RESP_clientList`:
 			{
-				const clientListMessage = <ClientListMessage>response;
+				const clientListMessage = <OutRespClientListMessage>response;
 				return clientListMessage.payload.clients;
 			}
 			case `OUT_RESP_status`:
 			{
-				const statusMessage = <StatusMessage>response;
+				const statusMessage = <OutRespStatusMessage>response;
 				throw new Error(statusMessage.payload.status);
 			}
 			default:
@@ -167,7 +167,7 @@ export class ServerConnector extends EventTarget
 
 	public async sendMakeAdmin(adminPassword: string, clientID: string)
 	{
-		const message: MakeAdminMessage = {
+		const message: InReqMakeAdminMessage = {
 			message_type: `IN_REQ_makeAdmin`,
 			correlation_id: crypto.randomUUID(),
 			payload: {
@@ -182,7 +182,7 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_RESP_status`:
 			{
-				const statusMessage = <StatusMessage>response;
+				const statusMessage = <OutRespStatusMessage>response;
 
 				if (statusMessage.payload.status == `success`)
 				{
@@ -203,7 +203,7 @@ export class ServerConnector extends EventTarget
 	{
 		if (!this.webSocket) throw new Error(`missingWebsocket`);
 		const correlation_id = crypto.randomUUID();
-		const sendChatMessage: SendChatMessage = {
+		const sendChatMessage: InReqSendChatMessage = {
 			message_type: `IN_REQ_sendChat`,
 			correlation_id: correlation_id,
 			payload: { message: message },
@@ -218,22 +218,22 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_NOTIF_clientRegistered`:
 			{
-				const clientRegisteredMessage = <ClientRegisteredMessage>message;
-				const event = new CustomEvent<ClientRegisteredPayload>(`clientRegistered`, { detail: clientRegisteredMessage.payload });
+				const clientRegisteredMessage = <OutNotifClientRegisteredMessage>message;
+				const event = new CustomEvent<OutNotifClientRegisteredPayload>(`clientRegistered`, { detail: clientRegisteredMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_NOTIF_clientDisconnected`:
 			{
-				const clientDisconnectedMessage = <ClientRegisteredMessage>message;
-				const event = new CustomEvent<ClientRegisteredPayload>(`clientDisconnected`, { detail: clientDisconnectedMessage.payload });
+				const clientDisconnectedMessage = <OutNotifClientRegisteredMessage>message;
+				const event = new CustomEvent<OutNotifClientRegisteredPayload>(`clientDisconnected`, { detail: clientDisconnectedMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_NOTIF_chatSent`:
 			{
-				const chatSentMessage = <ChatSentMessage>message;
-				const event = new CustomEvent<ChatSentPayload>(`chatSent`, { detail: chatSentMessage.payload });
+				const chatSentMessage = <OutNotifChatSentMessage>message;
+				const event = new CustomEvent<OutNotifChatSentPayload>(`chatSent`, { detail: chatSentMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}

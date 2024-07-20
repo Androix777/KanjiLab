@@ -1,5 +1,5 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { ChatSentPayload, ClientDisconnectedPayload, ClientRegisteredPayload } from "./types";
+import type { OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload } from "./types";
 
 class WebSocketClient
 {
@@ -43,17 +43,17 @@ class WebSocketClient
 		});
 		this.serverConnector.addEventListener(`clientRegistered`, (event) =>
 		{
-			const customEvent: CustomEvent<ClientRegisteredPayload> = <CustomEvent<ClientRegisteredPayload>>event;
+			const customEvent: CustomEvent<OutNotifClientRegisteredPayload> = <CustomEvent<OutNotifClientRegisteredPayload>>event;
 			this.clientList.push({ id: customEvent.detail.id, name: customEvent.detail.name });
 		});
 		this.serverConnector.addEventListener(`clientDisconnected`, (event) =>
 		{
-			const customEvent: CustomEvent<ClientDisconnectedPayload> = <CustomEvent<ClientDisconnectedPayload>>event;
+			const customEvent: CustomEvent<OutNotifClientDisconnectedPayload> = <CustomEvent<OutNotifClientDisconnectedPayload>>event;
 			this.clientList = this.clientList.filter(client => client.id != customEvent.detail.id);
 		});
 		this.serverConnector.addEventListener(`chatSent`, (event) =>
 		{
-			const customEvent: CustomEvent<ChatSentPayload> = <CustomEvent<ChatSentPayload>>event;
+			const customEvent: CustomEvent<OutNotifChatSentPayload> = <CustomEvent<OutNotifChatSentPayload>>event;
 			this.chatList.push({ name: this.getClient(customEvent.detail.id).name, message: customEvent.detail.message });
 		});
 	}
