@@ -19,13 +19,17 @@ export type StatsInfo = {
 export type MessageType =
 	| `IN_REQ_registerClient`
 	| `IN_REQ_getClientList`
+	| `IN_REQ_sendChat`
+	| `IN_REQ_makeAdmin`
+
 	| `OUT_RESP_clientList`
 	| `OUT_RESP_status`
-	| `IN_REQ_sendChat`
+	| `OUT_RESP_clientRegistered`
+
 	| `OUT_NOTIF_clientRegistered`
 	| `OUT_NOTIF_clientDisconnected`
 	| `OUT_NOTIF_chatSent`
-	| `IN_REQ_makeAdmin`;
+	| `OUT_NOTIF_adminMade`;
 
 export type BaseMessage<T extends object, M extends MessageType> = {
 	message_type: M;
@@ -59,8 +63,18 @@ export type OutRespStatusPayload = {
 };
 export type OutRespStatusMessage = BaseMessage<OutRespStatusPayload, `OUT_RESP_status`>;
 
+export type OutRespClientRegisteredPayload = {
+	id: string;
+};
+export type OutRespClientRegisteredMessage = BaseMessage<OutRespClientRegisteredPayload, `OUT_RESP_clientRegistered`>;
+
 export type OutRespClientListPayload = {
-	clients: { id: string; name: string }[];
+	clients:
+	{
+		id: string;
+		name: string;
+		is_admin: boolean;
+	}[];
 };
 export type OutRespClientListMessage = BaseMessage<OutRespClientListPayload, `OUT_RESP_clientList`>;
 
@@ -82,3 +96,8 @@ export type OutNotifChatSentPayload = {
 	message: string;
 };
 export type OutNotifChatSentMessage = BaseMessage<OutNotifChatSentPayload, `OUT_NOTIF_chatSent`>;
+
+export type OutNotifAdminMadePayload = {
+	id: string;
+};
+export type OutNotifAdminMadeMessage = BaseMessage<OutNotifAdminMadePayload, `OUT_NOTIF_adminMade`>;

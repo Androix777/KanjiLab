@@ -3,9 +3,7 @@ use crate::server_logic::{
     make_admin, remove_client, Client,
 };
 use crate::structures::{
-    OutNotifAdminMadePayload, BaseMessage, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, ClientInfo,
-    OutRespClientListPayload, OutNotifClientRegisteredPayload, InReqMakeAdminPayload, InReqRegisterClientPayload,
-    InReqSendChatPayload, OutRespStatusPayload,
+    BaseMessage, ClientInfo, InReqMakeAdminPayload, InReqRegisterClientPayload, InReqSendChatPayload, OutNotifAdminMadePayload, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutRespClientListPayload, OutRespClientRegisteredPayload, OutRespStatusPayload
 };
 use colored::*;
 use futures_util::stream::SplitSink;
@@ -190,15 +188,18 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
             return;
         }
 
-        let _ = send_status(client_id, &incoming_message.correlation_id, "success").await;
+		let response_payload = OutRespClientRegisteredPayload {
+            id: client_id.to_string(),
+        };
+		let response = BaseMessage::new(response_payload, Some(incoming_message.correlation_id.clone()));
+        let _ = send(client_id, response).await;
+        
 
         let event_payload = OutNotifClientRegisteredPayload {
             id: client_id.to_string(),
             name: payload.name.clone(),
         };
-
         let event = BaseMessage::new(event_payload, None);
-
         let _ = send_all(event).await;
     }
 }
@@ -259,6 +260,7 @@ async fn handle_get_client_list(client_id: &str, incoming_message: BaseMessage) 
         .map(|client| ClientInfo {
             id: client.id.to_string(),
             name: client.name.clone(),
+			is_admin: client.is_admin,
         })
         .collect();
 

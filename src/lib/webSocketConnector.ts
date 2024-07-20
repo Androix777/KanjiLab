@@ -12,6 +12,9 @@ import {
 	type OutNotifChatSentPayload,
 	type MessageType,
 	type InReqMakeAdminMessage,
+	type OutRespClientRegisteredMessage,
+	type OutNotifAdminMadeMessage,
+	type OutNotifAdminMadePayload,
 } from "./types";
 
 export class ServerConnector extends EventTarget
@@ -118,18 +121,15 @@ export class ServerConnector extends EventTarget
 
 		switch (response.message_type)
 		{
+			case `OUT_RESP_clientRegistered`:
+			{
+				const clientRegisteredMessage = <OutRespClientRegisteredMessage>response;
+				return clientRegisteredMessage.payload.id;
+			}
 			case `OUT_RESP_status`:
 			{
 				const statusMessage = <OutRespStatusMessage>response;
-
-				if (statusMessage.payload.status == `success`)
-				{
-					return;
-				}
-				else
-				{
-					throw new Error(statusMessage.payload.status);
-				}
+				throw new Error(statusMessage.payload.status);
 			}
 			default:
 				console.log(`Received unknown message type: ${message.message_type}`);
@@ -218,22 +218,29 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_NOTIF_clientRegistered`:
 			{
-				const clientRegisteredMessage = <OutNotifClientRegisteredMessage>message;
-				const event = new CustomEvent<OutNotifClientRegisteredPayload>(`clientRegistered`, { detail: clientRegisteredMessage.payload });
+				const concreteMessage = <OutNotifClientRegisteredMessage>message;
+				const event = new CustomEvent<OutNotifClientRegisteredPayload>(`OUT_NOTIF_clientRegistered`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_NOTIF_clientDisconnected`:
 			{
-				const clientDisconnectedMessage = <OutNotifClientRegisteredMessage>message;
-				const event = new CustomEvent<OutNotifClientRegisteredPayload>(`clientDisconnected`, { detail: clientDisconnectedMessage.payload });
+				const concreteMessage = <OutNotifClientRegisteredMessage>message;
+				const event = new CustomEvent<OutNotifClientRegisteredPayload>(`OUT_NOTIF_clientDisconnected`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_NOTIF_chatSent`:
 			{
-				const chatSentMessage = <OutNotifChatSentMessage>message;
-				const event = new CustomEvent<OutNotifChatSentPayload>(`chatSent`, { detail: chatSentMessage.payload });
+				const concreteMessage = <OutNotifChatSentMessage>message;
+				const event = new CustomEvent<OutNotifChatSentPayload>(`OUT_NOTIF_chatSent`, { detail: concreteMessage.payload });
+				this.dispatchEvent(event);
+				break;
+			}
+			case `OUT_NOTIF_adminMade`:
+			{
+				const concreteMessage = <OutNotifAdminMadeMessage>message;
+				const event = new CustomEvent<OutNotifAdminMadePayload>(`OUT_NOTIF_adminMade`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}

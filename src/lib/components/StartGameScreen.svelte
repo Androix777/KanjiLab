@@ -15,6 +15,7 @@
 		webSocketClient = WebSocketClient.getInstance();
 		webSocketClient.isConnectedToSelf = true;
 		await webSocketClient.connectToServer(getSettings().ipAddress);
+		await webSocketClient.makeAdmin();
 	}
 
 	async function stopServer()
