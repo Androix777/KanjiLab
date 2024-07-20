@@ -11,15 +11,16 @@
 
 	async function launchServer()
 	{
-		getSettings().setIsConnectedToSelf(true);
 		getSettings().setAdminPassword(await invoke(LAUNCH_SERVER));
 		webSocketClient = WebSocketClient.getInstance();
+		webSocketClient.isConnectedToSelf = true;
 		await webSocketClient.connectToServer(getSettings().ipAddress);
 	}
 
 	async function stopServer()
 	{
-		getSettings().setIsConnectedToSelf(false);
+		webSocketClient = WebSocketClient.getInstance();
+		webSocketClient.isConnectedToSelf = false;
 		leaveServer();
 		await invoke(STOP_SERVER);
 	}
@@ -59,7 +60,7 @@
 
 	<div class="flex-none">
 		<div class="flex justify-between h-12">
-			{#if getSettings().isConnectedToSelf && webSocketClient?.connectionStatus == `Connected`}
+			{#if webSocketClient?.isConnectedToSelf && webSocketClient.connectionStatus == `Connected`}
 				<div class="w-2/5 border text-center">
 					<button class="btn btn-error w-full h-full rounded-none" onclick={() => { void stopServer(); }}>Stop Server</button>
 				</div>

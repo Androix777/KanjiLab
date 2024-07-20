@@ -9,6 +9,7 @@ class WebSocketClient
 	public chatList: Array<{ name: string; message: string }> = $state([]);
 
 	public connectionStatus: `Disconnected` | `Connecting` | `Connected` = $state(`Disconnected`);
+	public isConnectedToSelf: boolean = $state(false);
 
 	public static getInstance()
 	{

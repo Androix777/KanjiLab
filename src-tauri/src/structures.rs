@@ -34,62 +34,62 @@ impl BaseMessage {
 }
 
 #[derive(Deserialize)]
-pub struct RegisterClientPayload {
+pub struct InReqRegisterClientPayload {
     pub name: String,
 }
-impl_message_type!(RegisterClientPayload, "registerClient");
+impl_message_type!(InReqRegisterClientPayload, "IN_REQ_registerClient");
 
 #[derive(Serialize)]
-pub struct ClientRegisteredPayload {
+pub struct OutNotifClientRegisteredPayload {
     pub id: String,
     pub name: String,
 }
-impl_message_type!(ClientRegisteredPayload, "clientRegistered");
+impl_message_type!(OutNotifClientRegisteredPayload, "OUT_NOTIF_clientRegistered");
 
 #[derive(Serialize)]
-pub struct ClientDisconnectedPayload {
+pub struct OutNotifClientDisconnectedPayload {
     pub id: String,
     pub name: String,
 }
-impl_message_type!(ClientDisconnectedPayload, "clientDisconnected");
+impl_message_type!(OutNotifClientDisconnectedPayload, "OUT_NOTIF_clientDisconnected");
 
 #[derive(Serialize)]
-pub struct StatusPayload {
+pub struct OutRespStatusPayload {
     pub status: String,
 }
-impl_message_type!(StatusPayload, "status");
+impl_message_type!(OutRespStatusPayload, "OUT_RESP_status");
 
 #[derive(Serialize)]
-pub struct ClientListPayload {
+pub struct OutRespClientListPayload {
     pub clients: Vec<ClientInfo>,
 }
-impl_message_type!(ClientListPayload, "clientList");
+impl_message_type!(OutRespClientListPayload, "OUT_RESP_clientList");
 
 #[derive(Serialize)]
-pub struct ChatSentPayload {
+pub struct OutNotifChatSentPayload {
     pub id: String,
     pub message: String,
 }
-impl_message_type!(ChatSentPayload, "chatSent");
+impl_message_type!(OutNotifChatSentPayload, "OUT_NOTIF_chatSent");
 
 #[derive(Deserialize)]
-pub struct SendChatPayload {
+pub struct InReqSendChatPayload {
     pub message: String,
 }
-impl_message_type!(SendChatPayload, "sendChat");
+impl_message_type!(InReqSendChatPayload, "IN_REQ_sendChat");
 
 #[derive(Deserialize)]
-pub struct MakeAdminPayload {
+pub struct InReqMakeAdminPayload {
     pub admin_password: String,
     pub client_id: String,
 }
-impl_message_type!(MakeAdminPayload, "makeAdmin");
+impl_message_type!(InReqMakeAdminPayload, "IN_REQ_makeAdmin");
 
 #[derive(Serialize)]
-pub struct AdminMadePayload {
+pub struct OutNotifAdminMadePayload {
     pub id: String,
 }
-impl_message_type!(AdminMadePayload, "adminMade");
+impl_message_type!(OutNotifAdminMadePayload, "OUT_NOTIF_adminMade");
 
 #[derive(Serialize)]
 pub struct ClientInfo {

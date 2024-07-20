@@ -3,9 +3,9 @@ use crate::server_logic::{
     make_admin, remove_client, Client,
 };
 use crate::structures::{
-    AdminMadePayload, BaseMessage, ChatSentPayload, ClientDisconnectedPayload, ClientInfo,
-    ClientListPayload, ClientRegisteredPayload, MakeAdminPayload, RegisterClientPayload,
-    SendChatPayload, StatusPayload,
+    OutNotifAdminMadePayload, BaseMessage, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, ClientInfo,
+    OutRespClientListPayload, OutNotifClientRegisteredPayload, InReqMakeAdminPayload, InReqRegisterClientPayload,
+    InReqSendChatPayload, OutRespStatusPayload,
 };
 use colored::*;
 use futures_util::stream::SplitSink;
@@ -138,10 +138,10 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
         }
 
         match incoming_message.message_type.as_str() {
-            "registerClient" => handle_register_client(&client_id, incoming_message).await,
-            "getClientList" => handle_get_client_list(&client_id, incoming_message).await,
-            "sendChat" => handle_send_chat(&client_id, incoming_message).await,
-            "makeAdmin" => handle_make_admin(&client_id, incoming_message).await,
+            "IN_REQ_registerClient" => handle_register_client(&client_id, incoming_message).await,
+            "IN_REQ_getClientList" => handle_get_client_list(&client_id, incoming_message).await,
+            "IN_REQ_sendChat" => handle_send_chat(&client_id, incoming_message).await,
+            "IN_REQ_makeAdmin" => handle_make_admin(&client_id, incoming_message).await,
             _ => handle_unknown_message(&client_id, incoming_message).await,
         };
     }
@@ -159,7 +159,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
     CLIENTS_CONNECTIONS.lock().await.remove(&client_id);
 
     if let Some(client) = deleted_client {
-        let event_payload = ClientDisconnectedPayload {
+        let event_payload = OutNotifClientDisconnectedPayload {
             id: client_id.to_string(),
             name: client.name.clone(),
         };
@@ -171,7 +171,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
 }
 
 async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) {
-    if let Ok(payload) = validate_payload::<RegisterClientPayload>(
+    if let Ok(payload) = validate_payload::<InReqRegisterClientPayload>(
         client_id,
         &incoming_message.correlation_id,
         incoming_message.payload,
@@ -192,7 +192,7 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
 
         let _ = send_status(client_id, &incoming_message.correlation_id, "success").await;
 
-        let event_payload = ClientRegisteredPayload {
+        let event_payload = OutNotifClientRegisteredPayload {
             id: client_id.to_string(),
             name: payload.name.clone(),
         };
@@ -208,7 +208,7 @@ async fn handle_make_admin(client_id: &str, incoming_message: BaseMessage) {
         return;
     }
 
-    if let Ok(payload) = validate_payload::<MakeAdminPayload>(
+    if let Ok(payload) = validate_payload::<InReqMakeAdminPayload>(
         client_id,
         &incoming_message.correlation_id,
         incoming_message.payload,
@@ -239,7 +239,7 @@ async fn handle_make_admin(client_id: &str, incoming_message: BaseMessage) {
 
         let _ = send_status(client_id, &incoming_message.correlation_id, "success").await;
 
-        let event_payload = AdminMadePayload {
+        let event_payload = OutNotifAdminMadePayload {
             id: client_id.to_string(),
         };
 
@@ -262,7 +262,7 @@ async fn handle_get_client_list(client_id: &str, incoming_message: BaseMessage) 
         })
         .collect();
 
-    let response_payload = ClientListPayload {
+    let response_payload = OutRespClientListPayload {
         clients: client_list,
     };
 
@@ -279,14 +279,14 @@ async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
         return;
     }
 
-    if let Ok(payload) = validate_payload::<SendChatPayload>(
+    if let Ok(payload) = validate_payload::<InReqSendChatPayload>(
         client_id,
         &incoming_message.correlation_id,
         incoming_message.payload,
     )
     .await
     {
-        let event_payload = ChatSentPayload {
+        let event_payload = OutNotifChatSentPayload {
             id: client_id.to_string(),
             message: payload.message.clone(),
         };
@@ -335,7 +335,7 @@ async fn validate_payload<T: DeserializeOwned>(
 }
 
 async fn send_status(client_id: &str, correlation_id: &str, status: &str) {
-    let response_payload = StatusPayload {
+    let response_payload = OutRespStatusPayload {
         status: status.to_string(),
     };
 

@@ -11,6 +11,7 @@ import {
 	type ChatSentMessage,
 	type ChatSentPayload,
 	type MessageType,
+	type MakeAdminMessage,
 } from "./types";
 
 export class ServerConnector extends EventTarget
@@ -106,7 +107,7 @@ export class ServerConnector extends EventTarget
 	public async sendRegisterClientMessage()
 	{
 		const message: RegisterClientMessage = {
-			message_type: `registerClient`,
+			message_type: `IN_REQ_registerClient`,
 			correlation_id: crypto.randomUUID(),
 			payload: {
 				name: getSettings().userName,
@@ -117,7 +118,7 @@ export class ServerConnector extends EventTarget
 
 		switch (response.message_type)
 		{
-			case `status`:
+			case `OUT_RESP_status`:
 			{
 				const statusMessage = <StatusMessage>response;
 
@@ -139,7 +140,7 @@ export class ServerConnector extends EventTarget
 	public async sendGetClientListMessage()
 	{
 		const message: GetClientListMessage = {
-			message_type: `getClientList`,
+			message_type: `IN_REQ_getClientList`,
 			correlation_id: crypto.randomUUID(),
 			payload: {},
 		};
@@ -148,15 +149,49 @@ export class ServerConnector extends EventTarget
 
 		switch (response.message_type)
 		{
-			case `clientList`:
+			case `OUT_RESP_clientList`:
 			{
 				const clientListMessage = <ClientListMessage>response;
 				return clientListMessage.payload.clients;
 			}
-			case `status`:
+			case `OUT_RESP_status`:
 			{
 				const statusMessage = <StatusMessage>response;
 				throw new Error(statusMessage.payload.status);
+			}
+			default:
+				console.log(`Received unknown message type: ${message.message_type}`);
+				throw new Error(`unknownMessageType`);
+		}
+	}
+
+	public async sendMakeAdmin(adminPassword: string, clientID: string)
+	{
+		const message: MakeAdminMessage = {
+			message_type: `IN_REQ_makeAdmin`,
+			correlation_id: crypto.randomUUID(),
+			payload: {
+				admin_password: adminPassword,
+				client_id: clientID,
+			},
+		};
+
+		const response = await this.sendWebSocketMessage(message);
+
+		switch (response.message_type)
+		{
+			case `OUT_RESP_status`:
+			{
+				const statusMessage = <StatusMessage>response;
+
+				if (statusMessage.payload.status == `success`)
+				{
+					return;
+				}
+				else
+				{
+					throw new Error(statusMessage.payload.status);
+				}
 			}
 			default:
 				console.log(`Received unknown message type: ${message.message_type}`);
@@ -169,7 +204,7 @@ export class ServerConnector extends EventTarget
 		if (!this.webSocket) throw new Error(`missingWebsocket`);
 		const correlation_id = crypto.randomUUID();
 		const sendChatMessage: SendChatMessage = {
-			message_type: `sendChat`,
+			message_type: `IN_REQ_sendChat`,
 			correlation_id: correlation_id,
 			payload: { message: message },
 		};
@@ -181,21 +216,21 @@ export class ServerConnector extends EventTarget
 	{
 		switch (message.message_type)
 		{
-			case `clientRegistered`:
+			case `OUT_NOTIF_clientRegistered`:
 			{
 				const clientRegisteredMessage = <ClientRegisteredMessage>message;
 				const event = new CustomEvent<ClientRegisteredPayload>(`clientRegistered`, { detail: clientRegisteredMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
-			case `clientDisconnected`:
+			case `OUT_NOTIF_clientDisconnected`:
 			{
 				const clientDisconnectedMessage = <ClientRegisteredMessage>message;
 				const event = new CustomEvent<ClientRegisteredPayload>(`clientDisconnected`, { detail: clientDisconnectedMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
-			case `chatSent`:
+			case `OUT_NOTIF_chatSent`:
 			{
 				const chatSentMessage = <ChatSentMessage>message;
 				const event = new CustomEvent<ChatSentPayload>(`chatSent`, { detail: chatSentMessage.payload });
