@@ -364,14 +364,18 @@ async fn send(client_id: &str, message: BaseMessage) -> Result<(), String> {
 async fn send_all(message: BaseMessage) {
     let response_json = serde_json::to_string(&message).unwrap();
     let connections_lock = CLIENTS_CONNECTIONS.lock().await;
+    let client_list = get_client_list();
 
-    for (client_id, client_write) in connections_lock.iter() {
-        let mut write = client_write.lock().await;
-        if let Err(e) = write.send(Message::text(&response_json)).await {
-            eprintln!("Error sending message to {}: {}", client_id, e);
+    for client in client_list {
+        if let Some(client_write) = connections_lock.get(&client.id) {
+            let mut write = client_write.lock().await;
+            if let Err(e) = write.send(Message::text(&response_json)).await {
+                eprintln!("Error sending message to {}: {}", client.id, e);
+            }
         }
     }
 }
+
 
 fn log(client_name: &str, action: &str, ip: &str) {
     println!(
