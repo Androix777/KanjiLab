@@ -34,19 +34,19 @@ impl BaseMessage {
 }
 
 // IN REQ
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct InReqRegisterClientPayload {
     pub name: String,
 }
 impl_message_type!(InReqRegisterClientPayload, "IN_REQ_registerClient");
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct InReqSendChatPayload {
     pub message: String,
 }
 impl_message_type!(InReqSendChatPayload, "IN_REQ_sendChat");
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct InReqMakeAdminPayload {
     pub admin_password: String,
     pub client_id: String,
@@ -54,53 +54,53 @@ pub struct InReqMakeAdminPayload {
 impl_message_type!(InReqMakeAdminPayload, "IN_REQ_makeAdmin");
 
 // OUT RESP
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct OutRespClientRegisteredPayload {
     pub id: String,
 }
 impl_message_type!(OutRespClientRegisteredPayload, "OUT_RESP_clientRegistered");
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct OutRespStatusPayload {
     pub status: String,
 }
 impl_message_type!(OutRespStatusPayload, "OUT_RESP_status");
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct OutRespClientListPayload {
     pub clients: Vec<ClientInfo>,
 }
 impl_message_type!(OutRespClientListPayload, "OUT_RESP_clientList");
 
 // OUT NOTIF
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct OutNotifClientRegisteredPayload {
     pub id: String,
     pub name: String,
 }
 impl_message_type!(OutNotifClientRegisteredPayload, "OUT_NOTIF_clientRegistered");
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct OutNotifClientDisconnectedPayload {
     pub id: String,
     pub name: String,
 }
 impl_message_type!(OutNotifClientDisconnectedPayload, "OUT_NOTIF_clientDisconnected");
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct OutNotifChatSentPayload {
     pub id: String,
     pub message: String,
 }
 impl_message_type!(OutNotifChatSentPayload, "OUT_NOTIF_chatSent");
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct OutNotifAdminMadePayload {
     pub id: String,
 }
 impl_message_type!(OutNotifAdminMadePayload, "OUT_NOTIF_adminMade");
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct ClientInfo {
     pub id: String,
     pub name: String,
