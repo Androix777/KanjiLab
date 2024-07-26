@@ -1,12 +1,15 @@
 #[cfg(test)]
 mod test_utils {
+    use crate::server_logic::get_admin_password;
+    use crate::structures::{
+        BaseMessage, InReqClientListPayload, InReqMakeAdminPayload, InReqRegisterClientPayload,
+        MessageType, OutNotifAdminMadePayload, OutNotifClientDisconnectedPayload,
+        OutNotifClientRegisteredPayload, OutRespClientListPayload, OutRespClientRegisteredPayload,
+        OutRespStatusPayload, ClientInfo,
+    };
     use futures_util::{SinkExt, StreamExt};
     use serde::Serialize;
-    use crate::server_logic::get_admin_password;
     use std::time::Duration;
-    use crate::structures::{
-        BaseMessage, InReqMakeAdminPayload, InReqRegisterClientPayload, MessageType, OutNotifAdminMadePayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutRespClientRegisteredPayload, OutRespStatusPayload
-    };
     use tokio::net::TcpStream;
     use tokio::time::timeout;
     use tokio_tungstenite::{
@@ -321,7 +324,6 @@ mod test_utils {
                 Uuid::parse_str(&response.id).is_ok()
             })
             .unwrap();
-
         check_received_message::<OutNotifClientRegisteredPayload>(&mut clients, &[0, 1, 2])
             .await
             .unwrap()
@@ -331,20 +333,20 @@ mod test_utils {
             })
             .unwrap();
 
-		// Make Client0 admin
-		
-		let id = clients[0].client_id.as_ref().unwrap().to_string();
-		send_message(
+        // Make Client 0 admin
+
+        let id = clients[0].client_id.as_ref().unwrap().to_string();
+        send_message(
             &mut clients,
             &[0],
             InReqMakeAdminPayload {
                 admin_password: "wrong".to_string(),
-				client_id: id.clone()
+                client_id: id.clone(),
             },
         )
         .await;
 
-		check_received_message::<OutRespStatusPayload>(&mut clients, &[0])
+        check_received_message::<OutRespStatusPayload>(&mut clients, &[0])
             .await
             .unwrap()
             .validate(&mut clients, |_index, response, _clients| {
@@ -352,17 +354,17 @@ mod test_utils {
             })
             .unwrap();
 
-		send_message(
-				&mut clients,
-				&[0],
-				InReqMakeAdminPayload {
-					admin_password: get_admin_password(),
-					client_id: id.clone()
-				},
-			)
-			.await;
+        send_message(
+            &mut clients,
+            &[0],
+            InReqMakeAdminPayload {
+                admin_password: get_admin_password(),
+                client_id: id.clone(),
+            },
+        )
+        .await;
 
-		check_received_message::<OutRespStatusPayload>(&mut clients, &[0])
+        check_received_message::<OutRespStatusPayload>(&mut clients, &[0])
             .await
             .unwrap()
             .validate(&mut clients, |_index, response, _clients| {
@@ -370,7 +372,7 @@ mod test_utils {
             })
             .unwrap();
 
-		check_received_message::<OutNotifAdminMadePayload>(&mut clients, &[0, 1, 2])
+        check_received_message::<OutNotifAdminMadePayload>(&mut clients, &[0, 1, 2])
             .await
             .unwrap()
             .validate(&mut clients, |_index, response, clients| {
@@ -378,7 +380,46 @@ mod test_utils {
             })
             .unwrap();
 
-			crate::server::call_stop_server().await;
+        // Client 0 check clients list
+
+        send_message(&mut clients, &[0,1,2], InReqClientListPayload {}).await;
+
+        check_received_message::<OutRespClientListPayload>(&mut clients, &[0,1,2])
+            .await
+            .unwrap()
+            .validate(&mut clients, |_index, response, clients: &mut Vec<TestClient>| {
+                if response.clients.len() != 3 {
+                    return false;
+                }
+
+
+                let expected_clients = vec![
+                    ClientInfo {
+                        id: clients[0].client_id.as_ref().unwrap().clone(),
+                        name: clients[0].client_name.as_ref().unwrap().clone(),
+                        is_admin: true,
+                    },
+                    ClientInfo {
+                        id: clients[1].client_id.as_ref().unwrap().clone(),
+                        name: clients[1].client_name.as_ref().unwrap().clone(),
+                        is_admin: false,
+                    },
+                    ClientInfo {
+                        id: clients[2].client_id.as_ref().unwrap().clone(),
+                        name: clients[2].client_name.as_ref().unwrap().clone(),
+                        is_admin: false,
+                    },
+                ];
+
+				expected_clients.iter().all(|expected| 
+					response.clients.iter().any(|client| 
+						client == expected
+					)
+				)
+            })
+            .unwrap();
+
+        crate::server::call_stop_server().await;
         let _ = server_handle.await;
     }
 }

@@ -47,15 +47,15 @@ pub struct InReqMakeAdminPayload {
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("IN_REQ_clientList")]
-pub struct InReqGetClientList { }
+pub struct InReqClientListPayload { }
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("IN_REQ_startGame")]
-pub struct InReqStartGame { }
+pub struct InReqStartGamePayload { }
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("IN_REQ_sendAnswer")]
-pub struct InReqSendAnswer { 
+pub struct InReqSendAnswerPayload { 
 	pub answer: String,
 }
 
@@ -80,7 +80,7 @@ pub struct OutRespClientListPayload {
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_RESP_answerResult")]
-pub struct OutRespAnswerResult { 
+pub struct OutRespAnswerResultPayload { 
 	pub is_correct: bool,
 	pub correct_answer: String,
 }
@@ -89,13 +89,13 @@ pub struct OutRespAnswerResult {
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_REQ_question")]
-pub struct OutReqQuestion { }
+pub struct OutReqQuestionPayload { }
 
 // IN RESP
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("IN_RESP_question")]
-pub struct InRespQuestion { 
+pub struct InRespQuestionPayload { 
 	pub question: String,
 	pub answer: String,
 }
@@ -130,24 +130,24 @@ pub struct OutNotifAdminMadePayload {
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_gameStarted")]
-pub struct OutNotifGameStarted { }
+pub struct OutNotifGameStartedPayload { }
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_question")]
-pub struct OutNotifQuestion { 
+pub struct OutNotifQuestionPayload { 
 	pub question: String,
 	pub answer: String,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_RESP_clientAnswered")]
-pub struct OutNotifClientAnswered { 
+pub struct OutNotifClientAnsweredPayload { 
 	pub is_correct: bool,
 }
 
 
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq)]
 pub struct ClientInfo {
     pub id: String,
     pub name: String,
