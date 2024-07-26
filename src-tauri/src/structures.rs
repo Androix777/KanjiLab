@@ -1,16 +1,9 @@
+use kanjilab_macros::MessageType;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 pub trait MessageType {
     const MESSAGE_TYPE: &'static str;
-}
-
-macro_rules! impl_message_type {
-    ($struct_name:ident, $msg_type:expr) => {
-        impl MessageType for $struct_name {
-            const MESSAGE_TYPE: &'static str = $msg_type;
-        }
-    };
 }
 
 #[derive(Serialize, Deserialize)]
@@ -19,7 +12,6 @@ pub struct BaseMessage {
     pub message_type: String,
     pub payload: Option<serde_json::Value>,
 }
-
 
 impl BaseMessage {
     pub fn new<T: MessageType + Serialize>(payload: T, correlation_id: Option<String>) -> Self {
@@ -34,75 +26,75 @@ impl BaseMessage {
 }
 
 // IN REQ
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("IN_REQ_registerClient")]
 pub struct InReqRegisterClientPayload {
     pub name: String,
 }
-impl_message_type!(InReqRegisterClientPayload, "IN_REQ_registerClient");
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("IN_REQ_sendChat")]
 pub struct InReqSendChatPayload {
     pub message: String,
 }
-impl_message_type!(InReqSendChatPayload, "IN_REQ_sendChat");
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("IN_REQ_makeAdmin")]
 pub struct InReqMakeAdminPayload {
     pub admin_password: String,
     pub client_id: String,
 }
-impl_message_type!(InReqMakeAdminPayload, "IN_REQ_makeAdmin");
 
 // OUT RESP
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_RESP_clientRegistered")]
 pub struct OutRespClientRegisteredPayload {
     pub id: String,
 }
-impl_message_type!(OutRespClientRegisteredPayload, "OUT_RESP_clientRegistered");
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_RESP_status")]
 pub struct OutRespStatusPayload {
     pub status: String,
 }
-impl_message_type!(OutRespStatusPayload, "OUT_RESP_status");
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_RESP_clientList")]
 pub struct OutRespClientListPayload {
     pub clients: Vec<ClientInfo>,
 }
-impl_message_type!(OutRespClientListPayload, "OUT_RESP_clientList");
 
 // OUT NOTIF
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_NOTIF_clientRegistered")]
 pub struct OutNotifClientRegisteredPayload {
     pub id: String,
     pub name: String,
 }
-impl_message_type!(OutNotifClientRegisteredPayload, "OUT_NOTIF_clientRegistered");
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_NOTIF_clientDisconnected")]
 pub struct OutNotifClientDisconnectedPayload {
     pub id: String,
     pub name: String,
 }
-impl_message_type!(OutNotifClientDisconnectedPayload, "OUT_NOTIF_clientDisconnected");
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_NOTIF_chatSent")]
 pub struct OutNotifChatSentPayload {
     pub id: String,
     pub message: String,
 }
-impl_message_type!(OutNotifChatSentPayload, "OUT_NOTIF_chatSent");
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_NOTIF_adminMade")]
 pub struct OutNotifAdminMadePayload {
     pub id: String,
 }
-impl_message_type!(OutNotifAdminMadePayload, "OUT_NOTIF_adminMade");
 
 #[derive(Serialize, Deserialize)]
 pub struct ClientInfo {
     pub id: String,
     pub name: String,
-	pub is_admin: bool,
+    pub is_admin: bool,
 }

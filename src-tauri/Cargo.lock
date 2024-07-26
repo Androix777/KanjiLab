@@ -87,6 +87,7 @@ version = "0.1.0"
 dependencies = [
  "colored",
  "futures-util",
+ "kanjilab_macros",
  "serde",
  "serde_json",
  "tauri",
@@ -1680,6 +1681,15 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
+]
+
+[[package]]
+name = "kanjilab_macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.71",
 ]
 
 [[package]]

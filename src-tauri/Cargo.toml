@@ -18,6 +18,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.0.0-beta.19", features = [] }
 
 [dependencies]
+kanjilab_macros = { path = "./kanjilab_macros" }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "2.0.0-beta.24", features = [] }
