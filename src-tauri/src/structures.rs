@@ -45,6 +45,20 @@ pub struct InReqMakeAdminPayload {
     pub client_id: String,
 }
 
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("IN_REQ_clientList")]
+pub struct InReqGetClientList { }
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("IN_REQ_startGame")]
+pub struct InReqStartGame { }
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("IN_REQ_sendAnswer")]
+pub struct InReqSendAnswer { 
+	pub answer: String,
+}
+
 // OUT RESP
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_RESP_clientRegistered")]
@@ -62,6 +76,28 @@ pub struct OutRespStatusPayload {
 #[message_type("OUT_RESP_clientList")]
 pub struct OutRespClientListPayload {
     pub clients: Vec<ClientInfo>,
+}
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_RESP_answerResult")]
+pub struct OutRespAnswerResult { 
+	pub is_correct: bool,
+	pub correct_answer: String,
+}
+
+// OUT REQ
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_REQ_question")]
+pub struct OutReqQuestion { }
+
+// IN RESP
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("IN_RESP_question")]
+pub struct InRespQuestion { 
+	pub question: String,
+	pub answer: String,
 }
 
 // OUT NOTIF
@@ -91,6 +127,25 @@ pub struct OutNotifChatSentPayload {
 pub struct OutNotifAdminMadePayload {
     pub id: String,
 }
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_NOTIF_gameStarted")]
+pub struct OutNotifGameStarted { }
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_NOTIF_question")]
+pub struct OutNotifQuestion { 
+	pub question: String,
+	pub answer: String,
+}
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_RESP_clientAnswered")]
+pub struct OutNotifClientAnswered { 
+	pub is_correct: bool,
+}
+
+
 
 #[derive(Serialize, Deserialize)]
 pub struct ClientInfo {

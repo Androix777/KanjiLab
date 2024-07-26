@@ -137,7 +137,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
 
         match incoming_message.message_type.as_str() {
             "IN_REQ_registerClient" => handle_register_client(&client_id, incoming_message).await,
-            "IN_REQ_getClientList" => handle_get_client_list(&client_id, incoming_message).await,
+            "IN_REQ_clientList" => handle_get_client_list(&client_id, incoming_message).await,
             "IN_REQ_sendChat" => handle_send_chat(&client_id, incoming_message).await,
             "IN_REQ_makeAdmin" => handle_make_admin(&client_id, incoming_message).await,
             _ => handle_unknown_message(&client_id, incoming_message).await,

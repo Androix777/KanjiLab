@@ -140,7 +140,7 @@ export class ServerConnector extends EventTarget
 	public async sendGetClientListMessage()
 	{
 		const message: InReqGetClientListMessage = {
-			message_type: `IN_REQ_getClientList`,
+			message_type: `IN_REQ_clientList`,
 			correlation_id: crypto.randomUUID(),
 			payload: {},
 		};

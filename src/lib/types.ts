@@ -18,7 +18,7 @@ export type StatsInfo = {
 
 export type MessageType =
 	| `IN_REQ_registerClient`
-	| `IN_REQ_getClientList`
+	| `IN_REQ_clientList`
 	| `IN_REQ_sendChat`
 	| `IN_REQ_makeAdmin`
 
@@ -44,7 +44,7 @@ export type InReqRegisterClientPayload = {
 export type InReqRegisterClientMessage = BaseMessage<InReqRegisterClientPayload, `IN_REQ_registerClient`>;
 
 export type InReqGetClientListPayload = object;
-export type InReqGetClientListMessage = BaseMessage<InReqGetClientListPayload, `IN_REQ_getClientList`>;
+export type InReqGetClientListMessage = BaseMessage<InReqGetClientListPayload, `IN_REQ_clientList`>;
 
 export type InReqMakeAdminPayload = {
 	admin_password: string;
