@@ -106,7 +106,7 @@
 			<div class="flex-1 border text-center overflow-y-auto">
 				{#if webSocketClient && webSocketClient.clientList}
 					{#each webSocketClient.clientList as client}
-						<PlayerListCard playerName={client.name} />
+						<PlayerListCard clientInfo={client} isMe={client.id == webSocketClient.id} />
 					{/each}
 				{/if}
 			</div>

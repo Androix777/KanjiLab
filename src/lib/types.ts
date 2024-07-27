@@ -16,6 +16,12 @@ export type StatsInfo = {
 	wrongCount: number;
 };
 
+export type ClientInfo = {
+	id: string;
+	name: string;
+	is_admin: boolean;
+};
+
 export type MessageType =
 	| `IN_REQ_registerClient`
 	| `IN_REQ_clientList`

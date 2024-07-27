@@ -1,12 +1,12 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload } from "./types";
+import type { ClientInfo, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 
 class WebSocketClient
 {
 	private static instance: WebSocketClient | null;
 	private serverConnector: ServerConnector | null = null;
-	public clientList: Array<{ id: string; name: string; is_admin: boolean }> = $state([]);
+	public clientList: Array<ClientInfo> = $state([]);
 	public chatList: Array<{ name: string; message: string }> = $state([]);
 
 	public connectionStatus: `Disconnected` | `Connecting` | `Connected` = $state(`Disconnected`);
