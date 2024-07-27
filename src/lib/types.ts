@@ -33,6 +33,10 @@ export type MessageType =
 	| `OUT_RESP_status`
 	| `OUT_RESP_clientRegistered`
 
+	| `OUT_REQ_question`
+
+	| `IN_RESP_question`
+
 	| `OUT_NOTIF_clientRegistered`
 	| `OUT_NOTIF_clientDisconnected`
 	| `OUT_NOTIF_chatSent`
@@ -88,6 +92,18 @@ export type OutRespClientListPayload = {
 	}[];
 };
 export type OutRespClientListMessage = BaseMessage<OutRespClientListPayload, `OUT_RESP_clientList`>;
+// OUT REQ
+
+export type OutReqQuestionPayload = object;
+export type OutReqQuestionMessage = BaseMessage<OutReqQuestionPayload, `OUT_REQ_question`>;
+
+// IN RESP
+
+export type InRespQuestionPayload = {
+	question: string;
+	answers: string[];
+};
+export type InRespQuestionMessage = BaseMessage<InRespQuestionPayload, `IN_RESP_question`>;
 
 // OUT NOTIF
 export type OutNotifClientRegisteredPayload = {

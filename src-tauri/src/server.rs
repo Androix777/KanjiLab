@@ -366,7 +366,6 @@ async fn handle_question(client_id: &str, incoming_message: BaseMessage) {
             return;
         } else {
             set_current_question(payload.question.clone(), payload.answers.clone());
-            let _ = send_status(client_id, &incoming_message.correlation_id, "success").await;
 
             let event_payload = OutNotifQuestionPayload {
                 question: payload.question.clone(),

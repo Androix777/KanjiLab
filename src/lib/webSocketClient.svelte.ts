@@ -1,6 +1,7 @@
 import { ServerConnector } from "$lib/webSocketConnector";
 import type { ClientInfo, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
+import DatabaseService from "./databaseService";
 
 class WebSocketClient
 {
@@ -78,6 +79,11 @@ class WebSocketClient
 		{
 			this.isGameStarted = true;
 		});
+		this.serverConnector.addEventListener(`OUT_REQ_question`, (event) =>
+		{
+			const customEvent: CustomEvent<(question: string, answers: string[]) => void> = <CustomEvent<(question: string, answers: string[]) => void>>event;
+			void this.respondToQuestionRequest(customEvent);
+		});
 	}
 
 	public disconnectFromServer()
@@ -94,6 +100,33 @@ class WebSocketClient
 	public sendChatMessage(message: string)
 	{
 		this.serverConnector?.sendChatMessage(message);
+	}
+
+	public async respondToQuestionRequest(event: CustomEvent<(question: string, answers: string[]) => void>)
+	{
+		const question: { question: string; answers: string[] } = await this.getQuestion();
+		event.detail(question.question, question.answers);
+	}
+
+	public async getQuestion(): Promise<{ question: string; answers: string[] }>
+	{
+		try
+		{
+			const databaseService = await DatabaseService.getInstance();
+			const words = await databaseService.getRandomWords(1);
+			const lastWord = words[0];
+			const readings = lastWord.wordReadings.map(reading => reading.reading);
+			const question: { question: string; answers: string[] } = {
+				question: lastWord.word,
+				answers: readings,
+			};
+			return question;
+		}
+		catch (error)
+		{
+			console.error(error);
+			throw new Error(`getQuestionFailed`);
+		}
 	}
 
 	public async makeAdmin()
