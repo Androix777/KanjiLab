@@ -1,9 +1,14 @@
 use crate::server_logic::{
-    add_client, client_exists, get_admin_password, get_client, get_client_list, initialize,
-    make_admin, remove_client, Client,
+    add_client, client_exists, get_admin_password, get_client, get_client_list,
+    get_current_question, get_game_state, initialize, make_admin, remove_client,
+    set_current_question, start_game, Client,
 };
 use crate::structures::{
-    BaseMessage, ClientInfo, InReqMakeAdminPayload, InReqRegisterClientPayload, InReqSendChatPayload, InReqStartGamePayload, OutNotifAdminMadePayload, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutRespClientListPayload, OutRespClientRegisteredPayload, OutRespStatusPayload
+    BaseMessage, ClientInfo, InReqMakeAdminPayload, InReqRegisterClientPayload,
+    InReqSendChatPayload, InRespQuestionPayload, OutNotifAdminMadePayload, OutNotifChatSentPayload,
+    OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload,
+    OutNotifQuestionPayload, OutReqQuestionPayload, OutRespClientListPayload,
+    OutRespClientRegisteredPayload, OutRespStatusPayload,
 };
 use colored::*;
 use futures_util::stream::SplitSink;
@@ -25,8 +30,10 @@ pub static SERVER_HANDLE: LazyLock<Arc<Mutex<Option<oneshot::Sender<()>>>>> =
 pub type ClientWrite = Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, Message>>>;
 pub type ClientsConnections = Arc<Mutex<HashMap<String, ClientWrite>>>;
 
-pub static CLIENTS_CONNECTIONS: LazyLock<ClientsConnections> =
-    LazyLock::new(|| Arc::new(Mutex::new(HashMap::new())));
+pub static CLIENTS_CONNECTIONS: LazyLock<ClientsConnections> = LazyLock::new(|| Default::default());
+
+pub static MESSAGES_CORRELATIONS: LazyLock<HashMap<String, String>> =
+    LazyLock::new(|| Default::default());
 
 pub async fn call_launch_server() {
     let rt = Runtime::new().unwrap();
@@ -140,7 +147,8 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
             "IN_REQ_clientList" => handle_get_client_list(&client_id, incoming_message).await,
             "IN_REQ_sendChat" => handle_send_chat(&client_id, incoming_message).await,
             "IN_REQ_makeAdmin" => handle_make_admin(&client_id, incoming_message).await,
-			"IN_REQ_startGame" => handle_start_game(&client_id, incoming_message).await,
+            "IN_REQ_startGame" => handle_start_game(&client_id, incoming_message).await,
+            "IN_RESP_question" => handle_question(&client_id, incoming_message).await,
             _ => handle_unknown_message(&client_id, incoming_message).await,
         };
     }
@@ -189,12 +197,14 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
             return;
         }
 
-		let response_payload = OutRespClientRegisteredPayload {
+        let response_payload = OutRespClientRegisteredPayload {
             id: client_id.to_string(),
         };
-		let response = BaseMessage::new(response_payload, Some(incoming_message.correlation_id.clone()));
+        let response = BaseMessage::new(
+            response_payload,
+            Some(incoming_message.correlation_id.clone()),
+        );
         let _ = send(client_id, response).await;
-        
 
         let event_payload = OutNotifClientRegisteredPayload {
             id: client_id.to_string(),
@@ -261,7 +271,7 @@ async fn handle_get_client_list(client_id: &str, incoming_message: BaseMessage) 
         .map(|client| ClientInfo {
             id: client.id.to_string(),
             name: client.name.clone(),
-			is_admin: client.is_admin,
+            is_admin: client.is_admin,
         })
         .collect();
 
@@ -305,25 +315,69 @@ async fn handle_start_game(client_id: &str, incoming_message: BaseMessage) {
         return;
     }
 
-	if let Some(client) = get_client(client_id) {
-		if !client.is_admin {
-			send_status(
-				client_id,
-				&incoming_message.correlation_id,
-				"noRightsError",
-			)
-			.await;
-			return;
-		}
-		let _ = send_status(client_id, &incoming_message.correlation_id, "success").await;
+    if let Some(client) = get_client(client_id) {
+        if !client.is_admin {
+            send_status(client_id, &incoming_message.correlation_id, "noRightsError").await;
+            return;
+        }
 
-		let event_payload = OutNotifGameStartedPayload {
-		};
+        if get_game_state() {
+            send_status(
+                client_id,
+                &incoming_message.correlation_id,
+                "alreadyStarted",
+            )
+            .await;
+            return;
+        }
 
-		let event = BaseMessage::new(event_payload, None);
+        start_game();
 
-		let _ = send_all(event).await;
-	}
+        let _ = send_status(client_id, &incoming_message.correlation_id, "success").await;
+
+        let event_payload = OutNotifGameStartedPayload {};
+
+        let event = BaseMessage::new(event_payload, None);
+
+        let _ = send_all(event).await;
+
+        let event_payload = OutReqQuestionPayload {};
+
+        let event = BaseMessage::new(event_payload, None);
+
+        let _ = send(client_id, event).await;
+    }
+}
+
+async fn handle_question(client_id: &str, incoming_message: BaseMessage) {
+    if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
+        return;
+    }
+
+    if let Ok(payload) = validate_payload::<InRespQuestionPayload>(
+        client_id,
+        &incoming_message.correlation_id,
+        incoming_message.payload,
+    )
+    .await
+    {
+        if let Some(_) = get_current_question() {
+            send_status(client_id, &incoming_message.correlation_id, "alreadyExist").await;
+            return;
+        } else {
+            set_current_question(payload.question.clone(), payload.answers.clone());
+            let _ = send_status(client_id, &incoming_message.correlation_id, "success").await;
+
+            let event_payload = OutNotifQuestionPayload {
+                question: payload.question.clone(),
+                answers: payload.answers.clone(),
+            };
+
+            let event = BaseMessage::new(event_payload, None);
+
+            let _ = send(client_id, event).await;
+        }
+    }
 }
 
 async fn handle_unknown_message(client_id: &str, incoming_message: BaseMessage) {
@@ -402,7 +456,6 @@ async fn send_all(message: BaseMessage) {
         }
     }
 }
-
 
 fn log(client_name: &str, action: &str, ip: &str) {
     println!(

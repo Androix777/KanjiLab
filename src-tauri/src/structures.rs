@@ -97,7 +97,7 @@ pub struct OutReqQuestionPayload { }
 #[message_type("IN_RESP_question")]
 pub struct InRespQuestionPayload { 
 	pub question: String,
-	pub answer: String,
+	pub answers: Vec<String>,
 }
 
 // OUT NOTIF
@@ -136,7 +136,7 @@ pub struct OutNotifGameStartedPayload { }
 #[message_type("OUT_NOTIF_question")]
 pub struct OutNotifQuestionPayload { 
 	pub question: String,
-	pub answer: String,
+	pub answers: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
