@@ -6,7 +6,7 @@ pub trait MessageType {
     const MESSAGE_TYPE: &'static str;
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct BaseMessage {
     pub correlation_id: String,
     pub message_type: String,

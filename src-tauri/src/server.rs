@@ -10,12 +10,12 @@ use crate::structures::{
     OutNotifQuestionPayload, OutReqQuestionPayload, OutRespClientListPayload,
     OutRespClientRegisteredPayload, OutRespStatusPayload,
 };
-use colored::*;
 use futures_util::stream::SplitSink;
 use futures_util::{SinkExt, StreamExt};
 use serde::de::DeserializeOwned;
 use serde_json::{self, Value};
 use std::collections::HashMap;
+use std::future::Future;
 use std::sync::{Arc, LazyLock};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::runtime::Runtime;
@@ -32,8 +32,32 @@ pub type ClientsConnections = Arc<Mutex<HashMap<String, ClientWrite>>>;
 
 pub static CLIENTS_CONNECTIONS: LazyLock<ClientsConnections> = LazyLock::new(|| Default::default());
 
-pub static MESSAGES_CORRELATIONS: LazyLock<HashMap<String, String>> =
-    LazyLock::new(|| Default::default());
+struct PendingResponses {
+    callbacks: HashMap<String, oneshot::Sender<BaseMessage>>,
+}
+
+impl PendingResponses {
+    fn new() -> Self {
+        Self {
+            callbacks: HashMap::new(),
+        }
+    }
+
+    fn insert(&mut self, correlation_id: String) -> oneshot::Receiver<BaseMessage> {
+        let (tx, rx) = oneshot::channel();
+        self.callbacks.insert(correlation_id, tx);
+        rx
+    }
+
+    fn complete(&mut self, message: BaseMessage) -> bool {
+        if let Some(callback) = self.callbacks.remove(&message.correlation_id) {
+            let _ = callback.send(message);
+            true
+        } else {
+            false
+        }
+    }
+}
 
 pub async fn call_launch_server() {
     let rt = Runtime::new().unwrap();
@@ -92,12 +116,13 @@ pub async fn launch_server(stop_signal: oneshot::Receiver<()>, start_signal: one
 }
 
 async fn handle_connection(stream: tokio::net::TcpStream) {
+    let pending_responses = Arc::new(Mutex::new(PendingResponses::new()));
     let ws_stream = accept_async(stream).await.expect("Failed to accept");
-    let peer_addr = ws_stream.get_ref().peer_addr().unwrap();
-    log("???", "connected", &peer_addr.to_string());
+    let _peer_addr = ws_stream.get_ref().peer_addr().unwrap();
 
     let (write, mut read) = ws_stream.split();
     let client_id = Uuid::new_v4().to_string();
+	log("???", "connected", &client_id, true);
     CLIENTS_CONNECTIONS
         .lock()
         .await
@@ -132,14 +157,25 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
             log(
                 &client.name,
                 &incoming_message.message_type,
-                &peer_addr.to_string(),
+                &client_id,
+				true,
             );
         } else {
             log(
                 "???",
                 &incoming_message.message_type,
-                &peer_addr.to_string(),
+                &client_id,
+				true,
             );
+        }
+
+        let pending_responses_clone = Arc::clone(&pending_responses);
+        if pending_responses_clone
+            .lock()
+            .await
+            .complete(incoming_message.clone())
+        {
+            continue;
         }
 
         match incoming_message.message_type.as_str() {
@@ -147,18 +183,19 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
             "IN_REQ_clientList" => handle_get_client_list(&client_id, incoming_message).await,
             "IN_REQ_sendChat" => handle_send_chat(&client_id, incoming_message).await,
             "IN_REQ_makeAdmin" => handle_make_admin(&client_id, incoming_message).await,
-            "IN_REQ_startGame" => handle_start_game(&client_id, incoming_message).await,
-            "IN_RESP_question" => handle_question(&client_id, incoming_message).await,
+            "IN_REQ_startGame" => {
+                handle_start_game(&client_id, incoming_message, pending_responses_clone).await
+            }
             _ => handle_unknown_message(&client_id, incoming_message).await,
         };
     }
 
     let deleted_client: Option<Client>;
     if let Some(client) = get_client(&client_id) {
-        log(&client.name, "disconnected", &peer_addr.to_string());
+        log(&client.name, "disconnected", &client_id, true);
         deleted_client = Some(client);
     } else {
-        log("???", "disconnected", &peer_addr.to_string());
+        log("???", "disconnected", &client_id, true);
         deleted_client = None;
     }
 
@@ -310,7 +347,11 @@ async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
     }
 }
 
-async fn handle_start_game(client_id: &str, incoming_message: BaseMessage) {
+async fn handle_start_game(
+    client_id: &str,
+    incoming_message: BaseMessage,
+    pending_responses: Arc<Mutex<PendingResponses>>,
+) {
     if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
         return;
     }
@@ -341,11 +382,18 @@ async fn handle_start_game(client_id: &str, incoming_message: BaseMessage) {
 
         let _ = send_all(event).await;
 
-        let event_payload = OutReqQuestionPayload {};
+        let message_payload = OutReqQuestionPayload {};
+        let message = BaseMessage::new(message_payload, None);
 
-        let event = BaseMessage::new(event_payload, None);
-
-        let _ = send(client_id, event).await;
+        let _ = send_and_response(
+            client_id,
+            message,
+            Arc::clone(&pending_responses),
+            |response, client_id, _pending_responses| async move {
+                handle_question(&client_id, response).await;
+            },
+        )
+        .await;
     }
 }
 
@@ -374,7 +422,7 @@ async fn handle_question(client_id: &str, incoming_message: BaseMessage) {
 
             let event = BaseMessage::new(event_payload, None);
 
-            let _ = send(client_id, event).await;
+            let _ = send_all(event).await;
         }
     }
 }
@@ -432,35 +480,88 @@ async fn send(client_id: &str, message: BaseMessage) -> Result<(), String> {
 
     if let Some(client_write) = connections_lock.get(client_id) {
         let mut write = client_write.lock().await;
+		log(&get_client(client_id).map_or("???".to_string(), |client| client.name.clone()), &message.message_type, client_id, false);
         write
             .send(Message::text(&response_json))
             .await
             .map_err(|e| e.to_string())
+			
     } else {
         Err(format!("Client with ID {} not found", client_id))
     }
 }
 
+async fn send_and_response<F, Fut>(
+    client_id: &str,
+    message: BaseMessage,
+    pending_responses: Arc<Mutex<PendingResponses>>,
+    response_handler: F,
+) -> Result<(), String>
+where
+    F: FnOnce(BaseMessage, String, Arc<Mutex<PendingResponses>>) -> Fut + Send + 'static,
+    Fut: Future<Output = ()> + Send + 'static,
+{
+    let correlation_id = message.correlation_id.clone();
+
+    let rx = {
+        let mut responses = pending_responses.lock().await;
+        responses.insert(correlation_id.clone())
+    };
+
+    send(client_id, message).await?;
+
+    let client_id_owned = client_id.to_string();
+    let pending_responses_cloned = Arc::clone(&pending_responses);
+
+    tokio::spawn(async move {
+        match rx.await {
+            Ok(response) => {
+                response_handler(
+                    response,
+                    client_id_owned,
+                    Arc::clone(&pending_responses_cloned),
+                )
+                .await;
+            }
+            Err(e) => {
+                eprintln!("Failed to receive response: {}", e);
+            }
+        }
+
+        let mut responses = pending_responses_cloned.lock().await;
+        responses.callbacks.remove(&correlation_id);
+    });
+
+    Ok(())
+}
+
 async fn send_all(message: BaseMessage) {
-    let response_json = serde_json::to_string(&message).unwrap();
-    let connections_lock = CLIENTS_CONNECTIONS.lock().await;
     let client_list = get_client_list();
 
     for client in client_list {
-        if let Some(client_write) = connections_lock.get(&client.id) {
-            let mut write = client_write.lock().await;
-            if let Err(e) = write.send(Message::text(&response_json)).await {
-                eprintln!("Error sending message to {}: {}", client.id, e);
-            }
+        if let Err(e) = send(&client.id, message.clone()).await {
+            eprintln!("Error sending message to {}: {}", client.id, e);
         }
     }
 }
 
-fn log(client_name: &str, action: &str, ip: &str) {
+fn log(client_name: &str, action: &str, id: &str, to_server: bool) {
+    use colored::*;
+
+    let colored_action = if to_server {
+        action.green()
+    } else {
+        action.red()
+    };
+
+    let truncated_id = &id[..8.min(id.len())];
+
     println!(
-        "{:<20} {:<15} {:<15}",
-        ip.yellow(),
+        "{:<15} {:<15} {:<15}",
+        truncated_id.yellow(),
         client_name.blue(),
-        action.green(),
+        colored_action,
     );
 }
+
+
