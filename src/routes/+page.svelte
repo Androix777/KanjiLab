@@ -1,5 +1,5 @@
 <script lang="ts">
-    import GameScreen from "$lib/components/GameScreen.svelte";
+    import LegacyGameScreen from "$lib/components/LegacyGameScreen.svelte";
     import SettingsScreen from "$lib/components/SettingsScreen.svelte";
     import StatsScreen from "$lib/components/StatsScreen.svelte";
 	import StartGameScreen from "$lib/components/StartGameScreen.svelte";
@@ -42,7 +42,7 @@
 		{#if currentScreenType === `Stats`}
 			<StatsScreen />
 		{:else if currentScreenType === `GameTest`}
-			<GameScreen fontLoader = {fontLoader} />
+			<LegacyGameScreen fontLoader = {fontLoader} />
 		{:else if currentScreenType === `Settings`}
 			<SettingsScreen />
 		{:else if currentScreenType === `StartGame`}

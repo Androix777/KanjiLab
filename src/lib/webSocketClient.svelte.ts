@@ -12,6 +12,8 @@ class WebSocketClient
 	public connectionStatus: `Disconnected` | `Connecting` | `Connected` = $state(`Disconnected`);
 	public isConnectedToSelf: boolean = $state(false);
 	public id: string = $state(``);
+	public isAdmin: boolean = $state(false);
+	public isGameStarted: boolean = $state(false);
 
 	public static getInstance()
 	{
@@ -72,6 +74,10 @@ class WebSocketClient
 				throw new Error(`noAdmin`);
 			}
 		});
+		this.serverConnector.addEventListener(`OUT_NOTIF_gameStarted`, () =>
+		{
+			this.isGameStarted = true;
+		});
 	}
 
 	public disconnectFromServer()
@@ -80,6 +86,9 @@ class WebSocketClient
 		this.connectionStatus = `Disconnected`;
 		this.clientList = [];
 		this.chatList = [];
+		this.id = ``;
+		this.isAdmin = false;
+		this.isGameStarted = false;
 	}
 
 	public sendChatMessage(message: string)
@@ -90,11 +99,18 @@ class WebSocketClient
 	public async makeAdmin()
 	{
 		await this.serverConnector?.sendMakeAdmin(getSettings().adminPassword, this.id);
+		this.isAdmin = true;
 	}
 
 	public getClient(id: string)
 	{
 		return this.clientList.filter(client => client.id == id)[0];
+	}
+
+	public async startGame()
+	{
+		await this.serverConnector?.sendStartGame();
+		this.isGameStarted = true;
 	}
 }
 

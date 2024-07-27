@@ -3,7 +3,7 @@ use crate::server_logic::{
     make_admin, remove_client, Client,
 };
 use crate::structures::{
-    BaseMessage, ClientInfo, InReqMakeAdminPayload, InReqRegisterClientPayload, InReqSendChatPayload, OutNotifAdminMadePayload, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutRespClientListPayload, OutRespClientRegisteredPayload, OutRespStatusPayload
+    BaseMessage, ClientInfo, InReqMakeAdminPayload, InReqRegisterClientPayload, InReqSendChatPayload, InReqStartGamePayload, OutNotifAdminMadePayload, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutRespClientListPayload, OutRespClientRegisteredPayload, OutRespStatusPayload
 };
 use colored::*;
 use futures_util::stream::SplitSink;
@@ -140,6 +140,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
             "IN_REQ_clientList" => handle_get_client_list(&client_id, incoming_message).await,
             "IN_REQ_sendChat" => handle_send_chat(&client_id, incoming_message).await,
             "IN_REQ_makeAdmin" => handle_make_admin(&client_id, incoming_message).await,
+			"IN_REQ_startGame" => handle_start_game(&client_id, incoming_message).await,
             _ => handle_unknown_message(&client_id, incoming_message).await,
         };
     }
@@ -297,6 +298,32 @@ async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
 
         let _ = send_all(event).await;
     }
+}
+
+async fn handle_start_game(client_id: &str, incoming_message: BaseMessage) {
+    if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
+        return;
+    }
+
+	if let Some(client) = get_client(client_id) {
+		if !client.is_admin {
+			send_status(
+				client_id,
+				&incoming_message.correlation_id,
+				"noRightsError",
+			)
+			.await;
+			return;
+		}
+		let _ = send_status(client_id, &incoming_message.correlation_id, "success").await;
+
+		let event_payload = OutNotifGameStartedPayload {
+		};
+
+		let event = BaseMessage::new(event_payload, None);
+
+		let _ = send_all(event).await;
+	}
 }
 
 async fn handle_unknown_message(client_id: &str, incoming_message: BaseMessage) {

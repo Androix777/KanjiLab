@@ -3,11 +3,23 @@
 	import * as wanakana from "wanakana";
 	import { themeChange } from 'theme-change';
     import AnswerCard from "$lib/components/AnswerCard.svelte";
+	import { FontLoader } from '$lib/fontLoader';
     import type { WordInfo } from "$lib/types";
+
+	type Props = {
+		fontLoader: FontLoader;
+	};
+
+	const
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		{
+			fontLoader,
+		}: Props = $props();
 
 	let inputElement: HTMLInputElement;
 
 	let lastWord: WordInfo | undefined = $state();
+	let wordFont = $state(``);
 	let readings: string[] = $state([]);
 
 	let previousWord = $state(``);
@@ -16,7 +28,6 @@
 	let readingInput = $state(``);
 	let answerStatus: `Correct` | `Wrong` | `` = $state(``);
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async function generateWord()
 	{
 		try
@@ -25,6 +36,7 @@
 			const words = await databaseService.getRandomWords(1);
 			lastWord = words[0];
 			readings = lastWord.wordReadings.map(reading => reading.reading);
+			wordFont = fontLoader.getRandomFont() ?? ``;
 		}
 		catch (error)
 		{
@@ -57,6 +69,7 @@
 			await databaseService.addAnswerResult(lastWord.id, null);
 			answerStatus = `Wrong`;
 		}
+		await generateWord();
 		readingInput = ``;
 		return 0;
 	}
@@ -65,13 +78,14 @@
 	{
 		inputElement.focus();
 		wanakana.bind(inputElement);
+		void generateWord();
 		themeChange(false);
 	});
 </script>
 
 <div class="flex flex-col min-h-screen">
     <div class="flex items-center justify-center flex-grow bg-base-200">
-        <div class="text-7xl">
+        <div class="text-7xl" style="font-family:'{wordFont}'">
             {lastWord?.word}
         </div>
     </div>

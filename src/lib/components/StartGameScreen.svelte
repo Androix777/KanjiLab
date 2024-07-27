@@ -5,6 +5,7 @@
 	import WebSocketClient from "$lib/webSocketClient.svelte";
     import { onMount } from "svelte";
     import PlayerListCard from "./PlayerListCard.svelte";
+    import GameScreen from "./GameScreen.svelte";
 
 	let webSocketClient: WebSocketClient | null = $state(null);
 	let chatMessage: string = $state(``);
@@ -98,9 +99,13 @@
 
 	<div class="flex-grow flex">
 		<div class="w-3/5 border text-center">
-			<div class="flex flex-col justify-center h-full">
-				<span class="text-4xl">Settings</span>
-			</div>
+			{#if webSocketClient?.isGameStarted}
+				<GameScreen />
+			{:else if true}
+				<div class="flex flex-col justify-center h-full">
+					<span class="text-4xl">Settings</span>
+				</div>
+			{/if}
 		</div>
 		<div class="w-2/5 flex flex-col">
 			<div class="flex-1 border text-center overflow-y-auto">
@@ -129,7 +134,7 @@
 
 	<div class="flex-none text-center h-12">
 		<div class="border-x">
-			<button class="btn btn-success w-full h-full rounded-none" onclick={() => {}}>START</button>
+			<button class="btn btn-success w-full h-full rounded-none" onclick={() => { void webSocketClient?.startGame(); }} disabled={!webSocketClient?.isAdmin}>START</button>
 		</div>
 	</div>
 

@@ -15,6 +15,7 @@ import {
 	type OutRespClientRegisteredMessage,
 	type OutNotifAdminMadeMessage,
 	type OutNotifAdminMadePayload,
+	type InReqStartGameMessage,
 } from "./types";
 
 export class ServerConnector extends EventTarget
@@ -212,6 +213,37 @@ export class ServerConnector extends EventTarget
 		this.webSocket.send(JSON.stringify(sendChatMessage));
 	}
 
+	public async sendStartGame()
+	{
+		const message: InReqStartGameMessage = {
+			message_type: `IN_REQ_startGame`,
+			correlation_id: crypto.randomUUID(),
+			payload: {},
+		};
+
+		const response = await this.sendWebSocketMessage(message);
+
+		switch (response.message_type)
+		{
+			case `OUT_RESP_status`:
+			{
+				const statusMessage = <OutRespStatusMessage>response;
+
+				if (statusMessage.payload.status == `success`)
+				{
+					return;
+				}
+				else
+				{
+					throw new Error(statusMessage.payload.status);
+				}
+			}
+			default:
+				console.log(`Received unknown message type: ${message.message_type}`);
+				throw new Error(`unknownMessageType`);
+		}
+	}
+
 	private handleReceivedMessage(message: BaseMessage<object, MessageType>)
 	{
 		switch (message.message_type)
@@ -241,6 +273,12 @@ export class ServerConnector extends EventTarget
 			{
 				const concreteMessage = <OutNotifAdminMadeMessage>message;
 				const event = new CustomEvent<OutNotifAdminMadePayload>(`OUT_NOTIF_adminMade`, { detail: concreteMessage.payload });
+				this.dispatchEvent(event);
+				break;
+			}
+			case `OUT_NOTIF_gameStarted`:
+			{
+				const event = new Event(`OUT_NOTIF_gameStarted`);
 				this.dispatchEvent(event);
 				break;
 			}
