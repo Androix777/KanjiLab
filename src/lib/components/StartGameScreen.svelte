@@ -99,7 +99,13 @@
 	<div class="flex-grow flex min-h-0 flex-row">
 		<div class="border text-center flex flex-1 min-h-0">
 			{#if webSocketClient?.isGameStarted}
-				<GameScreen />
+				<GameScreen
+					question={webSocketClient.question}
+					currentAnswerStatus={webSocketClient.currentAnswerStatus}
+					currentAnswer={webSocketClient.currentAnswer}
+					previousAnswerStatus={webSocketClient.previousAnswerStatus}
+					previousAnswer={webSocketClient.previousAnswer}
+					onAnswer={(answer: string) => webSocketClient?.sendAnswer(answer)} />
 			{:else if true}
 				<div class="flex flex-col flex-grow justify-center h-full">
 					<span class="text-4xl">Settings</span>

@@ -18,6 +18,9 @@ import {
 	type InReqStartGameMessage,
 	type OutReqQuestionMessage,
 	type InRespQuestionMessage,
+	type OutNotifQuestionMessage,
+	type OutNotifQuestionPayload,
+	type InReqSendAnswerMessage,
 } from "./types";
 
 export class ServerConnector extends EventTarget
@@ -258,6 +261,39 @@ export class ServerConnector extends EventTarget
 		this.webSocket.send(JSON.stringify(sendChatMessage));
 	}
 
+	public async sendAnswer(answer: string)
+	{
+		const message: InReqSendAnswerMessage = {
+			message_type: `IN_REQ_sendAnswer`,
+			correlation_id: crypto.randomUUID(),
+			payload: {
+				answer: answer,
+			},
+		};
+
+		const response = await this.sendWebSocketMessage(message);
+
+		switch (response.message_type)
+		{
+			case `OUT_RESP_status`:
+			{
+				const statusMessage = <OutRespStatusMessage>response;
+
+				if (statusMessage.payload.status == `success`)
+				{
+					return;
+				}
+				else
+				{
+					throw new Error(statusMessage.payload.status);
+				}
+			}
+			default:
+				console.log(`Received unknown message type: ${message.message_type}`);
+				throw new Error(`unknownMessageType`);
+		}
+	}
+
 	private handleReceivedMessage(message: BaseMessage<object, MessageType>)
 	{
 		switch (message.message_type)
@@ -303,6 +339,13 @@ export class ServerConnector extends EventTarget
 				{
 					this.sendQuestion(concreteMessage.correlation_id, question, answers);
 				} });
+				this.dispatchEvent(event);
+				break;
+			}
+			case `OUT_NOTIF_question`:
+			{
+				const concreteMessage = <OutNotifQuestionMessage>message;
+				const event = new CustomEvent<OutNotifQuestionPayload>(`OUT_NOTIF_question`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}

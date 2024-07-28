@@ -22,12 +22,15 @@ export type ClientInfo = {
 	is_admin: boolean;
 };
 
+export type AnswerStatus = `Correct` | `Incorrect` | `Unknown`;
+
 export type MessageType =
 	| `IN_REQ_registerClient`
 	| `IN_REQ_clientList`
 	| `IN_REQ_sendChat`
 	| `IN_REQ_makeAdmin`
 	| `IN_REQ_startGame`
+	| `IN_REQ_sendAnswer`
 
 	| `OUT_RESP_clientList`
 	| `OUT_RESP_status`
@@ -41,7 +44,8 @@ export type MessageType =
 	| `OUT_NOTIF_clientDisconnected`
 	| `OUT_NOTIF_chatSent`
 	| `OUT_NOTIF_adminMade`
-	| `OUT_NOTIF_gameStarted`;
+	| `OUT_NOTIF_gameStarted`
+	| `OUT_NOTIF_question`;
 
 export type BaseMessage<T extends object, M extends MessageType> = {
 	message_type: M;
@@ -71,6 +75,11 @@ export type InReqSendChatMessage = BaseMessage<InReqSendChatPayload, `IN_REQ_sen
 
 export type InReqStartGamePayload = object;
 export type InReqStartGameMessage = BaseMessage<InReqStartGamePayload, `IN_REQ_startGame`>;
+
+export type InReqSendAnswerPayload = {
+	answer: string;
+};
+export type InReqSendAnswerMessage = BaseMessage<InReqSendAnswerPayload, `IN_REQ_sendAnswer`>;
 
 // OUT RESP
 export type OutRespStatusPayload = {
@@ -131,3 +140,9 @@ export type OutNotifAdminMadeMessage = BaseMessage<OutNotifAdminMadePayload, `OU
 
 export type OutNotifGameStartedPayload = object;
 export type OutNotifGameStartedMessage = BaseMessage<OutNotifGameStartedPayload, `OUT_NOTIF_gameStarted`>;
+
+export type OutNotifQuestionPayload = {
+	question: string;
+	answers: string[];
+};
+export type OutNotifQuestionMessage = BaseMessage<OutNotifQuestionPayload, `OUT_NOTIF_question`>;

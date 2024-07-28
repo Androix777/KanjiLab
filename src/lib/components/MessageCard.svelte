@@ -1,5 +1,4 @@
 <script lang="ts">
-
 	type Props = {
 		player: string;
 		message: string;

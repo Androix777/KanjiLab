@@ -1,63 +1,44 @@
 <script lang="ts">
-	import DatabaseService from "$lib/databaseService";
 	import * as wanakana from "wanakana";
 	import { themeChange } from 'theme-change';
     import AnswerCard from "$lib/components/AnswerCard.svelte";
-    import type { WordInfo } from "$lib/types";
+    import type { AnswerStatus } from "$lib/types";
+
+	type Props = {
+		question: string;
+		currentAnswerStatus: AnswerStatus;
+		currentAnswer: string;
+		previousAnswerStatus: AnswerStatus;
+		previousAnswer: string;
+		onAnswer: (answer: string) => void;
+	};
+
+	const
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		{
+			question = `NULL`,
+			currentAnswerStatus = `Unknown`,
+			currentAnswer = `NULL`,
+			previousAnswerStatus = `Unknown`,
+			previousAnswer = `NULL`,
+			onAnswer = () => {},
+		}: Props = $props();
 
 	let inputElement: HTMLInputElement;
 
-	let lastWord: WordInfo | undefined = $state();
-	let readings: string[] = $state([]);
-
-	let previousWord = $state(``);
-	let previousReadings: string[] = $state([]);
-
 	let readingInput = $state(``);
-	let answerStatus: `Correct` | `Wrong` | `` = $state(``);
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async function generateWord()
+	function checkWord(e: KeyboardEvent)
 	{
-		try
-		{
-			const databaseService = await DatabaseService.getInstance();
-			const words = await databaseService.getRandomWords(1);
-			lastWord = words[0];
-			readings = lastWord.wordReadings.map(reading => reading.reading);
-		}
-		catch (error)
-		{
-			console.error(error);
-		}
-	}
-
-	async function checkWord(e: KeyboardEvent)
-	{
-		if (lastWord == undefined) return;
-
-		const databaseService = await DatabaseService.getInstance();
 		const realInput: string = inputElement.value;
 
 		if (e.key != `Enter` && e.key != ` `)
 		{
 			return;
 		}
-		previousWord = lastWord.word;
-		previousReadings = readings;
 
-		const readingID = lastWord.wordReadings.find(wr => wr.reading === realInput)?.id || null;
-		if (readingID != null)
-		{
-			await databaseService.addAnswerResult(lastWord.id, readingID);
-			answerStatus = `Correct`;
-		}
-		else
-		{
-			await databaseService.addAnswerResult(lastWord.id, null);
-			answerStatus = `Wrong`;
-		}
-		readingInput = ``;
+		onAnswer(realInput);
+
 		return 0;
 	}
 
@@ -72,7 +53,7 @@
 <div class="flex flex-col flex-grow">
     <div class="flex items-center justify-center flex-grow bg-base-200">
         <div class="text-7xl">
-            {lastWord?.word}
+            {question}
         </div>
     </div>
 
@@ -88,9 +69,10 @@
 
         <div class="w-full flex justify-center">
 			<AnswerCard
-				answerStatus={answerStatus}
-				previousWord={previousWord}
-				previousReadings={previousReadings}
+				currentAnswerStatus={currentAnswerStatus}
+				currentAnswer={currentAnswer}
+				previousAnswerStatus={previousAnswerStatus}
+				previousAnswer={previousAnswer}
 				/>
         </div>
     </div>

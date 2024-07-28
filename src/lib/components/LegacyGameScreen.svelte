@@ -2,7 +2,7 @@
 	import DatabaseService from "$lib/databaseService";
 	import * as wanakana from "wanakana";
 	import { themeChange } from 'theme-change';
-    import AnswerCard from "$lib/components/AnswerCard.svelte";
+    import LegacyAnswerCard from "$lib/components/LegacyAnswerCard.svelte";
 	import { FontLoader } from '$lib/fontLoader';
     import type { WordInfo } from "$lib/types";
 
@@ -101,7 +101,7 @@
         </div>
 
         <div class="w-full flex justify-center">
-			<AnswerCard
+			<LegacyAnswerCard
 				answerStatus={answerStatus}
 				previousWord={previousWord}
 				previousReadings={previousReadings}

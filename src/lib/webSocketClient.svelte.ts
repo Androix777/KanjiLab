@@ -1,5 +1,5 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { ClientInfo, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload } from "./types";
+import type { AnswerStatus, ClientInfo, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifQuestionPayload } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 import DatabaseService from "./databaseService";
 
@@ -15,6 +15,12 @@ class WebSocketClient
 	public id: string = $state(``);
 	public isAdmin: boolean = $state(false);
 	public isGameStarted: boolean = $state(false);
+
+	public question: string = $state(``);
+	public currentAnswerStatus: AnswerStatus = $state(`Unknown`);
+	public previousAnswerStatus: AnswerStatus = $state(`Unknown`);
+	public currentAnswer: string = $state(``);
+	public previousAnswer: string = $state(``);
 
 	public static getInstance()
 	{
@@ -84,6 +90,11 @@ class WebSocketClient
 			const customEvent: CustomEvent<(question: string, answers: string[]) => void> = <CustomEvent<(question: string, answers: string[]) => void>>event;
 			void this.respondToQuestionRequest(customEvent);
 		});
+		this.serverConnector.addEventListener(`OUT_NOTIF_question`, (event) =>
+		{
+			const customEvent: CustomEvent<OutNotifQuestionPayload> = <CustomEvent<OutNotifQuestionPayload>>event;
+			this.showQuestion(customEvent.detail);
+		});
 	}
 
 	public disconnectFromServer()
@@ -144,6 +155,20 @@ class WebSocketClient
 	{
 		await this.serverConnector?.sendStartGame();
 		this.isGameStarted = true;
+	}
+
+	public showQuestion(questionPayload: OutNotifQuestionPayload)
+	{
+		this.question = questionPayload.question;
+	}
+
+	public async sendAnswer(answer: string)
+	{
+		this.previousAnswer = this.currentAnswer;
+		this.previousAnswerStatus = this.currentAnswerStatus;
+		this.currentAnswer = answer;
+
+		await this.serverConnector?.sendAnswer(answer);
 	}
 }
 
