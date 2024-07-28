@@ -5,7 +5,7 @@ use uuid::Uuid;
 use tokio::time::sleep;
 use tokio::sync::broadcast;
 
-// #region Structures and enumerations
+// #region StructuresEnumerations
 #[derive(Clone)]
 pub struct Client {
     pub id: String,
@@ -42,6 +42,7 @@ static GAME_STATE_NOTIFIER: LazyLock<broadcast::Sender<GameState>> = LazyLock::n
     let (sender, _) = broadcast::channel(1);
     sender
 });
+// #endregion
 
 // #region  Initialization
 
