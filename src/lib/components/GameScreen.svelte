@@ -69,7 +69,7 @@
 	});
 </script>
 
-<div class="flex flex-col min-h-screen">
+<div class="flex flex-col flex-grow">
     <div class="flex items-center justify-center flex-grow bg-base-200">
         <div class="text-7xl">
             {lastWord?.word}
