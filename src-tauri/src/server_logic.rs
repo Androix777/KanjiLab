@@ -5,7 +5,7 @@ use uuid::Uuid;
 use tokio::time::sleep;
 use tokio::sync::broadcast;
 
-// region: Structures and enumerations
+// #region Structures and enumerations
 #[derive(Clone)]
 pub struct Client {
     pub id: String,
@@ -27,13 +27,13 @@ pub enum GameState {
     AnswerQuestion,
     WatchingQuestion,
 }
-// endregion
+// #endregion
 
-// region:  Constants
+// #region  Constants
 const ROUND_DURATION: Duration = Duration::from_secs(5);
-// endregion
+// #endregion
 
-// region:  Static
+// #region  Static
 static CLIENT_LIST: LazyLock<RwLock<HashMap<String, Client>>> = LazyLock::new(Default::default);
 static ADMIN_PASSWORD: LazyLock<RwLock<String>> = LazyLock::new(|| RwLock::new(Uuid::new_v4().to_string()));
 static GAME_STATE: LazyLock<RwLock<GameState>> = LazyLock::new(|| RwLock::new(GameState::Lobby));
@@ -43,7 +43,8 @@ static GAME_STATE_NOTIFIER: LazyLock<broadcast::Sender<GameState>> = LazyLock::n
     sender
 });
 
-// region:  Initialization and state management
+// #region  Initialization
+
 pub fn initialize() {
     *ADMIN_PASSWORD.write().unwrap() = Uuid::new_v4().to_string();
     *GAME_STATE.write().unwrap() = GameState::Lobby;
@@ -59,9 +60,10 @@ pub fn set_game_state(new_state: GameState) {
 pub fn get_game_state() -> GameState {
     GAME_STATE.read().unwrap().clone()
 }
-// endregion
+// #endregion
 
-// region: Clients management
+// #region ClientsManagement
+
 pub fn client_exists(id: &str) -> bool {
     CLIENT_LIST.read().unwrap().contains_key(id)
 }
@@ -108,9 +110,10 @@ pub fn get_admin_id() -> Option<String> {
         .find(|client| client.is_admin)
         .map(|admin| admin.id.clone())
 }
-// endregion
+// #endregion
 
-// region: Game control
+// #region GameControl
+
 pub fn get_admin_password() -> String {
     ADMIN_PASSWORD.read().unwrap().clone()
 }
@@ -155,4 +158,4 @@ pub fn get_current_question() -> Option<Question> {
 pub fn subscribe_to_game_state() -> broadcast::Receiver<GameState> {
     GAME_STATE_NOTIFIER.subscribe()
 }
-// endregion
+// #endregion

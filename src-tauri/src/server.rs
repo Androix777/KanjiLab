@@ -60,7 +60,7 @@ impl PendingResponses {
         }
     }
 }
-// region: Server control
+// #region ServerControl
 pub async fn call_launch_server() {
     let rt = Runtime::new().unwrap();
     let (stop_tx, stop_rx) = oneshot::channel();
@@ -256,9 +256,10 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
         let _ = send_all(event).await;
     }
 }
-// endregion
+// #endregion
 
-// region: Handles
+// #region Handles
+
 async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) {
     if let Ok(payload) = validate_payload::<InReqRegisterClientPayload>(
         client_id,
@@ -454,9 +455,10 @@ async fn handle_unknown_message(client_id: &str, incoming_message: BaseMessage) 
     )
     .await;
 }
-// endregion
+// #endregion
 
-// region: Helpers
+// ##region Helpers
+
 async fn request_question(client_id: &str, pending_responses: Arc<Mutex<PendingResponses>>) {
     let message_payload = OutReqQuestionPayload {};
     let message = BaseMessage::new(message_payload, None);
@@ -518,9 +520,10 @@ fn log(client_name: &str, action: &str, id: &str, to_server: bool) {
         colored_action,
     );
 }
-// endregion
+// #endregion
 
-// region: Senders
+// #region Senders
+
 async fn send_status(client_id: &str, correlation_id: &str, status: &str) {
     let response_payload = OutRespStatusPayload {
         status: status.to_string(),
@@ -605,4 +608,4 @@ async fn send_all(message: BaseMessage) {
         }
     }
 }
-// endregion
+// #endregion
