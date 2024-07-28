@@ -6,6 +6,7 @@
     import { onMount } from "svelte";
     import PlayerListCard from "./PlayerListCard.svelte";
     import GameScreen from "./GameScreen.svelte";
+    import MessageCard from "./MessageCard.svelte";
 
 	let webSocketClient: WebSocketClient | null = $state(null);
 	let chatMessage: string = $state(``);
@@ -114,16 +115,19 @@
 					{/if}
 			</div>
 			<div class="flex-1 border text-center flex flex-col min-h-0">
-				<div class="flex-grow flex flex-col overflow-y-auto">
-					<div>{getSettings().userName}</div>
+				<div class="flex-grow flex flex-col overflow-y-auto overflow-x-hidden [&>*:nth-child(even)]:bg-base-200" style="scrollbar-gutter: stable;">
 					{#if webSocketClient && webSocketClient.chatList}
 						{#each webSocketClient.chatList as chatMessage}
-							<div class="break-words border border-primary-content">{`${chatMessage.name}: ${chatMessage.message}`}</div>
+							<MessageCard player={chatMessage.name} message={chatMessage.message} />
 						{/each}
 					{/if}
 				</div>
 				<div class="flex justify-between h-12">
-					<input bind:value={chatMessage} onkeydown={chatOnKeyDown} class="input input-bordered text-center w-full rounded-none"/>
+					<input
+						bind:value={chatMessage}
+						onkeydown={chatOnKeyDown}
+						placeholder="{getSettings().userName}:"
+						class="input input-bordered text-left w-full rounded-none placeholder:text-base-content placeholder:text-opacity-30"/>
 					<button class="btn btn-primary w-12 rounded-none" onclick={() => { sendChatMessage(); }}>Send</button>
 				</div>
 			</div>
