@@ -1,12 +1,11 @@
-use std::collections::hash_map::Entry;
-use std::collections::HashMap;
-use std::sync::LazyLock;
-use std::sync::RwLock;
+use std::collections::{HashMap, hash_map::Entry};
+use std::sync::{LazyLock, RwLock};
 use std::time::Duration;
 use uuid::Uuid;
 use tokio::time::sleep;
 use tokio::sync::broadcast;
 
+// region: Structures and enumerations
 #[derive(Clone)]
 pub struct Client {
     pub id: String,
@@ -17,39 +16,37 @@ pub struct Client {
 #[derive(Clone)]
 pub struct Question {
     pub question: String,
-	pub answers: Vec<String>,
+    pub answers: Vec<String>,
 }
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum GameState {
-	Lobby,
-	GameStarting,
-	WaitingQuestion,
-	AnswerQuestion,
-	WatchingQuestion,
+    Lobby,
+    GameStarting,
+    WaitingQuestion,
+    AnswerQuestion,
+    WatchingQuestion,
 }
+// endregion
 
-static CLIENT_LIST: LazyLock<RwLock<HashMap<String, Client>>> = LazyLock::new(Default::default);
-
-static ADMIN_PASSWORD: LazyLock<RwLock<String>> =
-    LazyLock::new(|| RwLock::new(Uuid::new_v4().to_string()));
-
-static GAME_STATE: LazyLock<RwLock<GameState>> = LazyLock::new(|| RwLock::new(GameState::Lobby));
-
-static CURRENT_QUESTION: LazyLock<RwLock<Option<Question>>> = LazyLock::new(|| RwLock::new(None));
-
+// region:  Constants
 const ROUND_DURATION: Duration = Duration::from_secs(5);
+// endregion
 
+// region:  Static
+static CLIENT_LIST: LazyLock<RwLock<HashMap<String, Client>>> = LazyLock::new(Default::default);
+static ADMIN_PASSWORD: LazyLock<RwLock<String>> = LazyLock::new(|| RwLock::new(Uuid::new_v4().to_string()));
+static GAME_STATE: LazyLock<RwLock<GameState>> = LazyLock::new(|| RwLock::new(GameState::Lobby));
+static CURRENT_QUESTION: LazyLock<RwLock<Option<Question>>> = LazyLock::new(|| RwLock::new(None));
 static GAME_STATE_NOTIFIER: LazyLock<broadcast::Sender<GameState>> = LazyLock::new(|| {
     let (sender, _) = broadcast::channel(1);
     sender
 });
 
+// region:  Initialization and state management
 pub fn initialize() {
-    let mut password_lock = ADMIN_PASSWORD.write().unwrap();
-    *password_lock = Uuid::new_v4().to_string();
-	*GAME_STATE.write().unwrap() = GameState::Lobby;
-
+    *ADMIN_PASSWORD.write().unwrap() = Uuid::new_v4().to_string();
+    *GAME_STATE.write().unwrap() = GameState::Lobby;
     CLIENT_LIST.write().unwrap().clear();
 }
 
@@ -59,6 +56,12 @@ pub fn set_game_state(new_state: GameState) {
     let _ = GAME_STATE_NOTIFIER.send(new_state);
 }
 
+pub fn get_game_state() -> GameState {
+    GAME_STATE.read().unwrap().clone()
+}
+// endregion
+
+// region: Clients management
 pub fn client_exists(id: &str) -> bool {
     CLIENT_LIST.read().unwrap().contains_key(id)
 }
@@ -77,14 +80,14 @@ pub fn add_client(id: &str, name: &str) -> bool {
     }
 }
 
-
 pub fn make_admin(id: &str) -> bool {
-    if let Some(client) = CLIENT_LIST.write().unwrap().get_mut(id) {
-        client.is_admin = true;
-        true
-    } else {
-        false
-    }
+    CLIENT_LIST.write().unwrap()
+        .get_mut(id)
+        .map(|client| {
+            client.is_admin = true;
+            true
+        })
+        .unwrap_or(false)
 }
 
 pub fn remove_client(client_id: &str) {
@@ -99,16 +102,21 @@ pub fn get_client(client_id: &str) -> Option<Client> {
     CLIENT_LIST.read().unwrap().get(client_id).cloned()
 }
 
+pub fn get_admin_id() -> Option<String> {
+    CLIENT_LIST.read().unwrap()
+        .values()
+        .find(|client| client.is_admin)
+        .map(|admin| admin.id.clone())
+}
+// endregion
+
+// region: Game control
 pub fn get_admin_password() -> String {
     ADMIN_PASSWORD.read().unwrap().clone()
 }
 
 pub fn start_game() -> bool {
-    let current_state = {
-        let game_state = GAME_STATE.read().unwrap();
-        game_state.clone()
-    };
-
+    let current_state = get_game_state();
     if current_state == GameState::Lobby {
         set_game_state(GameState::GameStarting);
         true
@@ -118,11 +126,7 @@ pub fn start_game() -> bool {
 }
 
 pub fn stop_game() -> bool {
-    let current_state = {
-        let game_state = GAME_STATE.read().unwrap();
-        game_state.clone()
-    };
-
+    let current_state = get_game_state();
     if current_state != GameState::Lobby {
         set_game_state(GameState::Lobby);
         true
@@ -131,20 +135,15 @@ pub fn stop_game() -> bool {
     }
 }
 
-pub fn get_game_state() -> GameState {
-    GAME_STATE.read().unwrap().clone()
-}
-
 pub fn set_current_question(question: String, answers: Vec<String>) {
-    let mut current_question = CURRENT_QUESTION.write().unwrap();
-    *current_question = Some(Question { question, answers });
+    let new_question = Question { question, answers };
+    *CURRENT_QUESTION.write().unwrap() = Some(new_question);
     
     set_game_state(GameState::AnswerQuestion);
     
     tokio::spawn(async move {
         sleep(ROUND_DURATION).await;
-		let mut current_question = CURRENT_QUESTION.write().unwrap();
-    	*current_question = None;
+        *CURRENT_QUESTION.write().unwrap() = None;
         set_game_state(GameState::WaitingQuestion);
     });
 }
@@ -156,10 +155,4 @@ pub fn get_current_question() -> Option<Question> {
 pub fn subscribe_to_game_state() -> broadcast::Receiver<GameState> {
     GAME_STATE_NOTIFIER.subscribe()
 }
-
-pub fn get_admin_id() -> Option<String> {
-    CLIENT_LIST.read().unwrap()
-        .values()
-        .find(|client| client.is_admin)
-        .map(|admin| admin.id.clone())
-}
+// endregion

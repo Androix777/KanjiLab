@@ -60,7 +60,7 @@ impl PendingResponses {
         }
     }
 }
-
+// region: Server control
 pub async fn call_launch_server() {
     let rt = Runtime::new().unwrap();
     let (stop_tx, stop_rx) = oneshot::channel();
@@ -256,7 +256,9 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
         let _ = send_all(event).await;
     }
 }
+// endregion
 
+// region: Handles
 async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) {
     if let Ok(payload) = validate_payload::<InReqRegisterClientPayload>(
         client_id,
@@ -416,21 +418,6 @@ async fn handle_start_game(client_id: &str, incoming_message: BaseMessage) {
     }
 }
 
-async fn request_question(client_id: &str, pending_responses: Arc<Mutex<PendingResponses>>) {
-    let message_payload = OutReqQuestionPayload {};
-    let message = BaseMessage::new(message_payload, None);
-
-    let _ = send_and_response(
-        client_id,
-        message,
-        Arc::clone(&pending_responses),
-        |response, client_id, _pending_responses| async move {
-            handle_question(&client_id, response).await;
-        },
-    )
-    .await;
-}
-
 async fn handle_question(client_id: &str, incoming_message: BaseMessage) {
     if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
         return;
@@ -467,6 +454,23 @@ async fn handle_unknown_message(client_id: &str, incoming_message: BaseMessage) 
     )
     .await;
 }
+// endregion
+
+// region: Helpers
+async fn request_question(client_id: &str, pending_responses: Arc<Mutex<PendingResponses>>) {
+    let message_payload = OutReqQuestionPayload {};
+    let message = BaseMessage::new(message_payload, None);
+
+    let _ = send_and_response(
+        client_id,
+        message,
+        Arc::clone(&pending_responses),
+        |response, client_id, _pending_responses| async move {
+            handle_question(&client_id, response).await;
+        },
+    )
+    .await;
+}
 
 async fn check_client_exists(client_id: &str, correlation_id: &str) -> Result<(), ()> {
     if !client_exists(client_id) {
@@ -496,6 +500,27 @@ async fn validate_payload<T: DeserializeOwned>(
     }
 }
 
+fn log(client_name: &str, action: &str, id: &str, to_server: bool) {
+    use colored::*;
+
+    let colored_action = if to_server {
+        action.green()
+    } else {
+        action.red()
+    };
+
+    let truncated_id = &id[..8.min(id.len())];
+
+    println!(
+        "{:<15} {:<15} {:<15}",
+        truncated_id.yellow(),
+        client_name.blue(),
+        colored_action,
+    );
+}
+// endregion
+
+// region: Senders
 async fn send_status(client_id: &str, correlation_id: &str, status: &str) {
     let response_payload = OutRespStatusPayload {
         status: status.to_string(),
@@ -580,22 +605,4 @@ async fn send_all(message: BaseMessage) {
         }
     }
 }
-
-fn log(client_name: &str, action: &str, id: &str, to_server: bool) {
-    use colored::*;
-
-    let colored_action = if to_server {
-        action.green()
-    } else {
-        action.red()
-    };
-
-    let truncated_id = &id[..8.min(id.len())];
-
-    println!(
-        "{:<15} {:<15} {:<15}",
-        truncated_id.yellow(),
-        client_name.blue(),
-        colored_action,
-    );
-}
+// endregion
