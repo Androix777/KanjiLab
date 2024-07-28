@@ -78,13 +78,6 @@ pub struct OutRespClientListPayload {
     pub clients: Vec<ClientInfo>,
 }
 
-#[derive(Serialize, Deserialize, MessageType)]
-#[message_type("OUT_RESP_answerResult")]
-pub struct OutRespAnswerResultPayload { 
-	pub is_correct: bool,
-	pub correct_answer: String,
-}
-
 // OUT REQ
 
 #[derive(Serialize, Deserialize, MessageType)]
@@ -140,9 +133,14 @@ pub struct OutNotifQuestionPayload {
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
-#[message_type("OUT_RESP_clientAnswered")]
+#[message_type("OUT_NOTIF_clientAnswered")]
 pub struct OutNotifClientAnsweredPayload { 
 	pub is_correct: bool,
+}
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_NOTIF_roundEnded")]
+pub struct OutNotifRoundEndedPayload { 
 }
 
 

@@ -1,14 +1,14 @@
 use crate::server_logic::{
-    add_client, client_exists, get_admin_password, get_client, get_client_list,
+    add_client, client_exists, get_admin_id, get_admin_password, get_client, get_client_list,
     get_current_question, get_game_state, initialize, make_admin, remove_client,
-    set_current_question, start_game, Client,
+    set_current_question, start_game, subscribe_to_game_state, Client, GameState,
 };
 use crate::structures::{
     BaseMessage, ClientInfo, InReqMakeAdminPayload, InReqRegisterClientPayload,
     InReqSendChatPayload, InRespQuestionPayload, OutNotifAdminMadePayload, OutNotifChatSentPayload,
     OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload,
-    OutNotifQuestionPayload, OutReqQuestionPayload, OutRespClientListPayload,
-    OutRespClientRegisteredPayload, OutRespStatusPayload,
+    OutNotifQuestionPayload, OutNotifRoundEndedPayload, OutReqQuestionPayload,
+    OutRespClientListPayload, OutRespClientRegisteredPayload, OutRespStatusPayload,
 };
 use futures_util::stream::SplitSink;
 use futures_util::{SinkExt, StreamExt};
@@ -29,10 +29,12 @@ pub static SERVER_HANDLE: LazyLock<Arc<Mutex<Option<oneshot::Sender<()>>>>> =
 
 pub type ClientWrite = Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, Message>>>;
 pub type ClientsConnections = Arc<Mutex<HashMap<String, ClientWrite>>>;
+pub type ClientsResponses = Arc<Mutex<HashMap<String, Arc<Mutex<PendingResponses>>>>>;
 
 pub static CLIENTS_CONNECTIONS: LazyLock<ClientsConnections> = LazyLock::new(|| Default::default());
+pub static CLIENTS_RESPONSES: LazyLock<ClientsResponses> = LazyLock::new(|| Default::default());
 
-struct PendingResponses {
+pub struct PendingResponses {
     callbacks: HashMap<String, oneshot::Sender<BaseMessage>>,
 }
 
@@ -101,6 +103,7 @@ pub async fn launch_server(stop_signal: oneshot::Receiver<()>, start_signal: one
     println!("WebSocket server listening on ws://0.0.0.0:8080");
 
     start_signal.send(()).unwrap();
+    let mut game_state_receiver = subscribe_to_game_state();
 
     tokio::select! {
         _ = async {
@@ -112,21 +115,68 @@ pub async fn launch_server(stop_signal: oneshot::Receiver<()>, start_signal: one
             println!("Received stop signal. Shutting down server.");
             disconnect_all_clients().await;
         },
+        _ = async {
+            while let Ok(game_state) = game_state_receiver.recv().await {
+                handle_game_state_update(game_state).await;
+            }
+        } => {},
+    }
+}
+
+async fn handle_game_state_update(game_state: GameState) {
+    if game_state == GameState::WaitingQuestion {
+        let event_payload = OutNotifRoundEndedPayload {};
+        let event = BaseMessage::new(event_payload, None);
+        let _ = send_all(event).await;
+
+        let clients_responses = CLIENTS_RESPONSES.lock().await;
+        if let Some(admin_id) = get_admin_id() {
+            if let Some(pending_responses) = clients_responses.get(&admin_id) {
+                let pending_responses_clone = Arc::clone(pending_responses);
+                request_question(&admin_id, pending_responses_clone).await;
+            } else {
+                println!("No PendingResponses found for admin id: {}", admin_id);
+            }
+        } else {
+            println!("Admin ID not found");
+        }
+    } else if game_state == GameState::GameStarting {
+        let event_payload = OutNotifGameStartedPayload {};
+        let event = BaseMessage::new(event_payload, None);
+        let _ = send_all(event).await;
+
+        let clients_responses = CLIENTS_RESPONSES.lock().await;
+        if let Some(admin_id) = get_admin_id() {
+            if let Some(pending_responses) = clients_responses.get(&admin_id) {
+                println!("request_question");
+                let pending_responses_clone = Arc::clone(pending_responses);
+                request_question(&admin_id, pending_responses_clone).await;
+            } else {
+                println!("No PendingResponses found for admin id: {}", admin_id);
+            }
+        } else {
+            println!("Admin ID not found");
+        }
     }
 }
 
 async fn handle_connection(stream: tokio::net::TcpStream) {
-    let pending_responses = Arc::new(Mutex::new(PendingResponses::new()));
     let ws_stream = accept_async(stream).await.expect("Failed to accept");
     let _peer_addr = ws_stream.get_ref().peer_addr().unwrap();
 
     let (write, mut read) = ws_stream.split();
     let client_id = Uuid::new_v4().to_string();
-	log("???", "connected", &client_id, true);
+    log("???", "connected", &client_id, true);
     CLIENTS_CONNECTIONS
         .lock()
         .await
         .insert(client_id.clone(), Arc::new(Mutex::new(write)));
+
+    let pending_responses = Arc::new(Mutex::new(PendingResponses::new()));
+    CLIENTS_RESPONSES
+        .lock()
+        .await
+        .insert(client_id.clone(), Arc::clone(&pending_responses));
 
     while let Some(message) = read.next().await {
         let message = match message {
@@ -158,15 +208,10 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
                 &client.name,
                 &incoming_message.message_type,
                 &client_id,
-				true,
+                true,
             );
         } else {
-            log(
-                "???",
-                &incoming_message.message_type,
-                &client_id,
-				true,
-            );
+            log("???", &incoming_message.message_type, &client_id, true);
         }
 
         let pending_responses_clone = Arc::clone(&pending_responses);
@@ -183,9 +228,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
             "IN_REQ_clientList" => handle_get_client_list(&client_id, incoming_message).await,
             "IN_REQ_sendChat" => handle_send_chat(&client_id, incoming_message).await,
             "IN_REQ_makeAdmin" => handle_make_admin(&client_id, incoming_message).await,
-            "IN_REQ_startGame" => {
-                handle_start_game(&client_id, incoming_message, pending_responses_clone).await
-            }
+            "IN_REQ_startGame" => handle_start_game(&client_id, incoming_message).await,
             _ => handle_unknown_message(&client_id, incoming_message).await,
         };
     }
@@ -347,11 +390,7 @@ async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
     }
 }
 
-async fn handle_start_game(
-    client_id: &str,
-    incoming_message: BaseMessage,
-    pending_responses: Arc<Mutex<PendingResponses>>,
-) {
+async fn handle_start_game(client_id: &str, incoming_message: BaseMessage) {
     if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
         return;
     }
@@ -362,7 +401,7 @@ async fn handle_start_game(
             return;
         }
 
-        if get_game_state() {
+        if get_game_state() != GameState::Lobby {
             send_status(
                 client_id,
                 &incoming_message.correlation_id,
@@ -373,28 +412,23 @@ async fn handle_start_game(
         }
 
         start_game();
-
         let _ = send_status(client_id, &incoming_message.correlation_id, "success").await;
-
-        let event_payload = OutNotifGameStartedPayload {};
-
-        let event = BaseMessage::new(event_payload, None);
-
-        let _ = send_all(event).await;
-
-        let message_payload = OutReqQuestionPayload {};
-        let message = BaseMessage::new(message_payload, None);
-
-        let _ = send_and_response(
-            client_id,
-            message,
-            Arc::clone(&pending_responses),
-            |response, client_id, _pending_responses| async move {
-                handle_question(&client_id, response).await;
-            },
-        )
-        .await;
     }
+}
+
+async fn request_question(client_id: &str, pending_responses: Arc<Mutex<PendingResponses>>) {
+    let message_payload = OutReqQuestionPayload {};
+    let message = BaseMessage::new(message_payload, None);
+
+    let _ = send_and_response(
+        client_id,
+        message,
+        Arc::clone(&pending_responses),
+        |response, client_id, _pending_responses| async move {
+            handle_question(&client_id, response).await;
+        },
+    )
+    .await;
 }
 
 async fn handle_question(client_id: &str, incoming_message: BaseMessage) {
@@ -419,9 +453,7 @@ async fn handle_question(client_id: &str, incoming_message: BaseMessage) {
                 question: payload.question.clone(),
                 answers: payload.answers.clone(),
             };
-
             let event = BaseMessage::new(event_payload, None);
-
             let _ = send_all(event).await;
         }
     }
@@ -480,12 +512,16 @@ async fn send(client_id: &str, message: BaseMessage) -> Result<(), String> {
 
     if let Some(client_write) = connections_lock.get(client_id) {
         let mut write = client_write.lock().await;
-		log(&get_client(client_id).map_or("???".to_string(), |client| client.name.clone()), &message.message_type, client_id, false);
+        log(
+            &get_client(client_id).map_or("???".to_string(), |client| client.name.clone()),
+            &message.message_type,
+            client_id,
+            false,
+        );
         write
             .send(Message::text(&response_json))
             .await
             .map_err(|e| e.to_string())
-			
     } else {
         Err(format!("Client with ID {} not found", client_id))
     }
@@ -563,5 +599,3 @@ fn log(client_name: &str, action: &str, id: &str, to_server: bool) {
         colored_action,
     );
 }
-
-

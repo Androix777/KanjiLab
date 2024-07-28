@@ -2,7 +2,10 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 use std::sync::RwLock;
+use std::time::Duration;
 use uuid::Uuid;
+use tokio::time::sleep;
+use tokio::sync::broadcast;
 
 #[derive(Clone)]
 pub struct Client {
@@ -17,21 +20,43 @@ pub struct Question {
 	pub answers: Vec<String>,
 }
 
-pub static CLIENT_LIST: LazyLock<RwLock<HashMap<String, Client>>> = LazyLock::new(Default::default);
+#[derive(PartialEq, Clone, Debug)]
+pub enum GameState {
+	Lobby,
+	GameStarting,
+	WaitingQuestion,
+	AnswerQuestion,
+	WatchingQuestion,
+}
 
-pub static ADMIN_PASSWORD: LazyLock<RwLock<String>> =
+static CLIENT_LIST: LazyLock<RwLock<HashMap<String, Client>>> = LazyLock::new(Default::default);
+
+static ADMIN_PASSWORD: LazyLock<RwLock<String>> =
     LazyLock::new(|| RwLock::new(Uuid::new_v4().to_string()));
 
-pub static GAME_STATE: LazyLock<RwLock<bool>> = LazyLock::new(|| RwLock::new(false));
+static GAME_STATE: LazyLock<RwLock<GameState>> = LazyLock::new(|| RwLock::new(GameState::Lobby));
 
-pub static CURRENT_QUESTION: LazyLock<RwLock<Option<Question>>> = LazyLock::new(|| RwLock::new(None));
+static CURRENT_QUESTION: LazyLock<RwLock<Option<Question>>> = LazyLock::new(|| RwLock::new(None));
+
+const ROUND_DURATION: Duration = Duration::from_secs(5);
+
+static GAME_STATE_NOTIFIER: LazyLock<broadcast::Sender<GameState>> = LazyLock::new(|| {
+    let (sender, _) = broadcast::channel(1);
+    sender
+});
 
 pub fn initialize() {
     let mut password_lock = ADMIN_PASSWORD.write().unwrap();
     *password_lock = Uuid::new_v4().to_string();
-	*GAME_STATE.write().unwrap() = false;
+	*GAME_STATE.write().unwrap() = GameState::Lobby;
 
     CLIENT_LIST.write().unwrap().clear();
+}
+
+pub fn set_game_state(new_state: GameState) {
+    let mut game_state = GAME_STATE.write().unwrap();
+    *game_state = new_state.clone();
+    let _ = GAME_STATE_NOTIFIER.send(new_state);
 }
 
 pub fn client_exists(id: &str) -> bool {
@@ -79,9 +104,13 @@ pub fn get_admin_password() -> String {
 }
 
 pub fn start_game() -> bool {
-    let mut game_state = GAME_STATE.write().unwrap();
-    if !*game_state {
-        *game_state = true;
+    let current_state = {
+        let game_state = GAME_STATE.read().unwrap();
+        game_state.clone()
+    };
+
+    if current_state == GameState::Lobby {
+        set_game_state(GameState::GameStarting);
         true
     } else {
         false
@@ -89,24 +118,48 @@ pub fn start_game() -> bool {
 }
 
 pub fn stop_game() -> bool {
-    let mut game_state = GAME_STATE.write().unwrap();
-    if *game_state {
-        *game_state = false;
+    let current_state = {
+        let game_state = GAME_STATE.read().unwrap();
+        game_state.clone()
+    };
+
+    if current_state != GameState::Lobby {
+        set_game_state(GameState::Lobby);
         true
     } else {
         false
     }
 }
 
-pub fn get_game_state() -> bool {
-    *GAME_STATE.read().unwrap()
+pub fn get_game_state() -> GameState {
+    GAME_STATE.read().unwrap().clone()
 }
 
 pub fn set_current_question(question: String, answers: Vec<String>) {
     let mut current_question = CURRENT_QUESTION.write().unwrap();
     *current_question = Some(Question { question, answers });
+    
+    set_game_state(GameState::AnswerQuestion);
+    
+    tokio::spawn(async move {
+        sleep(ROUND_DURATION).await;
+		let mut current_question = CURRENT_QUESTION.write().unwrap();
+    	*current_question = None;
+        set_game_state(GameState::WaitingQuestion);
+    });
 }
 
 pub fn get_current_question() -> Option<Question> {
     CURRENT_QUESTION.read().unwrap().clone()
+}
+
+pub fn subscribe_to_game_state() -> broadcast::Receiver<GameState> {
+    GAME_STATE_NOTIFIER.subscribe()
+}
+
+pub fn get_admin_id() -> Option<String> {
+    CLIENT_LIST.read().unwrap()
+        .values()
+        .find(|client| client.is_admin)
+        .map(|admin| admin.id.clone())
 }
