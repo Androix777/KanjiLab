@@ -5,18 +5,15 @@ use uuid::Uuid;
 use tokio::time::sleep;
 use tokio::sync::broadcast;
 
+use crate::structures::{AnswerInfo, QuestionInfo};
+
 // #region StructuresEnumerations
 #[derive(Clone)]
 pub struct Client {
     pub id: String,
     pub name: String,
     pub is_admin: bool,
-}
-
-#[derive(Clone)]
-pub struct Question {
-    pub question: String,
-    pub answers: Vec<String>,
+	pub last_answer: Option<AnswerInfo>,
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -29,22 +26,22 @@ pub enum GameState {
 }
 // #endregion
 
-// #region  Constants
+// #region Constants
 const ROUND_DURATION: Duration = Duration::from_secs(5);
 // #endregion
 
-// #region  Static
+// #region Static
 static CLIENT_LIST: LazyLock<RwLock<HashMap<String, Client>>> = LazyLock::new(Default::default);
 static ADMIN_PASSWORD: LazyLock<RwLock<String>> = LazyLock::new(|| RwLock::new(Uuid::new_v4().to_string()));
 static GAME_STATE: LazyLock<RwLock<GameState>> = LazyLock::new(|| RwLock::new(GameState::Lobby));
-static CURRENT_QUESTION: LazyLock<RwLock<Option<Question>>> = LazyLock::new(|| RwLock::new(None));
+static CURRENT_QUESTION: LazyLock<RwLock<Option<QuestionInfo>>> = LazyLock::new(|| RwLock::new(None));
 static GAME_STATE_NOTIFIER: LazyLock<broadcast::Sender<GameState>> = LazyLock::new(|| {
     let (sender, _) = broadcast::channel(1);
     sender
 });
 // #endregion
 
-// #region  Initialization
+// #region Initialization
 
 pub fn initialize() {
     *ADMIN_PASSWORD.write().unwrap() = Uuid::new_v4().to_string();
@@ -76,6 +73,7 @@ pub fn add_client(id: &str, name: &str) -> bool {
                 id: id.to_string(),
                 name: name.to_string(),
                 is_admin: false,
+				last_answer: None
             });
             true
         }
@@ -139,8 +137,8 @@ pub fn stop_game() -> bool {
     }
 }
 
-pub fn set_current_question(question: String, answers: Vec<String>) {
-    let new_question = Question { question, answers };
+pub fn set_current_question(question: QuestionInfo) {
+    let new_question = question;
     *CURRENT_QUESTION.write().unwrap() = Some(new_question);
     
     set_game_state(GameState::AnswerQuestion);
@@ -152,11 +150,53 @@ pub fn set_current_question(question: String, answers: Vec<String>) {
     });
 }
 
-pub fn get_current_question() -> Option<Question> {
+pub fn get_current_question() -> Option<QuestionInfo> {
     CURRENT_QUESTION.read().unwrap().clone()
 }
 
 pub fn subscribe_to_game_state() -> broadcast::Receiver<GameState> {
     GAME_STATE_NOTIFIER.subscribe()
 }
+
+pub enum AnswerError {
+    NoCurrentQuestion,
+    AlreadyAnswered,
+}
+
+pub fn record_answer(client_id: &str, answer: &str) -> Result<bool, AnswerError> {
+    let current_question = CURRENT_QUESTION.read().unwrap().clone();
+    
+    if current_question.is_none() {
+        return Err(AnswerError::NoCurrentQuestion);
+    }
+
+    let question = current_question.unwrap();
+    
+    let mut client_list = CLIENT_LIST.write().unwrap();
+    let client = client_list.get_mut(client_id).unwrap();
+    
+    if client.last_answer.is_some() {
+        return Err(AnswerError::AlreadyAnswered);
+    }
+    
+    let is_correct = question.answers.iter().any(|correct_answer| 
+        correct_answer.to_lowercase() == answer.to_lowercase()
+    );
+    
+    client.last_answer = Some(AnswerInfo {
+        id: client_id.to_string(),
+        answer: answer.to_string(),
+        is_correct,
+    });
+    
+    Ok(is_correct)
+}
+
+pub fn get_clients_answers() -> Vec<AnswerInfo> {
+    CLIENT_LIST.read().unwrap()
+        .values()
+        .filter_map(|client| client.last_answer.clone())
+        .collect()
+}
+
 // #endregion

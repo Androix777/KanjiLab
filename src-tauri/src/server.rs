@@ -1,14 +1,8 @@
 use crate::server_logic::{
-    add_client, client_exists, get_admin_id, get_admin_password, get_client, get_client_list,
-    get_current_question, get_game_state, initialize, make_admin, remove_client,
-    set_current_question, start_game, subscribe_to_game_state, Client, GameState,
+    add_client, client_exists, get_admin_id, get_admin_password, get_client, get_client_list, get_clients_answers, get_current_question, get_game_state, initialize, make_admin, record_answer, remove_client, set_current_question, start_game, subscribe_to_game_state, AnswerError, Client, GameState
 };
 use crate::structures::{
-    BaseMessage, ClientInfo, InReqMakeAdminPayload, InReqRegisterClientPayload,
-    InReqSendChatPayload, InRespQuestionPayload, OutNotifAdminMadePayload, OutNotifChatSentPayload,
-    OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload,
-    OutNotifQuestionPayload, OutNotifRoundEndedPayload, OutReqQuestionPayload,
-    OutRespClientListPayload, OutRespClientRegisteredPayload, OutRespStatusPayload,
+    BaseMessage, ClientInfo, InReqMakeAdminPayload, InReqRegisterClientPayload, InReqSendAnswerPayload, InReqSendChatPayload, InRespQuestionPayload, OutNotifAdminMadePayload, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, OutReqQuestionPayload, OutRespClientListPayload, OutRespClientRegisteredPayload, OutRespStatusPayload
 };
 use futures_util::stream::SplitSink;
 use futures_util::{SinkExt, StreamExt};
@@ -60,7 +54,9 @@ impl PendingResponses {
         }
     }
 }
+
 // #region ServerControl
+
 pub async fn call_launch_server() {
     let rt = Runtime::new().unwrap();
     let (stop_tx, stop_rx) = oneshot::channel();
@@ -95,6 +91,7 @@ async fn disconnect_all_clients() {
     }
 }
 
+
 pub async fn launch_server(stop_signal: oneshot::Receiver<()>, start_signal: oneshot::Sender<()>) {
     initialize();
     let listener = TcpListener::bind("0.0.0.0:8080")
@@ -120,43 +117,6 @@ pub async fn launch_server(stop_signal: oneshot::Receiver<()>, start_signal: one
                 handle_game_state_update(game_state).await;
             }
         } => {},
-    }
-}
-
-async fn handle_game_state_update(game_state: GameState) {
-    if game_state == GameState::WaitingQuestion {
-        let event_payload = OutNotifRoundEndedPayload {};
-        let event = BaseMessage::new(event_payload, None);
-        let _ = send_all(event).await;
-
-        let clients_responses = CLIENTS_RESPONSES.lock().await;
-        if let Some(admin_id) = get_admin_id() {
-            if let Some(pending_responses) = clients_responses.get(&admin_id) {
-                let pending_responses_clone = Arc::clone(pending_responses);
-                request_question(&admin_id, pending_responses_clone).await;
-            } else {
-                println!("No PendingResponses found for admin id: {}", admin_id);
-            }
-        } else {
-            println!("Admin ID not found");
-        }
-    } else if game_state == GameState::GameStarting {
-        let event_payload = OutNotifGameStartedPayload {};
-        let event = BaseMessage::new(event_payload, None);
-        let _ = send_all(event).await;
-
-        let clients_responses = CLIENTS_RESPONSES.lock().await;
-        if let Some(admin_id) = get_admin_id() {
-            if let Some(pending_responses) = clients_responses.get(&admin_id) {
-                println!("request_question");
-                let pending_responses_clone = Arc::clone(pending_responses);
-                request_question(&admin_id, pending_responses_clone).await;
-            } else {
-                println!("No PendingResponses found for admin id: {}", admin_id);
-            }
-        } else {
-            println!("Admin ID not found");
-        }
     }
 }
 
@@ -229,6 +189,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
             "IN_REQ_sendChat" => handle_send_chat(&client_id, incoming_message).await,
             "IN_REQ_makeAdmin" => handle_make_admin(&client_id, incoming_message).await,
             "IN_REQ_startGame" => handle_start_game(&client_id, incoming_message).await,
+            "IN_REQ_sendAnswer" => handle_send_answer(&client_id, incoming_message).await,
             _ => handle_unknown_message(&client_id, incoming_message).await,
         };
     }
@@ -253,7 +214,15 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
 
         let event = BaseMessage::new(event_payload, None);
 
-        let _ = send_all(event).await;
+        send_all(event).await;
+    }
+}
+
+async fn handle_game_state_update(game_state: GameState) {
+    match game_state {
+        GameState::WaitingQuestion => handle_state_waiting_question().await,
+        GameState::GameStarting => handle_state_game_starting().await,
+        _ => (),
     }
 }
 // #endregion
@@ -287,14 +256,14 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
             response_payload,
             Some(incoming_message.correlation_id.clone()),
         );
-        let _ = send(client_id, response).await;
+        send(client_id, response).await;
 
         let event_payload = OutNotifClientRegisteredPayload {
             id: client_id.to_string(),
             name: payload.name.clone(),
         };
         let event = BaseMessage::new(event_payload, None);
-        let _ = send_all(event).await;
+        send_all(event).await;
     }
 }
 
@@ -332,7 +301,7 @@ async fn handle_make_admin(client_id: &str, incoming_message: BaseMessage) {
             return;
         }
 
-        let _ = send_status(client_id, &incoming_message.correlation_id, "success").await;
+        send_status(client_id, &incoming_message.correlation_id, "success").await;
 
         let event_payload = OutNotifAdminMadePayload {
             id: client_id.to_string(),
@@ -340,7 +309,7 @@ async fn handle_make_admin(client_id: &str, incoming_message: BaseMessage) {
 
         let event = BaseMessage::new(event_payload, None);
 
-        let _ = send_all(event).await;
+        send_all(event).await;
     }
 }
 
@@ -367,7 +336,7 @@ async fn handle_get_client_list(client_id: &str, incoming_message: BaseMessage) 
         Some(incoming_message.correlation_id.clone()),
     );
 
-    let _ = send(&client_id, response).await;
+    send(&client_id, response).await;
 }
 
 async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
@@ -389,7 +358,7 @@ async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
 
         let event = BaseMessage::new(event_payload, None);
 
-        let _ = send_all(event).await;
+        send_all(event).await;
     }
 }
 
@@ -415,7 +384,29 @@ async fn handle_start_game(client_id: &str, incoming_message: BaseMessage) {
         }
 
         start_game();
-        let _ = send_status(client_id, &incoming_message.correlation_id, "success").await;
+        send_status(client_id, &incoming_message.correlation_id, "success").await;
+    }
+}
+
+async fn handle_send_answer(client_id: &str, incoming_message: BaseMessage) {
+    if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
+        return;
+    }
+
+    if let Ok(payload) = validate_payload::<InReqSendAnswerPayload>(
+        client_id,
+        &incoming_message.correlation_id,
+        incoming_message.payload,
+    )
+    .await
+    {
+		match record_answer(client_id, &payload.answer) {
+			Ok(_is_correct) => {
+				send_status(client_id, &incoming_message.correlation_id, "success").await;
+			},
+			Err(AnswerError::NoCurrentQuestion) => send_status(client_id, &incoming_message.correlation_id, "noQuestion").await,
+			Err(AnswerError::AlreadyAnswered) => send_status(client_id, &incoming_message.correlation_id, "alreadyAnswered").await,
+		}
     }
 }
 
@@ -435,14 +426,13 @@ async fn handle_question(client_id: &str, incoming_message: BaseMessage) {
             send_status(client_id, &incoming_message.correlation_id, "alreadyExist").await;
             return;
         } else {
-            set_current_question(payload.question.clone(), payload.answers.clone());
+            set_current_question(payload.question.clone());
 
             let event_payload = OutNotifQuestionPayload {
-                question: payload.question.clone(),
-                answers: payload.answers.clone(),
+                question: payload.question.question.clone(),
             };
             let event = BaseMessage::new(event_payload, None);
-            let _ = send_all(event).await;
+            send_all(event).await;
         }
     }
 }
@@ -457,14 +447,39 @@ async fn handle_unknown_message(client_id: &str, incoming_message: BaseMessage) 
 }
 // #endregion
 
+// ##region StateHandles
+
+async fn handle_state_waiting_question() {
+    let event_payload = OutNotifRoundEndedPayload {
+        question: get_current_question().unwrap(),
+        answers: get_clients_answers()
+    };
+    let event = BaseMessage::new(event_payload, None);
+    send_all(event).await;
+
+    request_question().await;
+}
+
+async fn handle_state_game_starting() {
+    let event_payload = OutNotifGameStartedPayload {};
+    let event = BaseMessage::new(event_payload, None);
+    send_all(event).await;
+
+    request_question().await;
+}
+// #endregion
+
 // ##region Helpers
 
-async fn request_question(client_id: &str, pending_responses: Arc<Mutex<PendingResponses>>) {
+async fn request_question() {
+    let clients_responses = CLIENTS_RESPONSES.lock().await;
+    let admin_id = get_admin_id().unwrap();
+    let pending_responses = clients_responses.get(&admin_id).unwrap();
+
     let message_payload = OutReqQuestionPayload {};
     let message = BaseMessage::new(message_payload, None);
-
-    let _ = send_and_response(
-        client_id,
+    send_and_response(
+        &admin_id,
         message,
         Arc::clone(&pending_responses),
         |response, client_id, _pending_responses| async move {
@@ -531,10 +546,10 @@ async fn send_status(client_id: &str, correlation_id: &str, status: &str) {
 
     let message = BaseMessage::new(response_payload, Some(correlation_id.to_string()));
 
-    let _ = send(&client_id, message).await;
+    send(&client_id, message).await;
 }
 
-async fn send(client_id: &str, message: BaseMessage) -> Result<(), String> {
+async fn send(client_id: &str, message: BaseMessage) {
     let response_json = serde_json::to_string(&message).unwrap();
     let connections_lock = CLIENTS_CONNECTIONS.lock().await;
 
@@ -546,12 +561,12 @@ async fn send(client_id: &str, message: BaseMessage) -> Result<(), String> {
             client_id,
             false,
         );
-        write
-            .send(Message::text(&response_json))
-            .await
-            .map_err(|e| e.to_string())
+        
+        if let Err(e) = write.send(Message::text(&response_json)).await {
+            eprintln!("Error sending message to client {}: {}", client_id, e);
+        }
     } else {
-        Err(format!("Client with ID {} not found", client_id))
+        eprintln!("Client with ID {} not found", client_id);
     }
 }
 
@@ -560,7 +575,7 @@ async fn send_and_response<F, Fut>(
     message: BaseMessage,
     pending_responses: Arc<Mutex<PendingResponses>>,
     response_handler: F,
-) -> Result<(), String>
+)
 where
     F: FnOnce(BaseMessage, String, Arc<Mutex<PendingResponses>>) -> Fut + Send + 'static,
     Fut: Future<Output = ()> + Send + 'static,
@@ -572,7 +587,7 @@ where
         responses.insert(correlation_id.clone())
     };
 
-    send(client_id, message).await?;
+    send(client_id, message).await;
 
     let client_id_owned = client_id.to_string();
     let pending_responses_cloned = Arc::clone(&pending_responses);
@@ -595,17 +610,13 @@ where
         let mut responses = pending_responses_cloned.lock().await;
         responses.callbacks.remove(&correlation_id);
     });
-
-    Ok(())
 }
 
 async fn send_all(message: BaseMessage) {
     let client_list = get_client_list();
 
     for client in client_list {
-        if let Err(e) = send(&client.id, message.clone()).await {
-            eprintln!("Error sending message to {}: {}", client.id, e);
-        }
+        send(&client.id, message.clone()).await;
     }
 }
 // #endregion

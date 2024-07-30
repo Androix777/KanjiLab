@@ -25,7 +25,8 @@ impl BaseMessage {
     }
 }
 
-// IN REQ
+// #region IN_REQ
+
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("IN_REQ_registerClient")]
 pub struct InReqRegisterClientPayload {
@@ -58,8 +59,10 @@ pub struct InReqStartGamePayload { }
 pub struct InReqSendAnswerPayload { 
 	pub answer: String,
 }
+// #endregion
 
-// OUT RESP
+// #region OUT_RESP
+
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_RESP_clientRegistered")]
 pub struct OutRespClientRegisteredPayload {
@@ -77,23 +80,26 @@ pub struct OutRespStatusPayload {
 pub struct OutRespClientListPayload {
     pub clients: Vec<ClientInfo>,
 }
+// #endregion
 
-// OUT REQ
+// #region OUT_REQ
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_REQ_question")]
 pub struct OutReqQuestionPayload { }
+// #endregion
 
-// IN RESP
+// #region IN_RESP
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("IN_RESP_question")]
 pub struct InRespQuestionPayload { 
-	pub question: String,
-	pub answers: Vec<String>,
+	pub question: QuestionInfo,
 }
+// #endregion
 
-// OUT NOTIF
+// #region OUT_NOTIF
+
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_clientRegistered")]
 pub struct OutNotifClientRegisteredPayload {
@@ -129,7 +135,6 @@ pub struct OutNotifGameStartedPayload { }
 #[message_type("OUT_NOTIF_question")]
 pub struct OutNotifQuestionPayload { 
 	pub question: String,
-	pub answers: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
@@ -141,13 +146,28 @@ pub struct OutNotifClientAnsweredPayload {
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_roundEnded")]
 pub struct OutNotifRoundEndedPayload { 
+	pub question: QuestionInfo,
+	pub answers: Vec<AnswerInfo>
 }
 
+// #endregion
 
-
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct ClientInfo {
     pub id: String,
     pub name: String,
     pub is_admin: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct QuestionInfo { 
+	pub question: String,
+	pub answers: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct AnswerInfo { 
+	pub id: String,
+	pub answer: String,
+	pub is_correct: bool,
 }
