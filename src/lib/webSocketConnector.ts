@@ -255,7 +255,7 @@ export class ServerConnector extends EventTarget
 		const sendChatMessage: InRespQuestionMessage = {
 			message_type: `IN_RESP_question`,
 			correlation_id: correlation_id,
-			payload: { question: question, answers: answers },
+			payload: { question: { question: question, answers: answers } },
 		};
 
 		this.webSocket.send(JSON.stringify(sendChatMessage));

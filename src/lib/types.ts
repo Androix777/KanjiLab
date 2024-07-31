@@ -22,6 +22,11 @@ export type ClientInfo = {
 	is_admin: boolean;
 };
 
+export type QuestionInfo = {
+	question: string;
+	answers: string[];
+};
+
 export type AnswerStatus = `Correct` | `Incorrect` | `Unknown`;
 
 export type MessageType =
@@ -109,8 +114,7 @@ export type OutReqQuestionMessage = BaseMessage<OutReqQuestionPayload, `OUT_REQ_
 // IN RESP
 
 export type InRespQuestionPayload = {
-	question: string;
-	answers: string[];
+	question: QuestionInfo;
 };
 export type InRespQuestionMessage = BaseMessage<InRespQuestionPayload, `IN_RESP_question`>;
 
