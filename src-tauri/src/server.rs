@@ -1,9 +1,5 @@
-use crate::server_logic::{
-    add_client, client_exists, get_admin_id, get_admin_password, get_client, get_client_list, get_clients_answers, get_current_question, get_game_state, initialize, make_admin, record_answer, remove_client, set_current_question, start_game, subscribe_to_game_state, AnswerError, Client, GameState
-};
-use crate::structures::{
-    BaseMessage, ClientInfo, InReqMakeAdminPayload, InReqRegisterClientPayload, InReqSendAnswerPayload, InReqSendChatPayload, InRespQuestionPayload, OutNotifAdminMadePayload, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, OutReqQuestionPayload, OutRespClientListPayload, OutRespClientRegisteredPayload, OutRespStatusPayload
-};
+use crate::server_logic::*;
+use crate::structures::*;
 use futures_util::stream::SplitSink;
 use futures_util::{SinkExt, StreamExt};
 use serde::de::DeserializeOwned;
@@ -422,7 +418,7 @@ async fn handle_question(client_id: &str, incoming_message: BaseMessage) {
     )
     .await
     {
-        if let Some(_) = get_current_question() {
+        if let Some(_) = get_question_for_round(get_current_round()) {
             send_status(client_id, &incoming_message.correlation_id, "alreadyExist").await;
             return;
         } else {
@@ -451,8 +447,8 @@ async fn handle_unknown_message(client_id: &str, incoming_message: BaseMessage) 
 
 async fn handle_state_waiting_question() {
     let event_payload = OutNotifRoundEndedPayload {
-        question: get_current_question().unwrap(),
-        answers: get_clients_answers()
+        question: get_question_for_round(get_current_round() - 1).unwrap(),
+        answers: get_answers_for_round(get_current_round() - 1)
     };
     let event = BaseMessage::new(event_payload, None);
     send_all(event).await;

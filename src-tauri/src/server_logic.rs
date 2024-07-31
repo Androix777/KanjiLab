@@ -1,9 +1,9 @@
-use std::collections::{HashMap, hash_map::Entry};
+use std::collections::{hash_map::Entry, HashMap};
 use std::sync::{LazyLock, RwLock};
 use std::time::Duration;
-use uuid::Uuid;
-use tokio::time::sleep;
 use tokio::sync::broadcast;
+use tokio::time::sleep;
+use uuid::Uuid;
 
 use crate::structures::{AnswerInfo, QuestionInfo};
 
@@ -13,7 +13,6 @@ pub struct Client {
     pub id: String,
     pub name: String,
     pub is_admin: bool,
-	pub last_answer: Option<AnswerInfo>,
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -27,18 +26,22 @@ pub enum GameState {
 // #endregion
 
 // #region Constants
-const ROUND_DURATION: Duration = Duration::from_secs(5);
+const ROUND_DURATION: Duration = Duration::from_secs(15);
 // #endregion
 
 // #region Static
 static CLIENT_LIST: LazyLock<RwLock<HashMap<String, Client>>> = LazyLock::new(Default::default);
-static ADMIN_PASSWORD: LazyLock<RwLock<String>> = LazyLock::new(|| RwLock::new(Uuid::new_v4().to_string()));
+static ADMIN_PASSWORD: LazyLock<RwLock<String>> =
+    LazyLock::new(|| RwLock::new(Uuid::new_v4().to_string()));
 static GAME_STATE: LazyLock<RwLock<GameState>> = LazyLock::new(|| RwLock::new(GameState::Lobby));
-static CURRENT_QUESTION: LazyLock<RwLock<Option<QuestionInfo>>> = LazyLock::new(|| RwLock::new(None));
 static GAME_STATE_NOTIFIER: LazyLock<broadcast::Sender<GameState>> = LazyLock::new(|| {
     let (sender, _) = broadcast::channel(1);
     sender
 });
+static CURRENT_ROUND_INDEX: LazyLock<RwLock<u32>> = LazyLock::new(|| RwLock::new(0));
+static ANSWERS_BY_ROUND: LazyLock<
+    RwLock<HashMap<u32, (QuestionInfo, HashMap<String, AnswerInfo>)>>,
+> = LazyLock::new(Default::default);
 // #endregion
 
 // #region Initialization
@@ -47,6 +50,8 @@ pub fn initialize() {
     *ADMIN_PASSWORD.write().unwrap() = Uuid::new_v4().to_string();
     *GAME_STATE.write().unwrap() = GameState::Lobby;
     CLIENT_LIST.write().unwrap().clear();
+    *CURRENT_ROUND_INDEX.write().unwrap() = 0;
+    ANSWERS_BY_ROUND.write().unwrap().clear();
 }
 
 pub fn set_game_state(new_state: GameState) {
@@ -73,7 +78,6 @@ pub fn add_client(id: &str, name: &str) -> bool {
                 id: id.to_string(),
                 name: name.to_string(),
                 is_admin: false,
-				last_answer: None
             });
             true
         }
@@ -82,7 +86,9 @@ pub fn add_client(id: &str, name: &str) -> bool {
 }
 
 pub fn make_admin(id: &str) -> bool {
-    CLIENT_LIST.write().unwrap()
+    CLIENT_LIST
+        .write()
+        .unwrap()
         .get_mut(id)
         .map(|client| {
             client.is_admin = true;
@@ -104,7 +110,9 @@ pub fn get_client(client_id: &str) -> Option<Client> {
 }
 
 pub fn get_admin_id() -> Option<String> {
-    CLIENT_LIST.read().unwrap()
+    CLIENT_LIST
+        .read()
+        .unwrap()
         .values()
         .find(|client| client.is_admin)
         .map(|admin| admin.id.clone())
@@ -138,20 +146,19 @@ pub fn stop_game() -> bool {
 }
 
 pub fn set_current_question(question: QuestionInfo) {
-    let new_question = question;
-    *CURRENT_QUESTION.write().unwrap() = Some(new_question);
-    
+    let current_round = *CURRENT_ROUND_INDEX.write().unwrap();
+    ANSWERS_BY_ROUND
+        .write()
+        .unwrap()
+        .insert(current_round, (question, HashMap::new()));
+
     set_game_state(GameState::AnswerQuestion);
-    
+
     tokio::spawn(async move {
         sleep(ROUND_DURATION).await;
-        *CURRENT_QUESTION.write().unwrap() = None;
+        *CURRENT_ROUND_INDEX.write().unwrap() += 1;
         set_game_state(GameState::WaitingQuestion);
     });
-}
-
-pub fn get_current_question() -> Option<QuestionInfo> {
-    CURRENT_QUESTION.read().unwrap().clone()
 }
 
 pub fn subscribe_to_game_state() -> broadcast::Receiver<GameState> {
@@ -164,39 +171,56 @@ pub enum AnswerError {
 }
 
 pub fn record_answer(client_id: &str, answer: &str) -> Result<bool, AnswerError> {
-    let current_question = CURRENT_QUESTION.read().unwrap().clone();
-    
-    if current_question.is_none() {
-        return Err(AnswerError::NoCurrentQuestion);
-    }
+    let current_round = *CURRENT_ROUND_INDEX.read().unwrap();
+    let mut answers_by_round = ANSWERS_BY_ROUND.write().unwrap();
 
-    let question = current_question.unwrap();
-    
-    let mut client_list = CLIENT_LIST.write().unwrap();
-    let client = client_list.get_mut(client_id).unwrap();
-    
-    if client.last_answer.is_some() {
+    let (question, answers) = answers_by_round
+        .get_mut(&current_round)
+        .ok_or(AnswerError::NoCurrentQuestion)?;
+
+    if answers.contains_key(client_id) {
         return Err(AnswerError::AlreadyAnswered);
     }
-    
-    let is_correct = question.answers.iter().any(|correct_answer| 
-        correct_answer.to_lowercase() == answer.to_lowercase()
-    );
-    
-    client.last_answer = Some(AnswerInfo {
+
+    let is_correct = question
+        .answers
+        .iter()
+        .any(|correct_answer| correct_answer.to_lowercase() == answer.to_lowercase());
+
+    let answer_info = AnswerInfo {
         id: client_id.to_string(),
         answer: answer.to_string(),
         is_correct,
-    });
-    
+    };
+
+    answers.insert(client_id.to_string(), answer_info.clone());
+
     Ok(is_correct)
 }
 
-pub fn get_clients_answers() -> Vec<AnswerInfo> {
-    CLIENT_LIST.read().unwrap()
-        .values()
-        .filter_map(|client| client.last_answer.clone())
-        .collect()
+pub fn get_all_answers() -> HashMap<u32, (QuestionInfo, HashMap<String, AnswerInfo>)> {
+    ANSWERS_BY_ROUND.read().unwrap().clone()
+}
+
+pub fn get_question_for_round(round_index: u32) -> Option<QuestionInfo> {
+    ANSWERS_BY_ROUND
+        .read()
+        .unwrap()
+        .get(&round_index)
+        .map(|(question, _)| question.clone())
+}
+
+pub fn get_answers_for_round(round_index: u32) -> Vec<AnswerInfo> {
+    ANSWERS_BY_ROUND
+        .read()
+        .unwrap()
+        .get(&round_index)
+        .map(|(_, answers)| answers.values().cloned().collect())
+        .unwrap_or_else(Vec::new)
+}
+
+pub fn get_current_round() -> u32 {
+    *CURRENT_ROUND_INDEX.read().unwrap()
 }
 
 // #endregion
