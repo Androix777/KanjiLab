@@ -1,5 +1,5 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { AnswerStatus, ClientInfo, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifQuestionPayload } from "./types";
+import type { AnswerStatus, ClientInfo, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 import DatabaseService from "./databaseService";
 
@@ -95,6 +95,11 @@ class WebSocketClient
 			const customEvent: CustomEvent<OutNotifQuestionPayload> = <CustomEvent<OutNotifQuestionPayload>>event;
 			this.showQuestion(customEvent.detail);
 		});
+		this.serverConnector.addEventListener(`OUT_NOTIF_roundEnded`, (event) =>
+		{
+			const customEvent: CustomEvent<OutNotifRoundEndedPayload> = <CustomEvent<OutNotifRoundEndedPayload>>event;
+			this.endRound(customEvent.detail);
+		});
 	}
 
 	public disconnectFromServer()
@@ -160,15 +165,35 @@ class WebSocketClient
 	public showQuestion(questionPayload: OutNotifQuestionPayload)
 	{
 		this.question = questionPayload.question;
+		this.previousAnswer = this.currentAnswer;
+		this.previousAnswerStatus = this.currentAnswerStatus;
+		this.currentAnswer = ``;
+		this.currentAnswerStatus = `Unknown`;
 	}
 
 	public async sendAnswer(answer: string)
 	{
-		this.previousAnswer = this.currentAnswer;
-		this.previousAnswerStatus = this.currentAnswerStatus;
 		this.currentAnswer = answer;
 
 		await this.serverConnector?.sendAnswer(answer);
+	}
+
+	public endRound(roundResults: OutNotifRoundEndedPayload)
+	{
+		this.clientList.forEach((client) =>
+		{
+			const clientAnswerInfo = roundResults.answers.filter((answer) =>
+			{
+				return answer.id == client.id;
+			})[0];
+			console.log(client.id + ` answered ` + clientAnswerInfo.answer + `: ` + (clientAnswerInfo.is_correct ? `Correct` : `Incorrect`));
+
+			if (clientAnswerInfo.id == this.id)
+			{
+				this.currentAnswer = clientAnswerInfo.answer;
+				this.currentAnswerStatus = clientAnswerInfo.is_correct ? `Correct` : `Incorrect`;
+			}
+		});
 	}
 }
 

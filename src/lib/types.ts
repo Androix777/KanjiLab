@@ -27,6 +27,12 @@ export type QuestionInfo = {
 	answers: string[];
 };
 
+export type AnswerInfo = {
+	id: string;
+	answer: string;
+	is_correct: boolean;
+};
+
 export type AnswerStatus = `Correct` | `Incorrect` | `Unknown`;
 
 export type MessageType =
@@ -50,7 +56,8 @@ export type MessageType =
 	| `OUT_NOTIF_chatSent`
 	| `OUT_NOTIF_adminMade`
 	| `OUT_NOTIF_gameStarted`
-	| `OUT_NOTIF_question`;
+	| `OUT_NOTIF_question`
+	| `OUT_NOTIF_roundEnded`;
 
 export type BaseMessage<T extends object, M extends MessageType> = {
 	message_type: M;
@@ -150,3 +157,9 @@ export type OutNotifQuestionPayload = {
 	answers: string[];
 };
 export type OutNotifQuestionMessage = BaseMessage<OutNotifQuestionPayload, `OUT_NOTIF_question`>;
+
+export type OutNotifRoundEndedPayload = {
+	question: QuestionInfo;
+	answers: AnswerInfo[];
+};
+export type OutNotifRoundEndedMessage = BaseMessage<OutNotifRoundEndedPayload, `OUT_NOTIF_roundEnded`>;

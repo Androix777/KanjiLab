@@ -22,7 +22,7 @@
     <div class="flex flex-col space-y-2 text-xl">
         <div class="flex justify-center">
             {#if currentAnswer}
-                {currentAnswer + currentAnswerStatus}
+                {currentAnswer + `: ` + currentAnswerStatus}
             {:else}
                 <div class="opacity-0">Placeholder</div>
             {/if}
@@ -30,7 +30,7 @@
 
         <div class="flex justify-center">
             {#if previousAnswer}
-                {previousAnswer + previousAnswerStatus}
+                {previousAnswer + `: ` + previousAnswerStatus}
             {:else}
                 <div class="opacity-0">Placeholder</div>
             {/if}
