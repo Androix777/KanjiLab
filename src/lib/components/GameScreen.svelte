@@ -37,6 +37,7 @@
 			return;
 		}
 
+		readingInput = ``;
 		onAnswer(realInput);
 
 		return 0;
