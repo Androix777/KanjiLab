@@ -67,10 +67,6 @@ pub fn get_game_state() -> GameState {
 
 // #region ClientsManagement
 
-pub fn client_exists(id: &str) -> bool {
-    CLIENT_LIST.read().unwrap().contains_key(id)
-}
-
 pub fn add_client(id: &str, name: &str) -> bool {
     match CLIENT_LIST.write().unwrap().entry(id.to_string()) {
         Entry::Vacant(entry) => {
@@ -128,6 +124,8 @@ pub fn get_admin_password() -> String {
 pub fn start_game() -> bool {
     let current_state = get_game_state();
     if current_state == GameState::Lobby {
+        *CURRENT_ROUND_INDEX.write().unwrap() = 0;
+        ANSWERS_BY_ROUND.write().unwrap().clear();
         set_game_state(GameState::GameStarting);
         true
     } else {
@@ -139,6 +137,7 @@ pub fn stop_game() -> bool {
     let current_state = get_game_state();
     if current_state != GameState::Lobby {
         set_game_state(GameState::Lobby);
+
         true
     } else {
         false

@@ -48,16 +48,20 @@ pub struct InReqMakeAdminPayload {
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("IN_REQ_clientList")]
-pub struct InReqClientListPayload { }
+pub struct InReqClientListPayload {}
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("IN_REQ_startGame")]
-pub struct InReqStartGamePayload { }
+pub struct InReqStartGamePayload {}
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("IN_REQ_stopGame")]
+pub struct InReqStopGamePayload {}
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("IN_REQ_sendAnswer")]
-pub struct InReqSendAnswerPayload { 
-	pub answer: String,
+pub struct InReqSendAnswerPayload {
+    pub answer: String,
 }
 // #endregion
 
@@ -86,15 +90,15 @@ pub struct OutRespClientListPayload {
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_REQ_question")]
-pub struct OutReqQuestionPayload { }
+pub struct OutReqQuestionPayload {}
 // #endregion
 
 // #region IN_RESP
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("IN_RESP_question")]
-pub struct InRespQuestionPayload { 
-	pub question: QuestionInfo,
+pub struct InRespQuestionPayload {
+    pub question: QuestionInfo,
 }
 // #endregion
 
@@ -129,25 +133,29 @@ pub struct OutNotifAdminMadePayload {
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_gameStarted")]
-pub struct OutNotifGameStartedPayload { }
+pub struct OutNotifGameStartedPayload {}
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[message_type("OUT_NOTIF_gameStopped")]
+pub struct OutNotifGameStoppedPayload {}
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_question")]
-pub struct OutNotifQuestionPayload { 
-	pub question: String,
+pub struct OutNotifQuestionPayload {
+    pub question: String,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_clientAnswered")]
-pub struct OutNotifClientAnsweredPayload { 
-	pub is_correct: bool,
+pub struct OutNotifClientAnsweredPayload {
+    pub is_correct: bool,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_roundEnded")]
-pub struct OutNotifRoundEndedPayload { 
-	pub question: QuestionInfo,
-	pub answers: Vec<AnswerInfo>
+pub struct OutNotifRoundEndedPayload {
+    pub question: QuestionInfo,
+    pub answers: Vec<AnswerInfo>,
 }
 
 // #endregion
@@ -160,14 +168,14 @@ pub struct ClientInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct QuestionInfo { 
-	pub question: String,
-	pub answers: Vec<String>,
+pub struct QuestionInfo {
+    pub question: String,
+    pub answers: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct AnswerInfo { 
-	pub id: String,
-	pub answer: String,
-	pub is_correct: bool,
+pub struct AnswerInfo {
+    pub id: String,
+    pub answer: String,
+    pub is_correct: bool,
 }

@@ -87,7 +87,6 @@ async fn disconnect_all_clients() {
     }
 }
 
-
 pub async fn launch_server(stop_signal: oneshot::Receiver<()>, start_signal: oneshot::Sender<()>) {
     initialize();
     let listener = TcpListener::bind("0.0.0.0:8080")
@@ -185,6 +184,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
             "IN_REQ_sendChat" => handle_send_chat(&client_id, incoming_message).await,
             "IN_REQ_makeAdmin" => handle_make_admin(&client_id, incoming_message).await,
             "IN_REQ_startGame" => handle_start_game(&client_id, incoming_message).await,
+            "IN_REQ_stopGame" => handle_stop_game(&client_id, incoming_message).await,
             "IN_REQ_sendAnswer" => handle_send_answer(&client_id, incoming_message).await,
             _ => handle_unknown_message(&client_id, incoming_message).await,
         };
@@ -218,6 +218,7 @@ async fn handle_game_state_update(game_state: GameState) {
     match game_state {
         GameState::WaitingQuestion => handle_state_waiting_question().await,
         GameState::GameStarting => handle_state_game_starting().await,
+        GameState::Lobby => handle_state_lobby().await,
         _ => (),
     }
 }
@@ -363,25 +364,45 @@ async fn handle_start_game(client_id: &str, incoming_message: BaseMessage) {
         return;
     }
 
-    if let Some(client) = get_client(client_id) {
-        if !client.is_admin {
-            send_status(client_id, &incoming_message.correlation_id, "noRightsError").await;
-            return;
-        }
-
-        if get_game_state() != GameState::Lobby {
-            send_status(
-                client_id,
-                &incoming_message.correlation_id,
-                "alreadyStarted",
-            )
-            .await;
-            return;
-        }
-
-        start_game();
-        send_status(client_id, &incoming_message.correlation_id, "success").await;
+    if let Err(_) = check_client_admin(client_id, &incoming_message.correlation_id).await {
+        return;
     }
+
+    if get_game_state() != GameState::Lobby {
+        send_status(
+            client_id,
+            &incoming_message.correlation_id,
+            "alreadyStarted",
+        )
+        .await;
+        return;
+    }
+
+    start_game();
+    send_status(client_id, &incoming_message.correlation_id, "success").await;
+}
+
+async fn handle_stop_game(client_id: &str, incoming_message: BaseMessage) {
+    if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
+        return;
+    }
+
+    if let Err(_) = check_client_admin(client_id, &incoming_message.correlation_id).await {
+        return;
+    }
+
+    if get_game_state() == GameState::Lobby {
+        send_status(
+            client_id,
+            &incoming_message.correlation_id,
+            "alreadyStopped",
+        )
+        .await;
+        return;
+    }
+
+    stop_game();
+    send_status(client_id, &incoming_message.correlation_id, "success").await;
 }
 
 async fn handle_send_answer(client_id: &str, incoming_message: BaseMessage) {
@@ -396,13 +417,22 @@ async fn handle_send_answer(client_id: &str, incoming_message: BaseMessage) {
     )
     .await
     {
-		match record_answer(client_id, &payload.answer) {
-			Ok(_is_correct) => {
-				send_status(client_id, &incoming_message.correlation_id, "success").await;
-			},
-			Err(AnswerError::NoCurrentQuestion) => send_status(client_id, &incoming_message.correlation_id, "noQuestion").await,
-			Err(AnswerError::AlreadyAnswered) => send_status(client_id, &incoming_message.correlation_id, "alreadyAnswered").await,
-		}
+        match record_answer(client_id, &payload.answer) {
+            Ok(_is_correct) => {
+                send_status(client_id, &incoming_message.correlation_id, "success").await;
+            }
+            Err(AnswerError::NoCurrentQuestion) => {
+                send_status(client_id, &incoming_message.correlation_id, "noQuestion").await
+            }
+            Err(AnswerError::AlreadyAnswered) => {
+                send_status(
+                    client_id,
+                    &incoming_message.correlation_id,
+                    "alreadyAnswered",
+                )
+                .await
+            }
+        }
     }
 }
 
@@ -448,7 +478,7 @@ async fn handle_unknown_message(client_id: &str, incoming_message: BaseMessage) 
 async fn handle_state_waiting_question() {
     let event_payload = OutNotifRoundEndedPayload {
         question: get_question_for_round(get_current_round() - 1).unwrap(),
-        answers: get_answers_for_round(get_current_round() - 1)
+        answers: get_answers_for_round(get_current_round() - 1),
     };
     let event = BaseMessage::new(event_payload, None);
     send_all(event).await;
@@ -463,6 +493,13 @@ async fn handle_state_game_starting() {
 
     request_question().await;
 }
+
+async fn handle_state_lobby() {
+    let event_payload = OutNotifGameStoppedPayload {};
+    let event = BaseMessage::new(event_payload, None);
+    send_all(event).await;
+}
+
 // #endregion
 
 // ##region Helpers
@@ -486,11 +523,20 @@ async fn request_question() {
 }
 
 async fn check_client_exists(client_id: &str, correlation_id: &str) -> Result<(), ()> {
-    if !client_exists(client_id) {
+    if !get_client(client_id).is_some() {
         send_status(client_id, correlation_id, "notRegisteredError").await;
         return Err(());
     }
     Ok(())
+}
+
+async fn check_client_admin(client_id: &str, correlation_id: &str) -> Result<(), ()> {
+    if get_client(client_id).is_some_and(|x| x.is_admin) {
+        Ok(())
+    } else {
+        send_status(client_id, correlation_id, "noRightsError").await;
+        return Err(());
+    }
 }
 
 async fn validate_payload<T: DeserializeOwned>(
@@ -557,9 +603,12 @@ async fn send(client_id: &str, message: BaseMessage) {
             client_id,
             false,
         );
-        
+
         if let Err(e) = write.send(Message::text(&response_json)).await {
-            eprintln!("Error sending message to client {}: {}", client_id, e);
+            eprintln!(
+                "Error sending message {} to client {}: {}",
+                message.message_type, client_id, e
+            );
         }
     } else {
         eprintln!("Client with ID {} not found", client_id);
@@ -571,8 +620,7 @@ async fn send_and_response<F, Fut>(
     message: BaseMessage,
     pending_responses: Arc<Mutex<PendingResponses>>,
     response_handler: F,
-)
-where
+) where
     F: FnOnce(BaseMessage, String, Arc<Mutex<PendingResponses>>) -> Fut + Send + 'static,
     Fut: Future<Output = ()> + Send + 'static,
 {
