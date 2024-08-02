@@ -3,6 +3,7 @@ import type { WordInfo, WordInfoSQL } from "$lib/types";
 import { invoke } from "@tauri-apps/api/core";
 import { GET_EXECUTABLE_FILE_PATH } from "$lib/tauriFunctions";
 import type { StatsInfo } from "$lib/types";
+import { getSettings } from "$lib/globalSettings.svelte";
 
 class DatabaseService
 {
@@ -34,25 +35,66 @@ class DatabaseService
 
 	async getRandomWords(count: number): Promise<WordInfo[]>
 	{
-		const query = `
-			SELECT 
-				w.id AS word_id, 
-				w.word, 
-				wr.id AS reading_id, 
-				wr.word_reading
-			FROM (
-				SELECT id, word 
-				FROM word 
-				WHERE frequency < 10000
-				ORDER BY RANDOM() 
-				LIMIT ?
-			) AS w
-			JOIN word_reading AS wr ON w.id = wr.word_id;
-		`;
+		let query = ``;
+		if (getSettings().wordPart.get() == ``)
+		{
+			query = `
+				SELECT 
+					w.id AS word_id, 
+					w.word, 
+					wr.id AS reading_id, 
+					wr.word_reading
+				FROM (
+					SELECT id, word 
+					FROM word 
+					WHERE frequency > ${getSettings().minFrequency.get()} AND frequency < ${getSettings().maxFrequency.get()}
+					ORDER BY RANDOM() 
+					LIMIT ${count}
+				) AS w
+				JOIN word_reading AS wr ON w.id = wr.word_id;
+			`;
+		}
+		else
+		{
+			query = `
+				WITH filtered_words AS (
+					SELECT id, word
+					FROM word
+					WHERE frequency BETWEEN ${getSettings().minFrequency.get()} AND ${getSettings().maxFrequency.get()}
+				),
+				filtered_word_parts AS (
+					SELECT id
+					FROM word_part_reading
+					WHERE word_part = '${getSettings().wordPart.get()}'
+				),
+				filtered_word_readings AS (
+					SELECT wr.id, wr.word_id, wr.word_reading
+					FROM word_reading wr
+					JOIN word_reading_word_part_reading wrwpr ON wr.id = wrwpr.word_reading_id
+					WHERE wrwpr.word_part_reading_id IN (SELECT id FROM filtered_word_parts)
+				),
+				selected_words AS (
+					SELECT fw.id, fw.word
+					FROM filtered_words fw
+					JOIN filtered_word_readings fwr ON fw.id = fwr.word_id
+					GROUP BY fw.id, fw.word
+					ORDER BY RANDOM()
+					LIMIT ${count}
+				)
+				SELECT 
+					sw.id AS word_id, 
+					sw.word, 
+					fwr.id AS reading_id, 
+					fwr.word_reading
+				FROM selected_words sw
+				JOIN filtered_word_readings fwr ON sw.id = fwr.word_id;
+			`;
+		}
 
 		try
 		{
-			const data: WordInfoSQL[] = await this.db.select(query, [count]);
+			const data: WordInfoSQL[] = await this.db.select(query);
+			console.log(data);
 			const wordsMap: Map<string, WordInfo> = new Map();
 			data.forEach((result) =>
 			{

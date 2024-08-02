@@ -61,6 +61,15 @@ def create_tables(conn):
         );
     ''')
     
+    cursor.execute('''
+		CREATE INDEX "word_reading_id_index" ON "word_reading" ("word_id");
+	''')
+
+    cursor.execute('''
+		CREATE INDEX "word_part_reading_id_index" ON "word_reading_word_part_reading" ("word_part_reading_id");
+	''')
+
+    
     conn.commit()
 
 def insert_jmdict_data(conn, data):

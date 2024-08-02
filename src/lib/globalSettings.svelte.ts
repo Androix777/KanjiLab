@@ -16,6 +16,9 @@ const settings = {
 	userName: createStateVar(`NoName`),
 	ipAddress: createStateVar(`ws://127.0.0.1:8080`),
 	adminPassword: createStateVar(``),
+	minFrequency: createStateVar(0),
+	maxFrequency: createStateVar(10000),
+	wordPart: createStateVar(``),
 };
 
 export function getSettings()

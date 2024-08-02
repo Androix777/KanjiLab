@@ -7,6 +7,7 @@
     import PlayerListCard from "./PlayerListCard.svelte";
     import GameScreen from "./GameScreen.svelte";
     import MessageCard from "./MessageCard.svelte";
+    import GameSettings from "./GameSettings.svelte";
 
 	let webSocketClient: WebSocketClient | null = $state(null);
 	let chatMessage: string = $state(``);
@@ -107,9 +108,7 @@
 					previousAnswer={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 2]?.answers.get(webSocketClient.id)?.answer || ``}
 					onAnswer={(answer: string) => webSocketClient?.sendAnswer(answer)} />
 			{:else if true}
-				<div class="flex flex-col flex-grow justify-center h-full">
-					<span class="text-4xl">Settings</span>
-				</div>
+				<GameSettings />
 			{/if}
 		</div>
 		<div class="flex flex-col" style="width: 30vw;">
