@@ -100,11 +100,11 @@
 		<div class="border text-center flex flex-1 min-h-0">
 			{#if webSocketClient?.isGameStarted}
 				<GameScreen
-					question={webSocketClient.question}
-					currentAnswerStatus={webSocketClient.currentAnswerStatus}
-					currentAnswer={webSocketClient.currentAnswer}
-					previousAnswerStatus={webSocketClient.previousAnswerStatus}
-					previousAnswer={webSocketClient.previousAnswer}
+					question={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 1]?.question.question || ``}
+					currentAnswerStatus={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 1]?.answers.get(webSocketClient.id)?.answerStatus || `Unknown`}
+					currentAnswer={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 1]?.answers.get(webSocketClient.id)?.answer || ``}
+					previousAnswerStatus={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 2]?.answers.get(webSocketClient.id)?.answerStatus || `Unknown`}
+					previousAnswer={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 2]?.answers.get(webSocketClient.id)?.answer || ``}
 					onAnswer={(answer: string) => webSocketClient?.sendAnswer(answer)} />
 			{:else if true}
 				<div class="flex flex-col flex-grow justify-center h-full">
@@ -116,7 +116,13 @@
 			<div class="flex-1 border text-center overflow-y-auto">
 					{#if webSocketClient && webSocketClient.clientList}
 						{#each webSocketClient.clientList as client}
-							<PlayerListCard clientInfo={client} isMe={client.id == webSocketClient.id} />
+							<PlayerListCard
+								clientInfo={client}
+								isMe={client.id == webSocketClient.id}
+								currentAnswerStatus={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 1]?.answers.get(client.id)?.answerStatus || `Unknown`}
+								currentAnswer={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 1]?.answers.get(client.id)?.answer || ``}
+								previousAnswerStatus={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 2]?.answers.get(client.id)?.answerStatus || `Unknown`}
+								previousAnswer={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 2]?.answers.get(client.id)?.answer || ``} />
 						{/each}
 					{/if}
 			</div>

@@ -1,7 +1,8 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { AnswerStatus, ClientInfo, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload } from "./types";
+import type { AnswerHistory, ClientInfo, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 import DatabaseService from "./databaseService";
+import { SvelteMap } from "svelte/reactivity";
 
 class WebSocketClient
 {
@@ -17,10 +18,7 @@ class WebSocketClient
 	public isGameStarted: boolean = $state(false);
 
 	public question: string = $state(``);
-	public currentAnswerStatus: AnswerStatus = $state(`Unknown`);
-	public previousAnswerStatus: AnswerStatus = $state(`Unknown`);
-	public currentAnswer: string = $state(``);
-	public previousAnswer: string = $state(``);
+	public gameHistory: Array<RoundHistory> = $state([]);
 
 	public static getInstance()
 	{
@@ -111,6 +109,7 @@ class WebSocketClient
 		this.id = ``;
 		this.isAdmin = false;
 		this.isGameStarted = false;
+		this.gameHistory = [];
 	}
 
 	public sendChatMessage(message: string)
@@ -164,35 +163,34 @@ class WebSocketClient
 
 	public showQuestion(questionPayload: OutNotifQuestionPayload)
 	{
-		this.question = questionPayload.question;
-		this.previousAnswer = this.currentAnswer;
-		this.previousAnswerStatus = this.currentAnswerStatus;
-		this.currentAnswer = ``;
-		this.currentAnswerStatus = `Unknown`;
+		this.gameHistory.push({
+			question: questionPayload,
+			answers: new SvelteMap<string, AnswerHistory>(),
+		});
+		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {
+			answer: ``,
+			answerStatus: `Unknown`,
+		});
 	}
 
 	public async sendAnswer(answer: string)
 	{
-		this.currentAnswer = answer;
+		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {
+			answer: answer,
+			answerStatus: `Unknown`,
+		});
 
 		await this.serverConnector?.sendAnswer(answer);
 	}
 
 	public endRound(roundResults: OutNotifRoundEndedPayload)
 	{
-		this.clientList.forEach((client) =>
+		roundResults.answers.forEach((answer) =>
 		{
-			const clientAnswerInfo = roundResults.answers.filter((answer) =>
-			{
-				return answer.id == client.id;
-			})[0];
-			console.log(client.id + ` answered ` + clientAnswerInfo.answer + `: ` + (clientAnswerInfo.is_correct ? `Correct` : `Incorrect`));
-
-			if (clientAnswerInfo.id == this.id)
-			{
-				this.currentAnswer = clientAnswerInfo.answer;
-				this.currentAnswerStatus = clientAnswerInfo.is_correct ? `Correct` : `Incorrect`;
-			}
+			this.gameHistory[this.gameHistory.length - 1].answers.set(answer.id, {
+				answer: answer.answer,
+				answerStatus: answer.is_correct ? `Correct` : `Incorrect`,
+			});
 		});
 	}
 }

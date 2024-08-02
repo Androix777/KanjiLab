@@ -1,3 +1,5 @@
+import type { SvelteMap } from "svelte/reactivity";
+
 export type WordInfo = {
 	id: Uint8Array;
 	word: string;
@@ -31,6 +33,16 @@ export type AnswerInfo = {
 	id: string;
 	answer: string;
 	is_correct: boolean;
+};
+
+export type AnswerHistory = {
+	answer: string;
+	answerStatus: AnswerStatus;
+};
+
+export type RoundHistory = {
+	question: QuestionInfo;
+	answers: SvelteMap<string, AnswerHistory>;
 };
 
 export type AnswerStatus = `Correct` | `Incorrect` | `Unknown`;
