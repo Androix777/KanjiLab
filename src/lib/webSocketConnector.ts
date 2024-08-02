@@ -121,7 +121,7 @@ export class ServerConnector extends EventTarget
 			message_type: `IN_REQ_registerClient`,
 			correlation_id: crypto.randomUUID(),
 			payload: {
-				name: getSettings().userName,
+				name: getSettings().userName.get(),
 			},
 		};
 

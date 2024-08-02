@@ -1,17 +1,24 @@
-let userName = $state(`NoName`);
-let ipAddress: string = $state(`ws://127.0.0.1:8080`);
-let adminPassword: string = $state(``);
+type StateVar<T> = {
+	get: () => T;
+	set: (value: T) => void;
+};
+
+function createStateVar<T>(initial: T): StateVar<T>
+{
+	let value = $state(initial);
+	return {
+		get: () => value,
+		set: (newValue: T) => { value = newValue; },
+	};
+}
+
+const settings = {
+	userName: createStateVar(`NoName`),
+	ipAddress: createStateVar(`ws://127.0.0.1:8080`),
+	adminPassword: createStateVar(``),
+};
 
 export function getSettings()
 {
-	return {
-		get userName() { return userName; },
-		setUserName: (value: string) => { userName = value; },
-
-		get ipAddress() { return ipAddress; },
-		setIpAddress: (value: string) => { ipAddress = value; },
-
-		get adminPassword() { return adminPassword; },
-		setAdminPassword: (value: string) => { adminPassword = value; },
-	};
+	return settings;
 }

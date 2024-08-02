@@ -13,10 +13,10 @@
 
 	async function launchServer()
 	{
-		getSettings().setAdminPassword(await invoke(LAUNCH_SERVER));
+		getSettings().adminPassword.set(await invoke(LAUNCH_SERVER));
 		webSocketClient = WebSocketClient.getInstance();
 		webSocketClient.isConnectedToSelf = true;
-		await webSocketClient.connectToServer(getSettings().ipAddress);
+		await webSocketClient.connectToServer(getSettings().ipAddress.get());
 		await webSocketClient.makeAdmin();
 	}
 
@@ -30,7 +30,7 @@
 
 	async function joinServer()
 	{
-		await webSocketClient?.connectToServer(getSettings().ipAddress);
+		await webSocketClient?.connectToServer(getSettings().ipAddress.get());
 	}
 
 	function leaveServer()
@@ -84,12 +84,12 @@
 		{/if}
 		<div class="w-3/5 border text-center">
 			<input class="input input-bordered text-center w-full h-full rounded-none"
-			value={getSettings().ipAddress}
+			value={getSettings().ipAddress.get()}
 			oninput={(event) =>
 			{
 				if (event.target instanceof HTMLInputElement)
 				{
-					getSettings().setIpAddress(event.target.value);
+					getSettings().ipAddress.set(event.target.value);
 				}
 			}}
 			/>
@@ -138,7 +138,7 @@
 					<input
 						bind:value={chatMessage}
 						onkeydown={chatOnKeyDown}
-						placeholder="{getSettings().userName}:"
+						placeholder="{getSettings().userName.get()}:"
 						class="input input-bordered text-left w-full rounded-none placeholder:text-base-content placeholder:text-opacity-30"/>
 					<button class="btn btn-primary w-12 rounded-none" onclick={() => { sendChatMessage(); }}>Send</button>
 				</div>

@@ -10,10 +10,10 @@
 		{
 			if (event.target instanceof HTMLInputElement)
 			{
-				getSettings().setUserName(event.target.value);
+				getSettings().userName.set(event.target.value);
 			}
 		}}
-		value={getSettings().userName}
+		value={getSettings().userName.get()}
 		class="input input-bordered input-lg text-center w-3/4 text-3xl"
 	/>
 </div>

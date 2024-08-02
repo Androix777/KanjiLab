@@ -146,7 +146,7 @@ class WebSocketClient
 
 	public async makeAdmin()
 	{
-		await this.serverConnector?.sendMakeAdmin(getSettings().adminPassword, this.id);
+		await this.serverConnector?.sendMakeAdmin(getSettings().adminPassword.get(), this.id);
 		this.isAdmin = true;
 	}
 
