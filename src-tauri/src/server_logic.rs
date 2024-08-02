@@ -1,7 +1,7 @@
 use std::collections::{hash_map::Entry, HashMap};
 use std::sync::{LazyLock, RwLock};
 use std::time::Duration;
-use tokio::sync::broadcast;
+use tokio::sync::{broadcast, oneshot};
 use tokio::time::sleep;
 use uuid::Uuid;
 
@@ -26,7 +26,7 @@ pub enum GameState {
 // #endregion
 
 // #region Constants
-const ROUND_DURATION: Duration = Duration::from_secs(15);
+const ROUND_DURATION: Duration = Duration::from_secs(600);
 // #endregion
 
 // #region Static
@@ -42,6 +42,7 @@ static CURRENT_ROUND_INDEX: LazyLock<RwLock<u32>> = LazyLock::new(|| RwLock::new
 static ANSWERS_BY_ROUND: LazyLock<
     RwLock<HashMap<u32, (QuestionInfo, HashMap<String, AnswerInfo>)>>,
 > = LazyLock::new(Default::default);
+static ROUND_TIMER_CANCEL: LazyLock<RwLock<Option<oneshot::Sender<()>>>> = LazyLock::new(|| RwLock::new(None));
 // #endregion
 
 // #region Initialization
@@ -153,8 +154,16 @@ pub fn set_current_question(question: QuestionInfo) {
 
     set_game_state(GameState::AnswerQuestion);
 
+    let (cancel_sender, cancel_receiver) = oneshot::channel();
+    *ROUND_TIMER_CANCEL.write().unwrap() = Some(cancel_sender);
+
     tokio::spawn(async move {
-        sleep(ROUND_DURATION).await;
+        tokio::select! {
+            _ = sleep(ROUND_DURATION) => {},
+            _ = cancel_receiver => {
+                // Timer cancelled, do nothing
+            }
+        }
         *CURRENT_ROUND_INDEX.write().unwrap() += 1;
         set_game_state(GameState::WaitingQuestion);
     });
@@ -222,4 +231,28 @@ pub fn get_current_round() -> u32 {
     *CURRENT_ROUND_INDEX.read().unwrap()
 }
 
+pub fn all_clients_answered() -> bool {
+    let current_round = *CURRENT_ROUND_INDEX.read().unwrap();
+    let answers_by_round = ANSWERS_BY_ROUND.read().unwrap();
+    let client_list = CLIENT_LIST.read().unwrap();
+
+    if let Some((_, answers)) = answers_by_round.get(&current_round) {
+        client_list.len() == answers.len()
+    } else {
+        false
+    }
+}
+
+pub fn end_round_early() -> bool {
+    let current_state = get_game_state();
+    if current_state == GameState::AnswerQuestion {
+        // Cancel the existing timer
+        if let Some(cancel_sender) = ROUND_TIMER_CANCEL.write().unwrap().take() {
+            let _ = cancel_sender.send(());
+        }
+        true
+    } else {
+        false
+    }
+}
 // #endregion

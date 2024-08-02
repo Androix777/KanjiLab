@@ -420,6 +420,9 @@ async fn handle_send_answer(client_id: &str, incoming_message: BaseMessage) {
         match record_answer(client_id, &payload.answer) {
             Ok(_is_correct) => {
                 send_status(client_id, &incoming_message.correlation_id, "success").await;
+				if all_clients_answered(){
+					end_round_early();
+				}
             }
             Err(AnswerError::NoCurrentQuestion) => {
                 send_status(client_id, &incoming_message.correlation_id, "noQuestion").await
