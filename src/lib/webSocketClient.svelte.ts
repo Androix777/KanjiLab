@@ -192,6 +192,12 @@ class WebSocketClient
 				answerStatus: answer.is_correct ? `Correct` : `Incorrect`,
 			});
 		});
+		this.clientList.sort((e1, e2) =>
+		{
+			const e1Score = this.gameHistory.reduce((acc, round) => acc + (round.answers.get(e1.id)?.answerStatus == `Correct` ? 1 : 0), 0);
+			const e2Score = this.gameHistory.reduce((acc, round) => acc + (round.answers.get(e2.id)?.answerStatus == `Correct` ? 1 : 0), 0);
+			return (e1Score < e2Score) ? 1 : (e1Score > e2Score) ? -1 : 0;
+		});
 	}
 }
 

@@ -64,11 +64,12 @@
                 bind:value={readingInput}
                 onkeydown={checkWord}
                 bind:this={inputElement}
+				placeholder={currentAnswer}
                 class="input input-bordered input-lg text-center w-3/4 text-3xl"
             />
         </div>
 
-        <div class="w-full flex justify-center">
+        <div class="h-1/2 w-full flex justify-center min-h-0">
 			<AnswerCard
 				currentAnswerStatus={currentAnswerStatus}
 				currentAnswer={currentAnswer}

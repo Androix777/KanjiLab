@@ -18,22 +18,19 @@
 		}: Props = $props();
 </script>
 
-<div class="card w-3/4 bg-base-200 p-4">
+<div class="card w-3/4 bg-base-200 p-2 overflow-y-auto {previousAnswerStatus == `Correct` ? `bg-success text-success-content` : previousAnswerStatus == `Incorrect` ? `bg-error text-error-content` : `bg-base-200 text-base-content`}">
     <div class="flex flex-col space-y-2 text-xl">
-        <div class="flex justify-center">
-            {#if currentAnswer}
-                {currentAnswer + `: ` + currentAnswerStatus}
-            {:else}
-                <div class="opacity-0">Placeholder</div>
-            {/if}
+        <div class="justify-center">
+			<div class="">
+				WordInKanji
+			</div>
+			<div class="">
+				Word Readings
+			</div>
         </div>
 
-        <div class="flex justify-center">
-            {#if previousAnswer}
-                {previousAnswer + `: ` + previousAnswerStatus}
-            {:else}
-                <div class="opacity-0">Placeholder</div>
-            {/if}
+        <div class="flex-none flex justify-center">
+			<div> Word description {currentAnswerStatus.substring(0, 0)} {currentAnswer.substring(0, 0)} {previousAnswer.substring(0, 0)}</div>
         </div>
     </div>
 </div>

@@ -11,6 +11,7 @@
 
 	let webSocketClient: WebSocketClient | null = $state(null);
 	let chatMessage: string = $state(``);
+	let chatDiv: HTMLElement;
 
 	async function launchServer()
 	{
@@ -57,6 +58,11 @@
 	onMount(() =>
 	{
 		webSocketClient = WebSocketClient.getInstance();
+		const observer = new MutationObserver(() =>
+		{
+			chatDiv.scroll({ top: chatDiv.scrollHeight });
+		});
+		observer.observe(chatDiv, { childList: true });
 	});
 </script>
 
@@ -112,7 +118,7 @@
 			{/if}
 		</div>
 		<div class="flex flex-col" style="width: 30vw;">
-			<div class="flex-1 border text-center overflow-y-auto">
+			<div class="flex-1 border text-center overflow-y-auto overflow-x-hidden" style="scrollbar-width: none;">
 					{#if webSocketClient && webSocketClient.clientList}
 						{#each webSocketClient.clientList as client}
 							<PlayerListCard
@@ -121,12 +127,13 @@
 								currentAnswerStatus={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 1]?.answers.get(client.id)?.answerStatus || `Unknown`}
 								currentAnswer={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 1]?.answers.get(client.id)?.answer || ``}
 								previousAnswerStatus={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 2]?.answers.get(client.id)?.answerStatus || `Unknown`}
-								previousAnswer={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 2]?.answers.get(client.id)?.answer || ``} />
+								previousAnswer={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 2]?.answers.get(client.id)?.answer || ``}
+								score={webSocketClient.gameHistory.reduce((acc, round) => acc + (round.answers.get(client.id)?.answerStatus == `Correct` ? 1 : 0), 0) || 0} />
 						{/each}
 					{/if}
 			</div>
 			<div class="flex-1 border text-center flex flex-col min-h-0">
-				<div class="flex-grow flex flex-col overflow-y-auto overflow-x-hidden [&>*:nth-child(even)]:bg-base-200" style="scrollbar-gutter: stable;">
+				<div class="flex-grow flex flex-col overflow-y-auto overflow-x-hidden [&>*:nth-child(even)]:bg-base-200 pb-2" style="scrollbar-gutter: stable;" bind:this={chatDiv}>
 					{#if webSocketClient && webSocketClient.chatList}
 						{#each webSocketClient.chatList as chatMessage}
 							<MessageCard player={chatMessage.name} message={chatMessage.message} />
