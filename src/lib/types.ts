@@ -97,7 +97,9 @@ export type InReqSendChatPayload = {
 };
 export type InReqSendChatMessage = BaseMessage<InReqSendChatPayload, `IN_REQ_sendChat`>;
 
-export type InReqStartGamePayload = object;
+export type InReqStartGamePayload = {
+	round_duration: number;
+};
 export type InReqStartGameMessage = BaseMessage<InReqStartGamePayload, `IN_REQ_startGame`>;
 
 export type InReqSendAnswerPayload = {

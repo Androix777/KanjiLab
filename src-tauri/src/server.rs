@@ -7,6 +7,7 @@ use serde_json::{self, Value};
 use std::collections::HashMap;
 use std::future::Future;
 use std::sync::{Arc, LazyLock};
+use std::time::Duration;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::runtime::Runtime;
 use tokio::sync::{oneshot, Mutex};
@@ -368,18 +369,26 @@ async fn handle_start_game(client_id: &str, incoming_message: BaseMessage) {
         return;
     }
 
-    if get_game_state() != GameState::Lobby {
-        send_status(
-            client_id,
-            &incoming_message.correlation_id,
-            "alreadyStarted",
-        )
-        .await;
-        return;
-    }
+    if let Ok(payload) = validate_payload::<InReqStartGamePayload>(
+        client_id,
+        &incoming_message.correlation_id,
+        incoming_message.payload,
+    )
+    .await
+    {
+        if get_game_state() != GameState::Lobby {
+            send_status(
+                client_id,
+                &incoming_message.correlation_id,
+                "alreadyStarted",
+            )
+            .await;
+            return;
+        }
 
-    start_game();
-    send_status(client_id, &incoming_message.correlation_id, "success").await;
+        start_game(Duration::from_secs(payload.round_duration));
+        send_status(client_id, &incoming_message.correlation_id, "success").await;
+    }
 }
 
 async fn handle_stop_game(client_id: &str, incoming_message: BaseMessage) {
@@ -420,9 +429,9 @@ async fn handle_send_answer(client_id: &str, incoming_message: BaseMessage) {
         match record_answer(client_id, &payload.answer) {
             Ok(_is_correct) => {
                 send_status(client_id, &incoming_message.correlation_id, "success").await;
-				if all_clients_answered(){
-					end_round_early();
-				}
+                if all_clients_answered() {
+                    end_round_early();
+                }
             }
             Err(AnswerError::NoCurrentQuestion) => {
                 send_status(client_id, &incoming_message.correlation_id, "noQuestion").await

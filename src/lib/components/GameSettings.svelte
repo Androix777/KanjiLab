@@ -42,4 +42,18 @@
 		value={getSettings().wordPart.get()}
 		class="input input-bordered input-lg text-center w-3/4 text-3xl"
 	/>
+
+	<input
+		type="number"
+		step="1"
+		oninput={(event) =>
+		{
+			if (event.target instanceof HTMLInputElement)
+			{
+				getSettings().roundDuration.set(parseInt(event.target.value));
+			}
+		}}
+		value={getSettings().roundDuration.get()}
+		class="input input-bordered input-lg text-center w-3/4 text-3xl"
+	/>
 </div>

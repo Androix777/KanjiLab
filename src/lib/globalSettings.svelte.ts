@@ -18,6 +18,7 @@ const settings = {
 	adminPassword: createStateVar(``),
 	minFrequency: createStateVar(0),
 	maxFrequency: createStateVar(10000),
+	roundDuration: createStateVar(10),
 	wordPart: createStateVar(``),
 };
 

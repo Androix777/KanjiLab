@@ -220,12 +220,14 @@ export class ServerConnector extends EventTarget
 		this.webSocket.send(JSON.stringify(sendChatMessage));
 	}
 
-	public async sendStartGame()
+	public async sendStartGame(roundDuration: number)
 	{
 		const message: InReqStartGameMessage = {
 			message_type: `IN_REQ_startGame`,
 			correlation_id: crypto.randomUUID(),
-			payload: {},
+			payload: {
+				round_duration: roundDuration,
+			},
 		};
 
 		const response = await this.sendWebSocketMessage(message);

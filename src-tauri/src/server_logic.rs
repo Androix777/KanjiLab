@@ -25,10 +25,6 @@ pub enum GameState {
 }
 // #endregion
 
-// #region Constants
-const ROUND_DURATION: Duration = Duration::from_secs(600);
-// #endregion
-
 // #region Static
 static CLIENT_LIST: LazyLock<RwLock<HashMap<String, Client>>> = LazyLock::new(Default::default);
 static ADMIN_PASSWORD: LazyLock<RwLock<String>> =
@@ -42,7 +38,10 @@ static CURRENT_ROUND_INDEX: LazyLock<RwLock<u32>> = LazyLock::new(|| RwLock::new
 static ANSWERS_BY_ROUND: LazyLock<
     RwLock<HashMap<u32, (QuestionInfo, HashMap<String, AnswerInfo>)>>,
 > = LazyLock::new(Default::default);
-static ROUND_TIMER_CANCEL: LazyLock<RwLock<Option<oneshot::Sender<()>>>> = LazyLock::new(|| RwLock::new(None));
+static ROUND_TIMER_CANCEL: LazyLock<RwLock<Option<oneshot::Sender<()>>>> =
+    LazyLock::new(|| RwLock::new(None));
+static ROUND_DURATION: LazyLock<RwLock<Duration>> =
+    LazyLock::new(|| RwLock::new(Duration::from_secs(600)));
 // #endregion
 
 // #region Initialization
@@ -122,7 +121,8 @@ pub fn get_admin_password() -> String {
     ADMIN_PASSWORD.read().unwrap().clone()
 }
 
-pub fn start_game() -> bool {
+pub fn start_game(round_duration: Duration) -> bool {
+    *ROUND_DURATION.write().unwrap() = round_duration;
     let current_state = get_game_state();
     if current_state == GameState::Lobby {
         *CURRENT_ROUND_INDEX.write().unwrap() = 0;
@@ -156,10 +156,11 @@ pub fn set_current_question(question: QuestionInfo) {
 
     let (cancel_sender, cancel_receiver) = oneshot::channel();
     *ROUND_TIMER_CANCEL.write().unwrap() = Some(cancel_sender);
+    let duration = ROUND_DURATION.read().unwrap().clone();
 
     tokio::spawn(async move {
         tokio::select! {
-            _ = sleep(ROUND_DURATION) => {},
+            _ = sleep(duration) => {},
             _ = cancel_receiver => {
                 // Timer cancelled, do nothing
             }

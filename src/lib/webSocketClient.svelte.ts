@@ -157,7 +157,7 @@ class WebSocketClient
 
 	public async startGame()
 	{
-		await this.serverConnector?.sendStartGame();
+		await this.serverConnector?.sendStartGame(getSettings().roundDuration.get());
 		this.isGameStarted = true;
 	}
 

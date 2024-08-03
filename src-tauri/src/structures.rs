@@ -52,7 +52,9 @@ pub struct InReqClientListPayload {}
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("IN_REQ_startGame")]
-pub struct InReqStartGamePayload {}
+pub struct InReqStartGamePayload {
+    pub round_duration: u64,
+}
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("IN_REQ_stopGame")]
