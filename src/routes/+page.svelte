@@ -7,14 +7,13 @@
 	import { themeChange } from 'theme-change';
 
 	type ScreenType = `GameTest` | `Settings` | `Stats` | `StartGame`;
-	let currentScreenType: ScreenType = $state(`Settings`);
+	let currentScreenType: ScreenType = $state(`StartGame`);
 	let fontLoader: FontLoader = new FontLoader();
 
 	function setScreen(screenType: ScreenType)
 	{
 		currentScreenType = screenType;
 	}
-	setScreen(`Stats`);
 
 	async function loadFonts()
 	{
@@ -30,7 +29,7 @@
 </script>
 
 <div class="flex h-screen">
-	<div class="w-16 min-h-full text-center bg-base-300">
+	<div class="w-16 min-h-full text-center bg-base-100">
 		<ul class="">
 			<button class="btn btn-primary" onclick={() => { setScreen(`GameTest`); }}>Gl</button>
 			<button class="btn btn-primary" onclick={() => { setScreen(`Stats`); }}>St</button>
@@ -38,7 +37,7 @@
 			<button class="btn btn-primary" onclick={() => { setScreen(`StartGame`); }}>G</button>
 		</ul>
 	</div>
-	<div class="flex-1 bg-base-100">
+	<div class="flex-1 bg-base-300">
 		{#if currentScreenType === `Stats`}
 			<StatsScreen />
 		{:else if currentScreenType === `GameTest`}

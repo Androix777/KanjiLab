@@ -36,6 +36,7 @@
 		{
 			return;
 		}
+		e.preventDefault();
 
 		readingInput = ``;
 		onAnswer(realInput);
@@ -51,31 +52,30 @@
 	});
 </script>
 
-<div class="flex flex-col flex-grow">
-    <div class="flex items-center justify-center flex-grow bg-base-200">
+<div class="flex flex-col flex-grow min-h-0">
+    <div class="flex items-center justify-center flex-none my-4">
         <div class="text-7xl">
             {question}
         </div>
     </div>
 
-    <div class="flex flex-col items-center justify-center flex-grow space-y-4 bg-base-100 p-4">
-        <div class="w-full flex justify-center">
-            <input
-                bind:value={readingInput}
-                onkeydown={checkWord}
-                bind:this={inputElement}
-				placeholder={currentAnswer}
-                class="input input-bordered input-lg text-center w-3/4 text-3xl"
-            />
-        </div>
+	<div class="w-full flex justify-center flex-none my-4">
+		<input
+			bind:value={readingInput}
+			onkeydown={checkWord}
+			bind:this={inputElement}
+			placeholder={currentAnswer}
+			class="input input-bordered input-lg text-center w-3/4 text-3xl"
+		/>
+	</div>
 
-        <div class="h-1/2 w-full flex justify-center min-h-0">
-			<AnswerCard
-				currentAnswerStatus={currentAnswerStatus}
-				currentAnswer={currentAnswer}
-				previousAnswerStatus={previousAnswerStatus}
-				previousAnswer={previousAnswer}
-				/>
-        </div>
-    </div>
+	<div class="h-1/2 mt-auto mb-0 w-full flex justify-center flex-grow">
+		<AnswerCard
+			currentAnswerStatus={currentAnswerStatus}
+			currentAnswer={currentAnswer}
+			previousAnswerStatus={previousAnswerStatus}
+			previousAnswer={previousAnswer}
+			/>
+	</div>
+
 </div>

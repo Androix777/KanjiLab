@@ -28,26 +28,25 @@
 		}: Props = $props();
 </script>
 
-<div class="p-2 m-1 rounded-md border-2 border-primary bg-base-300 relative">
-	<div class="absolute right-2 top-0 text-success h-6 text-xs">{isMe ? `You` : ``}</div>
-	<div class="absolute left-2 top-0 text-error h-6 text-xs">{clientInfo.is_admin ? `Admin` : ``}</div>
-	<div class="flex flex-row justify-center items-center overflow-x-hidden min-w-0 pt-2">
+<div class="m-1 border border-primary bg-base-200 relative" style="border-radius: var(--rounded-box, 1rem /* 16px */);">
+	<div class="absolute right-2 top-0 text-primary h-6 text-xs">{isMe ? `You` : ``}</div>
+	<div class="flex flex-row justify-center items-center overflow-x-hidden min-w-0">
 		<div class="flex-none w-12 font-bold text-lg text-base-content">
 			{score}
 		</div>
-		<div class="flex-grow font-semibold text-base {clientInfo.is_admin ? `text-error` : `text-primary`}">
-			{clientInfo.name}
+		<div class="flex-grow font-semibold text-base text-primary}">
+			<span class="text-primary">{clientInfo.is_admin ? `♔ ` : ``}</span>{clientInfo.name}
 		</div>
 	</div>
-	<div class="flex flex-row justify-center items-center overflow-x-hidden min-w-0">
-		<div class="w-1/2 {currentAnswerStatus == `Correct` ? `bg-success text-success-content` : currentAnswerStatus == `Incorrect` ? `bg-error text-error-content` : currentAnswer != `` ? `bg-warning text-warning-content` : `bg-base-300 text-base-content`}">
+	<div class="flex flex-row justify-center items-center overflow-x-hidden min-w-0" style="border-bottom-right-radius: var(--rounded-box, 1rem); border-bottom-left-radius: var(--rounded-box, 1rem);">
+		<div class="w-1/2 bg-opacity-50 {currentAnswerStatus == `Correct` ? `bg-success text-success-content` : currentAnswerStatus == `Incorrect` ? `bg-error text-error-content` : currentAnswer != `` ? `bg-warning text-warning-content` : ``}">
 			{#if currentAnswer}
 				{currentAnswer}
 			{:else}
 				<div class="opacity-0">Placeholder</div>
 			{/if}
 		</div>
-		<div class="w-1/2 {previousAnswerStatus == `Correct` ? `bg-success text-success-content` : previousAnswerStatus == `Incorrect` ? `bg-error text-error-content` : `bg-base-300 text-base-content`}">
+		<div class="w-1/2 bg-opacity-50 {previousAnswerStatus == `Correct` ? `bg-success text-success-content` : previousAnswerStatus == `Incorrect` ? `bg-error text-error-content` : ``}">
 			{#if previousAnswer}
 				{previousAnswer}
 			{:else}
