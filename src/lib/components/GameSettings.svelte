@@ -8,7 +8,7 @@
 		step="1"
 		oninput={(event) =>
 		{
-			if (event.target instanceof HTMLInputElement && Number.isInteger(event.target.value))
+			if (event.target instanceof HTMLInputElement && event.target.value)
 			{
 				getSettings().minFrequency.set(parseInt(event.target.value));
 			}
