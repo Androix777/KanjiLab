@@ -18,7 +18,7 @@
 		getSettings().adminPassword.set(await invoke(LAUNCH_SERVER));
 		webSocketClient = WebSocketClient.getInstance();
 		webSocketClient.isConnectedToSelf = true;
-		await webSocketClient.connectToServer(getSettings().ipAddress.get());
+		await webSocketClient.connectToServer(`ws://127.0.0.1:8080`);
 		await webSocketClient.makeAdmin();
 	}
 
