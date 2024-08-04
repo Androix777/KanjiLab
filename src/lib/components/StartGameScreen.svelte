@@ -107,19 +107,14 @@
 		<div class="text-center flex flex-1 min-h-0 card card-bordered bg-base-100 shadow-xl p-4">
 			{#if webSocketClient?.isGameStarted}
 				<GameScreen
-					question={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 1]?.question.question || ``}
-					currentAnswerStatus={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 1]?.answers.get(webSocketClient.id)?.answerStatus || `Unknown`}
-					currentAnswer={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 1]?.answers.get(webSocketClient.id)?.answer || ``}
-					previousAnswerStatus={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 2]?.answers.get(webSocketClient.id)?.answerStatus || `Unknown`}
-					previousAnswer={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 2]?.answers.get(webSocketClient.id)?.answer || ``}
+					gameHistory = { webSocketClient.gameHistory }
+					clientID = { webSocketClient.id }
 					onAnswer={(answer: string) => webSocketClient?.sendAnswer(answer)} />
 			{:else if true}
-				<GameSettings />
-				<div class="text-center h-12">
-					<div class="">
-						<button class="btn btn-success" onclick={() => { void webSocketClient?.startGame(); }} disabled={!webSocketClient?.isAdmin}>START</button>
-					</div>
-				</div>
+				<GameSettings
+					startFunction={() => { void webSocketClient?.startGame(); }}
+					isAdmin={webSocketClient?.isAdmin || false}
+				/>
 			{/if}
 		</div>
 		<div class="flex flex-col ml-4" style="width: 30vw;">

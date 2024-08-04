@@ -35,14 +35,14 @@ export type AnswerInfo = {
 	is_correct: boolean;
 };
 
-export type AnswerHistory = {
+export type AnswerRecord = {
 	answer: string;
 	answerStatus: AnswerStatus;
 };
 
 export type RoundHistory = {
 	question: QuestionInfo;
-	answers: SvelteMap<string, AnswerHistory>;
+	answers: SvelteMap<string, AnswerRecord>;
 };
 
 export type AnswerStatus = `Correct` | `Incorrect` | `Unknown`;
@@ -168,7 +168,6 @@ export type OutNotifGameStartedMessage = BaseMessage<OutNotifGameStartedPayload,
 
 export type OutNotifQuestionPayload = {
 	question: string;
-	answers: string[];
 };
 export type OutNotifQuestionMessage = BaseMessage<OutNotifQuestionPayload, `OUT_NOTIF_question`>;
 

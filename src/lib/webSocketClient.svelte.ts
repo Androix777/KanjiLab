@@ -1,5 +1,5 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { AnswerHistory, ClientInfo, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory } from "./types";
+import type { AnswerRecord, ClientInfo, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 import DatabaseService from "./databaseService";
 import { SvelteMap } from "svelte/reactivity";
@@ -164,8 +164,11 @@ class WebSocketClient
 	public showQuestion(questionPayload: OutNotifQuestionPayload)
 	{
 		this.gameHistory.push({
-			question: questionPayload,
-			answers: new SvelteMap<string, AnswerHistory>(),
+			question: {
+				question: questionPayload.question,
+				answers: [],
+			},
+			answers: new SvelteMap<string, AnswerRecord>(),
 		});
 		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {
 			answer: ``,
@@ -185,6 +188,7 @@ class WebSocketClient
 
 	public endRound(roundResults: OutNotifRoundEndedPayload)
 	{
+		this.gameHistory[this.gameHistory.length - 1].question = roundResults.question;
 		roundResults.answers.forEach((answer) =>
 		{
 			this.gameHistory[this.gameHistory.length - 1].answers.set(answer.id, {
