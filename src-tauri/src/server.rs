@@ -429,6 +429,13 @@ async fn handle_send_answer(client_id: &str, incoming_message: BaseMessage) {
         match record_answer(client_id, &payload.answer) {
             Ok(_is_correct) => {
                 send_status(client_id, &incoming_message.correlation_id, "success").await;
+
+				let event_payload = OutNotifClientAnsweredPayload {
+					id: client_id.to_string(),
+				};
+				let event = BaseMessage::new(event_payload, None);
+				send_all(event).await;
+
                 if all_clients_answered() {
                     end_round_early();
                 }

@@ -150,7 +150,7 @@ pub struct OutNotifQuestionPayload {
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_clientAnswered")]
 pub struct OutNotifClientAnsweredPayload {
-    pub is_correct: bool,
+	pub id: String,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]

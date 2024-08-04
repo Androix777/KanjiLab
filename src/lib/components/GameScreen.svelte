@@ -28,7 +28,6 @@
 
 	function checkWord(e: KeyboardEvent)
 	{
-		console.log(gameHistory);
 		const realInput: string = inputElement.value;
 
 		if (e.key != `Enter` && e.key != ` `)
