@@ -81,6 +81,7 @@ class WebSocketClient
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_gameStarted`, () =>
 		{
+			this.gameHistory.length = 0;
 			this.isGameStarted = true;
 		});
 		this.serverConnector.addEventListener(`OUT_REQ_question`, (event) =>

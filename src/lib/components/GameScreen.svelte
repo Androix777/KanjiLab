@@ -2,6 +2,7 @@
 	import * as wanakana from "wanakana";
 	import { themeChange } from 'theme-change';
     import type { RoundHistory } from "$lib/types";
+	import { fade } from 'svelte/transition';
 
 	type Props = {
 		gameHistory: Array<RoundHistory>;
@@ -51,10 +52,12 @@
 </script>
 
 <div class="flex flex-col flex-grow min-h-0">
-    <div class="flex items-center justify-center flex-none my-4">
-        <div class="text-7xl">
-            { currentQuestionInfo?.question }
-        </div>
+    <div class="flex items-center justify-center flex-none my-4 h-24">
+		{#key currentQuestionInfo?.question}
+			<div class="text-7xl absolute" transition:fade={{ duration: 200 }}>
+				{ currentQuestionInfo?.question || `⠀` }
+			</div>
+		{/key}
     </div>
 
 	<div class="w-full flex justify-center flex-none my-4">

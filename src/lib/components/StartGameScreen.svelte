@@ -76,11 +76,11 @@
 	<div class="card card-bordered bg-base-100 shadow-xl mb-4 p-4">
 		<div class="flex flex-none">
 			{#if webSocketClient?.isConnectedToSelf && webSocketClient.connectionStatus == `Connected`}
-				<button class="btn btn-outline btn-error"
-						onclick={() => { void stopServer(); }}>Stop Server</button>
-				<button class="btn btn-outline btn-primary mx-2"
+				<button class="btn btn-primary mx-2"
 						onclick={() => { void stopGame(); }}
 						disabled={!webSocketClient.isGameStarted}>Stop Game</button>
+				<button class="btn btn-outline btn-error"
+						onclick={() => { void stopServer(); }}>Stop Server</button>
 			{:else}
 				{#if webSocketClient?.connectionStatus == `Disconnected`}
 					<button class="btn btn-primary"

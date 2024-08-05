@@ -35,6 +35,7 @@ static GAME_STATE_NOTIFIER: LazyLock<broadcast::Sender<GameState>> = LazyLock::n
     sender
 });
 static CURRENT_ROUND_INDEX: LazyLock<RwLock<u32>> = LazyLock::new(|| RwLock::new(0));
+static END_GAME_MARKER: LazyLock<RwLock<bool>> = LazyLock::new(|| RwLock::new(false));
 static ANSWERS_BY_ROUND: LazyLock<
     RwLock<HashMap<u32, (QuestionInfo, HashMap<String, AnswerInfo>)>>,
 > = LazyLock::new(Default::default);
@@ -137,8 +138,10 @@ pub fn start_game(round_duration: Duration) -> bool {
 pub fn stop_game() -> bool {
     let current_state = get_game_state();
     if current_state != GameState::Lobby {
-        set_game_state(GameState::Lobby);
-
+        *END_GAME_MARKER.write().unwrap() = true;
+		if let Some(cancel_sender) = ROUND_TIMER_CANCEL.write().unwrap().take() {
+            let _ = cancel_sender.send(());
+        }
         true
     } else {
         false
@@ -161,12 +164,19 @@ pub fn set_current_question(question: QuestionInfo) {
     tokio::spawn(async move {
         tokio::select! {
             _ = sleep(duration) => {},
-            _ = cancel_receiver => {
-                // Timer cancelled, do nothing
-            }
+            _ = cancel_receiver => {}
         }
-        *CURRENT_ROUND_INDEX.write().unwrap() += 1;
-        set_game_state(GameState::WaitingQuestion);
+		let game_state = {
+			let mut marker = END_GAME_MARKER.write().unwrap();
+			if *marker {
+				*marker = false;
+				GameState::Lobby
+			} else {
+				*CURRENT_ROUND_INDEX.write().unwrap() += 1;
+				GameState::WaitingQuestion
+			}
+		};
+		set_game_state(game_state);
     });
 }
 
@@ -247,7 +257,6 @@ pub fn all_clients_answered() -> bool {
 pub fn end_round_early() -> bool {
     let current_state = get_game_state();
     if current_state == GameState::AnswerQuestion {
-        // Cancel the existing timer
         if let Some(cancel_sender) = ROUND_TIMER_CANCEL.write().unwrap().take() {
             let _ = cancel_sender.send(());
         }
