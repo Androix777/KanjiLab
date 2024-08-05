@@ -106,6 +106,10 @@ class WebSocketClient
 				this.addClientAnswer(customEvent.detail.id);
 			}
 		});
+		this.serverConnector.addEventListener(`OUT_NOTIF_gameStopped`, () =>
+		{
+			this.isGameStarted = false;
+		});
 	}
 
 	public disconnectFromServer()
@@ -218,6 +222,11 @@ class WebSocketClient
 			const e2Score = this.gameHistory.reduce((acc, round) => acc + (round.answers.get(e2.id)?.answerStatus == `Correct` ? 1 : 0), 0);
 			return (e1Score < e2Score) ? 1 : (e1Score > e2Score) ? -1 : 0;
 		});
+	}
+
+	public async stopGame()
+	{
+		await this.serverConnector?.sendStopGame();
 	}
 }
 

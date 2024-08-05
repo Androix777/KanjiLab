@@ -54,6 +54,7 @@ export type MessageType =
 	| `IN_REQ_makeAdmin`
 	| `IN_REQ_startGame`
 	| `IN_REQ_sendAnswer`
+	| `IN_REQ_stopGame`
 
 	| `OUT_RESP_clientList`
 	| `OUT_RESP_status`
@@ -70,7 +71,8 @@ export type MessageType =
 	| `OUT_NOTIF_gameStarted`
 	| `OUT_NOTIF_question`
 	| `OUT_NOTIF_roundEnded`
-	| `OUT_NOTIF_clientAnswered`;
+	| `OUT_NOTIF_clientAnswered`
+	| `OUT_NOTIF_gameStopped`;
 
 export type BaseMessage<T extends object, M extends MessageType> = {
 	message_type: M;
@@ -107,6 +109,9 @@ export type InReqSendAnswerPayload = {
 	answer: string;
 };
 export type InReqSendAnswerMessage = BaseMessage<InReqSendAnswerPayload, `IN_REQ_sendAnswer`>;
+
+export type InReqStopGamePayload = object;
+export type InReqStopGameMessage = BaseMessage<InReqStopGamePayload, `IN_REQ_stopGame`>;
 
 // OUT RESP
 export type OutRespStatusPayload = {
@@ -182,3 +187,6 @@ export type OutNotifClientAnsweredPayload = {
 	id: string;
 };
 export type OutNotifClientAnsweredMessage = BaseMessage<OutNotifClientAnsweredPayload, `OUT_NOTIF_clientAnswered`>;
+
+export type OutNotifGameStoppedPayload = object;
+export type OutNotifGameStoppedMessage = BaseMessage<OutNotifGameStoppedPayload, `OUT_NOTIF_gameStopped`>;

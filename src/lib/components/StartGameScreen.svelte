@@ -30,6 +30,11 @@
 		await invoke(STOP_SERVER);
 	}
 
+	async function stopGame()
+	{
+		await webSocketClient?.stopGame();
+	}
+
 	async function joinServer()
 	{
 		await webSocketClient?.connectToServer(getSettings().ipAddress.get());
@@ -73,6 +78,9 @@
 			{#if webSocketClient?.isConnectedToSelf && webSocketClient.connectionStatus == `Connected`}
 				<button class="btn btn-outline btn-error"
 						onclick={() => { void stopServer(); }}>Stop Server</button>
+				<button class="btn btn-outline btn-primary mx-2"
+						onclick={() => { void stopGame(); }}
+						disabled={!webSocketClient.isGameStarted}>Stop Game</button>
 			{:else}
 				{#if webSocketClient?.connectionStatus == `Disconnected`}
 					<button class="btn btn-primary"

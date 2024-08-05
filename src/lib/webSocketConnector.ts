@@ -25,6 +25,9 @@ import {
 	type OutNotifRoundEndedPayload,
 	type OutNotifClientAnsweredMessage,
 	type OutNotifClientAnsweredPayload,
+	type InReqStopGameMessage,
+	type OutNotifGameStoppedMessage,
+	type OutNotifGameStoppedPayload,
 } from "./types";
 
 export class ServerConnector extends EventTarget
@@ -300,6 +303,37 @@ export class ServerConnector extends EventTarget
 		}
 	}
 
+	public async sendStopGame()
+	{
+		const message: InReqStopGameMessage = {
+			message_type: `IN_REQ_stopGame`,
+			correlation_id: crypto.randomUUID(),
+			payload: {},
+		};
+
+		const response = await this.sendWebSocketMessage(message);
+
+		switch (response.message_type)
+		{
+			case `OUT_RESP_status`:
+			{
+				const statusMessage = <OutRespStatusMessage>response;
+
+				if (statusMessage.payload.status == `success`)
+				{
+					return;
+				}
+				else
+				{
+					throw new Error(statusMessage.payload.status);
+				}
+			}
+			default:
+				console.log(`Received unknown message type: ${message.message_type}`);
+				throw new Error(`unknownMessageType`);
+		}
+	}
+
 	private handleReceivedMessage(message: BaseMessage<object, MessageType>)
 	{
 		switch (message.message_type)
@@ -366,6 +400,13 @@ export class ServerConnector extends EventTarget
 			{
 				const concreteMessage = <OutNotifClientAnsweredMessage>message;
 				const event = new CustomEvent<OutNotifClientAnsweredPayload>(`OUT_NOTIF_clientAnswered`, { detail: concreteMessage.payload });
+				this.dispatchEvent(event);
+				break;
+			}
+			case `OUT_NOTIF_gameStopped`:
+			{
+				const concreteMessage = <OutNotifGameStoppedMessage>message;
+				const event = new CustomEvent<OutNotifGameStoppedPayload>(`OUT_NOTIF_gameStopped`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
