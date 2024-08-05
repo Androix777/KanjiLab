@@ -1,5 +1,5 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { AnswerRecord, ClientInfo, OutNotifChatSentPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory } from "./types";
+import type { AnswerRecord, ClientInfo, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 import DatabaseService from "./databaseService";
 import { SvelteMap } from "svelte/reactivity";
@@ -98,6 +98,14 @@ class WebSocketClient
 			const customEvent: CustomEvent<OutNotifRoundEndedPayload> = <CustomEvent<OutNotifRoundEndedPayload>>event;
 			this.endRound(customEvent.detail);
 		});
+		this.serverConnector.addEventListener(`OUT_NOTIF_clientAnswered`, (event) =>
+		{
+			const customEvent: CustomEvent<OutNotifClientAnsweredPayload> = <CustomEvent<OutNotifClientAnsweredPayload>>event;
+			if (customEvent.detail.id != this.id)
+			{
+				this.addClientAnswer(customEvent.detail.id);
+			}
+		});
 	}
 
 	public disconnectFromServer()
@@ -184,6 +192,14 @@ class WebSocketClient
 		});
 
 		await this.serverConnector?.sendAnswer(answer);
+	}
+
+	public addClientAnswer(clientID: string)
+	{
+		this.gameHistory.at(-1)?.answers.set(clientID, {
+			answer: `?`,
+			answerStatus: `Unknown`,
+		});
 	}
 
 	public endRound(roundResults: OutNotifRoundEndedPayload)

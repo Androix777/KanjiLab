@@ -23,6 +23,8 @@ import {
 	type InReqSendAnswerMessage,
 	type OutNotifRoundEndedMessage,
 	type OutNotifRoundEndedPayload,
+	type OutNotifClientAnsweredMessage,
+	type OutNotifClientAnsweredPayload,
 } from "./types";
 
 export class ServerConnector extends EventTarget
@@ -357,6 +359,13 @@ export class ServerConnector extends EventTarget
 			{
 				const concreteMessage = <OutNotifRoundEndedMessage>message;
 				const event = new CustomEvent<OutNotifRoundEndedPayload>(`OUT_NOTIF_roundEnded`, { detail: concreteMessage.payload });
+				this.dispatchEvent(event);
+				break;
+			}
+			case `OUT_NOTIF_clientAnswered`:
+			{
+				const concreteMessage = <OutNotifClientAnsweredMessage>message;
+				const event = new CustomEvent<OutNotifClientAnsweredPayload>(`OUT_NOTIF_clientAnswered`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}

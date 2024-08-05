@@ -69,7 +69,8 @@ export type MessageType =
 	| `OUT_NOTIF_adminMade`
 	| `OUT_NOTIF_gameStarted`
 	| `OUT_NOTIF_question`
-	| `OUT_NOTIF_roundEnded`;
+	| `OUT_NOTIF_roundEnded`
+	| `OUT_NOTIF_clientAnswered`;
 
 export type BaseMessage<T extends object, M extends MessageType> = {
 	message_type: M;
@@ -176,3 +177,8 @@ export type OutNotifRoundEndedPayload = {
 	answers: AnswerInfo[];
 };
 export type OutNotifRoundEndedMessage = BaseMessage<OutNotifRoundEndedPayload, `OUT_NOTIF_roundEnded`>;
+
+export type OutNotifClientAnsweredPayload = {
+	id: string;
+};
+export type OutNotifClientAnsweredMessage = BaseMessage<OutNotifClientAnsweredPayload, `OUT_NOTIF_clientAnswered`>;
