@@ -50,7 +50,7 @@
 		</div>
 	</div>
 	<div class="flex flex-row justify-center items-center overflow-x-hidden min-w-0" style="border-bottom-right-radius: var(--rounded-box, 1rem); border-bottom-left-radius: var(--rounded-box, 1rem);">
-		{#each getLastAnswers() as roundHistory(roundHistory.question)} <!-- pad?? -->
+		{#each getLastAnswers() as roundHistory(roundHistory.question)}
 			<div class="w-1/2 bg-opacity-50 {roundHistory.answers.get(clientInfo.id)?.answerStatus == `Correct` ? `bg-success text-success-content` : roundHistory.answers.get(clientInfo.id)?.answerStatus == `Incorrect` ? `bg-error text-error-content` : roundHistory.answers.get(clientInfo.id)?.answer ? `bg-warning text-warning-content` : ``}"
 				animate:flip={{ duration: 200 }}
 				style="min-width: 50%;">
