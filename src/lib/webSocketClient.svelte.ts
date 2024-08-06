@@ -110,6 +110,7 @@ class WebSocketClient
 		this.serverConnector.addEventListener(`OUT_NOTIF_gameStopped`, () =>
 		{
 			this.isGameStarted = false;
+			this.gameHistory = [];
 		});
 	}
 
