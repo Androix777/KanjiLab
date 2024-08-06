@@ -1,13 +1,11 @@
 <script lang="ts">
-    import type { AnswerStatus, ClientInfo } from "$lib/types";
+    import type { ClientInfo, RoundHistory } from "$lib/types";
+    import { flip } from "svelte/animate";
 
 	type Props = {
 		clientInfo: ClientInfo;
 		isMe: boolean;
-		currentAnswerStatus: AnswerStatus;
-		currentAnswer: string;
-		previousAnswerStatus: AnswerStatus;
-		previousAnswer: string;
+		gameHistory: Array<RoundHistory>;
 		score: number;
 	};
 
@@ -20,10 +18,7 @@
 				is_admin: false,
 			},
 			isMe = false,
-			currentAnswerStatus = `Unknown`,
-			currentAnswer = `NULL`,
-			previousAnswerStatus = `Unknown`,
-			previousAnswer = `NULL`,
+			gameHistory = [],
 			score = 0,
 		}: Props = $props();
 </script>
@@ -38,20 +33,14 @@
 			<span class="text-primary">{clientInfo.is_admin ? `♔ ` : ``}</span>{clientInfo.name}
 		</div>
 	</div>
-	<div class="flex flex-row justify-center items-center overflow-x-hidden min-w-0" style="border-bottom-right-radius: var(--rounded-box, 1rem); border-bottom-left-radius: var(--rounded-box, 1rem);">
-		<div class="w-1/2 bg-opacity-50 {currentAnswerStatus == `Correct` ? `bg-success text-success-content` : currentAnswerStatus == `Incorrect` ? `bg-error text-error-content` : currentAnswer != `` ? `bg-warning text-warning-content` : ``}">
-			{#if currentAnswer}
-				{currentAnswer}
-			{:else}
-				<div class="opacity-0">Placeholder</div>
-			{/if}
-		</div>
-		<div class="w-1/2 bg-opacity-50 {previousAnswerStatus == `Correct` ? `bg-success text-success-content` : previousAnswerStatus == `Incorrect` ? `bg-error text-error-content` : ``}">
-			{#if previousAnswer}
-				{previousAnswer}
-			{:else}
-				<div class="opacity-0">Placeholder</div>
-			{/if}
-		</div>
+	<div class="flex flex-row {gameHistory.length > 1 ? `justify-end` : `justify-start`} items-center overflow-x-hidden min-w-0" style="border-bottom-right-radius: var(--rounded-box, 1rem); border-bottom-left-radius: var(--rounded-box, 1rem);">
+		{#each gameHistory.slice(-2).reverse() as roundHistory(roundHistory.question)}
+			<div class="w-1/2 bg-opacity-50 {roundHistory.answers.get(clientInfo.id)?.answerStatus == `Correct` ? `bg-success text-success-content` : roundHistory.answers.get(clientInfo.id)?.answerStatus == `Incorrect` ? `bg-error text-error-content` : roundHistory.answers.get(clientInfo.id)?.answer ? `bg-warning text-warning-content` : ``}"
+				animate:flip={{ duration: 200 }}>
+				{roundHistory.answers.get(clientInfo.id)?.answer ? roundHistory.answers.get(clientInfo.id)?.answer : `\xa0`}
+			</div>
+		{:else}
+			<div class="opacity-0">Placeholder</div>
+		{/each}
 	</div>
 </div>

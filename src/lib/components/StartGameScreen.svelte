@@ -8,6 +8,7 @@
     import GameScreen from "./GameScreen.svelte";
     import MessageCard from "./MessageCard.svelte";
     import GameSettings from "./GameSettings.svelte";
+    import { flip } from "svelte/animate";
 
 	let webSocketClient: WebSocketClient | null = $state(null);
 	let chatMessage: string = $state(``);
@@ -128,15 +129,14 @@
 		<div class="flex flex-col ml-4" style="width: 30vw;">
 			<div class="flex-1 text-center card card-bordered bg-base-100 shadow-xl overflow-y-auto overflow-x-hidden p-4 mb-4" style="scrollbar-width: none;">
 					{#if webSocketClient && webSocketClient.clientList}
-						{#each webSocketClient.clientList as client}
-							<PlayerListCard
-								clientInfo={client}
-								isMe={client.id == webSocketClient.id}
-								currentAnswerStatus={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 1]?.answers.get(client.id)?.answerStatus || `Unknown`}
-								currentAnswer={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 1]?.answers.get(client.id)?.answer || ``}
-								previousAnswerStatus={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 2]?.answers.get(client.id)?.answerStatus || `Unknown`}
-								previousAnswer={webSocketClient.gameHistory[webSocketClient.gameHistory.length - 2]?.answers.get(client.id)?.answer || ``}
-								score={webSocketClient.gameHistory.reduce((acc, round) => acc + (round.answers.get(client.id)?.answerStatus == `Correct` ? 1 : 0), 0) || 0} />
+						{#each webSocketClient.clientList as client(client.id)}
+							<div animate:flip>
+								<PlayerListCard
+									clientInfo={client}
+									isMe={client.id == webSocketClient.id}
+									gameHistory={webSocketClient.gameHistory}
+									score={webSocketClient.gameHistory.reduce((acc, round) => acc + (round.answers.get(client.id)?.answerStatus == `Correct` ? 1 : 0), 0) || 0} />
+							</div>
 						{/each}
 					{/if}
 			</div>
