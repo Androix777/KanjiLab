@@ -506,7 +506,9 @@ async fn handle_state_waiting_question() {
 }
 
 async fn handle_state_game_starting() {
-    let event_payload = OutNotifGameStartedPayload {};
+    let event_payload = OutNotifGameStartedPayload {
+		round_duration: get_round_duration()
+	};
     let event = BaseMessage::new(event_payload, None);
     send_all(event).await;
 

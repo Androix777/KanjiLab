@@ -135,7 +135,9 @@ pub struct OutNotifAdminMadePayload {
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_gameStarted")]
-pub struct OutNotifGameStartedPayload {}
+pub struct OutNotifGameStartedPayload {
+	pub round_duration: u64,
+}
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_gameStopped")]

@@ -242,6 +242,10 @@ pub fn get_current_round() -> u32 {
     *CURRENT_ROUND_INDEX.read().unwrap()
 }
 
+pub fn get_round_duration() -> u64 {
+    ROUND_DURATION.read().unwrap().as_secs()
+}
+
 pub fn all_clients_answered() -> bool {
     let current_round = *CURRENT_ROUND_INDEX.read().unwrap();
     let answers_by_round = ANSWERS_BY_ROUND.read().unwrap();
