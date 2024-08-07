@@ -7,6 +7,7 @@
 	type Props = {
 		gameHistory: Array<RoundHistory>;
 		clientID: string;
+		roundDuration: number;
 		onAnswer: (answer: string) => void;
 	};
 
@@ -15,6 +16,7 @@
 		{
 			gameHistory = [],
 			clientID = ``,
+			roundDuration = 0,
 			onAnswer = () => {},
 		}: Props = $props();
 
@@ -26,6 +28,13 @@
 	let previousQuestionInfo = $derived(gameHistory.at(-2)?.question);
 	let currentAnswerRecord = $derived(gameHistory.at(-1)?.answers.get(clientID));
 	let previousAnswerRecord = $derived(gameHistory.at(-2)?.answers.get(clientID));
+	let timerValue: number = $state(roundDuration);
+	const timerReset = $derived(() =>
+	{
+		gameHistory.at(-1)?.question;
+		timerValue = roundDuration;
+		return ``;
+	});
 
 	function checkWord(e: KeyboardEvent)
 	{
@@ -48,10 +57,17 @@
 		inputElement.focus();
 		wanakana.bind(inputElement);
 		themeChange(false);
+		setInterval(() =>
+		{
+			timerValue -= 1;
+		}, 1000);
 	});
 </script>
 
 <div class="flex flex-col flex-grow min-h-0">
+	{timerReset()}
+	<progress class="progress progress-primary" value={timerValue} max={roundDuration}></progress>
+
     <div class="flex items-center justify-center flex-none my-4 h-24">
 		{#key currentQuestionInfo?.question}
 			<div class="text-7xl absolute" transition:fade={{ duration: 200 }}>

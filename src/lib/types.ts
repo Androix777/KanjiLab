@@ -169,7 +169,9 @@ export type OutNotifAdminMadePayload = {
 };
 export type OutNotifAdminMadeMessage = BaseMessage<OutNotifAdminMadePayload, `OUT_NOTIF_adminMade`>;
 
-export type OutNotifGameStartedPayload = object;
+export type OutNotifGameStartedPayload = {
+	round_duration: number;
+};
 export type OutNotifGameStartedMessage = BaseMessage<OutNotifGameStartedPayload, `OUT_NOTIF_gameStarted`>;
 
 export type OutNotifQuestionPayload = {

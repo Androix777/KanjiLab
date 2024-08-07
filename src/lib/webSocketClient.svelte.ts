@@ -1,5 +1,5 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { AnswerRecord, ClientInfo, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory } from "./types";
+import type { AnswerRecord, ClientInfo, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 import DatabaseService from "./databaseService";
 import { SvelteMap } from "svelte/reactivity";
@@ -20,6 +20,8 @@ class WebSocketClient
 	public question: string = $state(``);
 	public gameHistory: Array<RoundHistory> = $state([]);
 
+	public roundDuration: number = 0;
+
 	public static getInstance()
 	{
 		if (this.instance != null) return this.instance;
@@ -35,7 +37,6 @@ class WebSocketClient
 		{
 			await this.serverConnector.connect(ipAddress);
 			this.id = await this.serverConnector.sendRegisterClientMessage();
-			console.log(this.id);
 			this.clientList = await this.serverConnector.sendGetClientListMessage();
 		}
 		catch (e)
@@ -79,8 +80,10 @@ class WebSocketClient
 				throw new Error(`noAdmin`);
 			}
 		});
-		this.serverConnector.addEventListener(`OUT_NOTIF_gameStarted`, () =>
+		this.serverConnector.addEventListener(`OUT_NOTIF_gameStarted`, (event) =>
 		{
+			const customEvent: CustomEvent<OutNotifGameStartedPayload> = <CustomEvent<OutNotifGameStartedPayload>>event;
+			this.roundDuration = customEvent.detail.round_duration;
 			this.gameHistory.length = 0;
 			this.isGameStarted = true;
 		});

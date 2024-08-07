@@ -28,6 +28,8 @@ import {
 	type InReqStopGameMessage,
 	type OutNotifGameStoppedMessage,
 	type OutNotifGameStoppedPayload,
+	type OutNotifGameStartedMessage,
+	type OutNotifGameStartedPayload,
 } from "./types";
 
 export class ServerConnector extends EventTarget
@@ -368,7 +370,8 @@ export class ServerConnector extends EventTarget
 			}
 			case `OUT_NOTIF_gameStarted`:
 			{
-				const event = new Event(`OUT_NOTIF_gameStarted`);
+				const concreteMessage = <OutNotifGameStartedMessage>message;
+				const event = new CustomEvent<OutNotifGameStartedPayload>(`OUT_NOTIF_gameStarted`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}

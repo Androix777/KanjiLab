@@ -118,6 +118,7 @@
 				<GameScreen
 					gameHistory = { webSocketClient.gameHistory }
 					clientID = { webSocketClient.id }
+					roundDuration = {webSocketClient.roundDuration}
 					onAnswer={(answer: string) => webSocketClient?.sendAnswer(answer)} />
 			{:else if true}
 				<GameSettings
