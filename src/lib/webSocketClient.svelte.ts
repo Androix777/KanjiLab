@@ -1,5 +1,5 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { AnswerRecord, ClientInfo, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory } from "./types";
+import type { AnswerRecord, ClientInfo, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory, ServerStatus } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 import DatabaseService from "./databaseService";
 import { SvelteMap } from "svelte/reactivity";
@@ -12,6 +12,7 @@ class WebSocketClient
 	public chatList: Array<{ name: string; message: string }> = $state([]);
 
 	public connectionStatus: `Disconnected` | `Connecting` | `Connected` = $state(`Disconnected`);
+	public serverStatus: ServerStatus = $state(`Lobby`);
 	public isConnectedToSelf: boolean = $state(false);
 	public id: string = $state(``);
 	public isAdmin: boolean = $state(false);
@@ -86,6 +87,7 @@ class WebSocketClient
 			this.roundDuration = customEvent.detail.round_duration;
 			this.gameHistory.length = 0;
 			this.isGameStarted = true;
+			this.serverStatus = `WaitingQuestion`;
 		});
 		this.serverConnector.addEventListener(`OUT_REQ_question`, (event) =>
 		{
@@ -96,11 +98,13 @@ class WebSocketClient
 		{
 			const customEvent: CustomEvent<OutNotifQuestionPayload> = <CustomEvent<OutNotifQuestionPayload>>event;
 			this.showQuestion(customEvent.detail);
+			this.serverStatus = `AnswerQuestion`;
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_roundEnded`, (event) =>
 		{
 			const customEvent: CustomEvent<OutNotifRoundEndedPayload> = <CustomEvent<OutNotifRoundEndedPayload>>event;
 			this.endRound(customEvent.detail);
+			this.serverStatus = `WaitingQuestion`;
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_clientAnswered`, (event) =>
 		{
@@ -114,6 +118,7 @@ class WebSocketClient
 		{
 			this.isGameStarted = false;
 			this.gameHistory = [];
+			this.serverStatus = `Lobby`;
 		});
 	}
 

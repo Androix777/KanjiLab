@@ -1,13 +1,15 @@
 <script lang="ts">
 	import * as wanakana from "wanakana";
 	import { themeChange } from 'theme-change';
-    import type { RoundHistory } from "$lib/types";
+    import type { RoundHistory, ServerStatus } from "$lib/types";
 	import { fade } from 'svelte/transition';
+    import { onMount } from "svelte";
 
 	type Props = {
 		gameHistory: Array<RoundHistory>;
 		clientID: string;
 		roundDuration: number;
+		serverStatus: ServerStatus;
 		onAnswer: (answer: string) => void;
 	};
 
@@ -17,6 +19,7 @@
 			gameHistory = [],
 			clientID = ``,
 			roundDuration = 0,
+			serverStatus = `Lobby`,
 			onAnswer = () => {},
 		}: Props = $props();
 
@@ -29,12 +32,6 @@
 	let currentAnswerRecord = $derived(gameHistory.at(-1)?.answers.get(clientID));
 	let previousAnswerRecord = $derived(gameHistory.at(-2)?.answers.get(clientID));
 	let timerValue: number = $state(roundDuration);
-	const timerReset = $derived(() =>
-	{
-		gameHistory.at(-1)?.question;
-		timerValue = roundDuration;
-		return ``;
-	});
 
 	function checkWord(e: KeyboardEvent)
 	{
@@ -54,18 +51,25 @@
 
 	$effect(() =>
 	{
+		if (serverStatus == `AnswerQuestion`)
+		{
+			timerValue = roundDuration;
+		}
+	});
+
+	onMount(() =>
+	{
 		inputElement.focus();
 		wanakana.bind(inputElement);
 		themeChange(false);
 		setInterval(() =>
 		{
-			timerValue -= 1;
-		}, 1000);
+			timerValue -= 0.01;
+		}, 10);
 	});
 </script>
 
 <div class="flex flex-col flex-grow min-h-0">
-	{timerReset()}
 	<progress class="progress progress-primary" value={timerValue} max={roundDuration}></progress>
 
     <div class="flex items-center justify-center flex-none my-4 h-24">
