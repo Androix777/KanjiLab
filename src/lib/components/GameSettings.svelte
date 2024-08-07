@@ -81,6 +81,23 @@
 			value={getSettings().roundDuration.get()}
 			class="input input-bordered w-full"
 		/>
+
+		<div class="label">
+			<span class="label-text">Rounds count</span>
+		</div>
+		<input
+			type="number"
+			step="1"
+			oninput={(event) =>
+			{
+				if (event.target instanceof HTMLInputElement)
+				{
+					getSettings().roundsCount.set(parseInt(event.target.value));
+				}
+			}}
+			value={getSettings().roundsCount.get()}
+			class="input input-bordered w-full"
+		/>
 	</div>
 
 	<div class="text-center flex-grow relative min-h-16">

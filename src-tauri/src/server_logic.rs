@@ -34,10 +34,11 @@ static GAME_STATE_NOTIFIER: LazyLock<broadcast::Sender<GameState>> = LazyLock::n
     let (sender, _) = broadcast::channel(1);
     sender
 });
-static CURRENT_ROUND_INDEX: LazyLock<RwLock<u32>> = LazyLock::new(|| RwLock::new(0));
+static CURRENT_ROUND_INDEX: LazyLock<RwLock<u64>> = LazyLock::new(|| RwLock::new(0));
+static ROUNDS_COUNT: LazyLock<RwLock<u64>> = LazyLock::new(|| RwLock::new(0));
 static END_GAME_MARKER: LazyLock<RwLock<bool>> = LazyLock::new(|| RwLock::new(false));
 static ANSWERS_BY_ROUND: LazyLock<
-    RwLock<HashMap<u32, (QuestionInfo, HashMap<String, AnswerInfo>)>>,
+    RwLock<HashMap<u64, (QuestionInfo, HashMap<String, AnswerInfo>)>>,
 > = LazyLock::new(Default::default);
 static ROUND_TIMER_CANCEL: LazyLock<RwLock<Option<oneshot::Sender<()>>>> =
     LazyLock::new(|| RwLock::new(None));
@@ -122,7 +123,8 @@ pub fn get_admin_password() -> String {
     ADMIN_PASSWORD.read().unwrap().clone()
 }
 
-pub fn start_game(round_duration: Duration) -> bool {
+pub fn start_game(round_duration: Duration, rounds_count: u64) -> bool {
+    *ROUNDS_COUNT.write().unwrap() = rounds_count;
     *ROUND_DURATION.write().unwrap() = round_duration;
     let current_state = get_game_state();
     if current_state == GameState::Lobby {
@@ -139,7 +141,7 @@ pub fn stop_game() -> bool {
     let current_state = get_game_state();
     if current_state != GameState::Lobby {
         *END_GAME_MARKER.write().unwrap() = true;
-		if let Some(cancel_sender) = ROUND_TIMER_CANCEL.write().unwrap().take() {
+        if let Some(cancel_sender) = ROUND_TIMER_CANCEL.write().unwrap().take() {
             let _ = cancel_sender.send(());
         }
         true
@@ -149,6 +151,12 @@ pub fn stop_game() -> bool {
 }
 
 pub fn set_current_question(question: QuestionInfo) {
+    let mut marker = END_GAME_MARKER.write().unwrap();
+    if *marker {
+        *marker = false;
+        set_game_state(GameState::Lobby);
+    }
+
     let current_round = *CURRENT_ROUND_INDEX.write().unwrap();
     ANSWERS_BY_ROUND
         .write()
@@ -166,17 +174,22 @@ pub fn set_current_question(question: QuestionInfo) {
             _ = sleep(duration) => {},
             _ = cancel_receiver => {}
         }
-		let game_state = {
-			let mut marker = END_GAME_MARKER.write().unwrap();
-			if *marker {
-				*marker = false;
-				GameState::Lobby
-			} else {
-				*CURRENT_ROUND_INDEX.write().unwrap() += 1;
-				GameState::WaitingQuestion
-			}
-		};
-		set_game_state(game_state);
+        let game_state = {
+            let mut marker = END_GAME_MARKER.write().unwrap();
+            if *marker {
+                *marker = false;
+                GameState::Lobby
+            } else {
+                let mut index = CURRENT_ROUND_INDEX.write().unwrap();
+                if (*index + 1) >= *ROUNDS_COUNT.read().unwrap() {
+                    GameState::Lobby
+                } else {
+                    *index += 1;
+                    GameState::WaitingQuestion
+                }
+            }
+        };
+        set_game_state(game_state);
     });
 }
 
@@ -217,11 +230,11 @@ pub fn record_answer(client_id: &str, answer: &str) -> Result<bool, AnswerError>
     Ok(is_correct)
 }
 
-pub fn get_all_answers() -> HashMap<u32, (QuestionInfo, HashMap<String, AnswerInfo>)> {
+pub fn get_all_answers() -> HashMap<u64, (QuestionInfo, HashMap<String, AnswerInfo>)> {
     ANSWERS_BY_ROUND.read().unwrap().clone()
 }
 
-pub fn get_question_for_round(round_index: u32) -> Option<QuestionInfo> {
+pub fn get_question_for_round(round_index: u64) -> Option<QuestionInfo> {
     ANSWERS_BY_ROUND
         .read()
         .unwrap()
@@ -229,7 +242,7 @@ pub fn get_question_for_round(round_index: u32) -> Option<QuestionInfo> {
         .map(|(question, _)| question.clone())
 }
 
-pub fn get_answers_for_round(round_index: u32) -> Vec<AnswerInfo> {
+pub fn get_answers_for_round(round_index: u64) -> Vec<AnswerInfo> {
     ANSWERS_BY_ROUND
         .read()
         .unwrap()
@@ -238,12 +251,16 @@ pub fn get_answers_for_round(round_index: u32) -> Vec<AnswerInfo> {
         .unwrap_or_else(Vec::new)
 }
 
-pub fn get_current_round() -> u32 {
+pub fn get_current_round() -> u64 {
     *CURRENT_ROUND_INDEX.read().unwrap()
 }
 
 pub fn get_round_duration() -> u64 {
     ROUND_DURATION.read().unwrap().as_secs()
+}
+
+pub fn get_rounds_count() -> u64 {
+    *ROUNDS_COUNT.read().unwrap()
 }
 
 pub fn all_clients_answered() -> bool {

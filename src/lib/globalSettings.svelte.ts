@@ -19,6 +19,7 @@ const settings = {
 	minFrequency: createStateVar(0),
 	maxFrequency: createStateVar(10000),
 	roundDuration: createStateVar(10),
+	roundsCount: createStateVar(10),
 	wordPart: createStateVar(``),
 };
 

@@ -103,6 +103,7 @@ export type InReqSendChatMessage = BaseMessage<InReqSendChatPayload, `IN_REQ_sen
 
 export type InReqStartGamePayload = {
 	round_duration: number;
+	rounds_count: number;
 };
 export type InReqStartGameMessage = BaseMessage<InReqStartGamePayload, `IN_REQ_startGame`>;
 
@@ -172,6 +173,7 @@ export type OutNotifAdminMadeMessage = BaseMessage<OutNotifAdminMadePayload, `OU
 
 export type OutNotifGameStartedPayload = {
 	round_duration: number;
+	rounds_count: number;
 };
 export type OutNotifGameStartedMessage = BaseMessage<OutNotifGameStartedPayload, `OUT_NOTIF_gameStarted`>;
 

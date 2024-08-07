@@ -386,7 +386,10 @@ async fn handle_start_game(client_id: &str, incoming_message: BaseMessage) {
             return;
         }
 
-        start_game(Duration::from_secs(payload.round_duration));
+        start_game(
+            Duration::from_secs(payload.round_duration),
+            payload.rounds_count,
+        );
         send_status(client_id, &incoming_message.correlation_id, "success").await;
     }
 }
@@ -430,11 +433,11 @@ async fn handle_send_answer(client_id: &str, incoming_message: BaseMessage) {
             Ok(_is_correct) => {
                 send_status(client_id, &incoming_message.correlation_id, "success").await;
 
-				let event_payload = OutNotifClientAnsweredPayload {
-					id: client_id.to_string(),
-				};
-				let event = BaseMessage::new(event_payload, None);
-				send_all(event).await;
+                let event_payload = OutNotifClientAnsweredPayload {
+                    id: client_id.to_string(),
+                };
+                let event = BaseMessage::new(event_payload, None);
+                send_all(event).await;
 
                 if all_clients_answered() {
                     end_round_early();
@@ -507,8 +510,9 @@ async fn handle_state_waiting_question() {
 
 async fn handle_state_game_starting() {
     let event_payload = OutNotifGameStartedPayload {
-		round_duration: get_round_duration()
-	};
+        round_duration: get_round_duration(),
+		rounds_count: get_rounds_count(),
+    };
     let event = BaseMessage::new(event_payload, None);
     send_all(event).await;
 

@@ -54,6 +54,7 @@ pub struct InReqClientListPayload {}
 #[message_type("IN_REQ_startGame")]
 pub struct InReqStartGamePayload {
     pub round_duration: u64,
+    pub rounds_count: u64,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
@@ -136,7 +137,8 @@ pub struct OutNotifAdminMadePayload {
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_gameStarted")]
 pub struct OutNotifGameStartedPayload {
-	pub round_duration: u64,
+    pub round_duration: u64,
+    pub rounds_count: u64,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
@@ -152,7 +154,7 @@ pub struct OutNotifQuestionPayload {
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_clientAnswered")]
 pub struct OutNotifClientAnsweredPayload {
-	pub id: String,
+    pub id: String,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
