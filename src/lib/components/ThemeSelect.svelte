@@ -6,7 +6,7 @@
 	});
 </script>
 
-<select data-choose-theme class="select select-bordered">
+<select data-choose-theme class="select select-bordered w-52">
     <option value="light">light</option>
     <option value="dark" selected>dark</option>
     <option value="cupcake">cupcake</option>
