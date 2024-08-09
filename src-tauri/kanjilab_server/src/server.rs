@@ -24,6 +24,7 @@ pub type ClientsResponses = Arc<Mutex<HashMap<String, Arc<Mutex<PendingResponses
 
 pub static CLIENTS_CONNECTIONS: LazyLock<ClientsConnections> = LazyLock::new(|| Default::default());
 pub static CLIENTS_RESPONSES: LazyLock<ClientsResponses> = LazyLock::new(|| Default::default());
+pub static IS_AUTO_SERVER: LazyLock<Arc<Mutex<bool>>> = LazyLock::new(|| Default::default());
 
 pub struct PendingResponses {
     callbacks: HashMap<String, oneshot::Sender<BaseMessage>>,
@@ -262,6 +263,14 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
         };
         let event = BaseMessage::new(event_payload, None);
         send_all(event).await;
+
+		if *IS_AUTO_SERVER.lock().await && get_admin_id().is_none() {
+			let payload = InReqMakeAdminPayload {
+				admin_password: get_admin_password(),
+				client_id: client_id.to_string(),
+			};
+			handle_make_admin(&client_id, BaseMessage::new(payload, None)).await;
+		}
     }
 }
 

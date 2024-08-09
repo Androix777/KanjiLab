@@ -34,20 +34,6 @@ class WebSocketClient
 	{
 		this.connectionStatus = `Connecting`;
 		this.serverConnector = new ServerConnector();
-		try
-		{
-			await this.serverConnector.connect(ipAddress);
-			this.id = await this.serverConnector.sendRegisterClientMessage();
-			this.clientList = await this.serverConnector.sendGetClientListMessage();
-		}
-		catch (e)
-		{
-			console.log(e);
-			this.disconnectFromServer();
-			return;
-		}
-
-		this.connectionStatus = `Connected`;
 
 		this.serverConnector.addEventListener(`socketClosed`, () =>
 		{
@@ -75,6 +61,10 @@ class WebSocketClient
 			if (client)
 			{
 				client.is_admin = true;
+				if (client.id == this.id)
+				{
+					this.isAdmin = true;
+				}
 			}
 			else
 			{
@@ -120,6 +110,21 @@ class WebSocketClient
 			this.gameHistory = [];
 			this.serverStatus = `Lobby`;
 		});
+
+		try
+		{
+			await this.serverConnector.connect(ipAddress);
+			this.id = await this.serverConnector.sendRegisterClientMessage();
+			this.clientList = await this.serverConnector.sendGetClientListMessage();
+		}
+		catch (e)
+		{
+			console.log(e);
+			this.disconnectFromServer();
+			return;
+		}
+
+		this.connectionStatus = `Connected`;
 	}
 
 	public disconnectFromServer()
