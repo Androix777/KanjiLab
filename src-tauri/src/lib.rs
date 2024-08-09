@@ -1,8 +1,5 @@
 use std::path::PathBuf;
-pub mod server;
-pub mod server_logic;
-pub mod structures;
-pub mod tests;
+use kanjilab_server;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -31,11 +28,11 @@ fn get_executable_file_path() -> Result<PathBuf, String> {
 
 #[tauri::command]
 async fn launch_server() -> String {
-    server::call_launch_server().await;
-    server_logic::get_admin_password()
+    kanjilab_server::call_launch_server().await;
+    kanjilab_server::get_admin_password()
 }
 
 #[tauri::command]
 async fn stop_server() {
-    server::call_stop_server().await;
+    kanjilab_server::call_stop_server().await;
 }
