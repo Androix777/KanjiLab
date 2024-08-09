@@ -92,22 +92,26 @@
 
 	<div class="h-1/2 mt-auto mb-0 w-full flex justify-center flex-grow">
 		<div class="card w-full flex-grow border border-base-100">
-			<div class="flex-none divider {previousAnswerRecord?.answerStatus == `Correct` ? `divider-success text-success` : previousAnswerRecord?.answerStatus == `Incorrect` ? `divider-error text-error` : `divider-neutral text-neutral-content`}">
-				{ previousAnswerRecord?.answer }
-			</div>
-			<div class="flex flex-col space-y-2 text-xl overflow-y-auto flex-grow">
-				<div class="justify-center">
-					<div class="">
-						{ previousQuestionInfo?.question }
+			{#key previousAnswerRecord?.answer}
+				<div class="flex-none divider {previousAnswerRecord?.answerStatus == `Correct` ? `divider-success text-success` : previousAnswerRecord?.answerStatus == `Incorrect` ? `divider-error text-error` : `divider-neutral text-neutral-content`}" in:fade={{ duration: 200 }}>
+					{ previousAnswerRecord?.answer }
+				</div>
+			{/key}
+			{#key previousQuestionInfo?.question}
+				<div class="flex flex-col space-y-2 text-xl overflow-y-auto flex-grow" in:fade={{ duration: 200 }}>
+					<div class="justify-center">
+						<div class="">
+							{ previousQuestionInfo?.question }
+						</div>
+						<div class="">
+							{ previousQuestionInfo?.answers.join(` `) }
+						</div>
 					</div>
-					<div class="">
-						{ previousQuestionInfo?.answers.join(` `) }
+					<div class="flex-none flex justify-center min-h-0">
+						<div>{ previousQuestionInfo?.question ? `Word description` : `` }</div>
 					</div>
 				</div>
-				<div class="flex-none flex justify-center min-h-0">
-					<div> Word description</div>
-				</div>
-			</div>
+			{/key}
 		</div>
 	</div>
 
