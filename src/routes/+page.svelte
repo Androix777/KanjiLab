@@ -32,16 +32,16 @@
 <div class="flex h-screen">
 	<div class="w-16 min-h-full text-center bg-base-100">
 		<ul class="">
-			<button class="btn btn-square btn-primary p-1 my-2" onclick={() => { setScreen(`GameTest`); }}>
+			<button class="btn btn-square bg-base-100 border-0 p-1 mt-2 mb-4 shadow-none hover:bg-transparent hover:scale-125" onclick={() => { setScreen(`GameTest`); }}>
 				<SvgIcon name="Nani"/>
 			</button>
-			<button class="btn btn-square btn-primary p-1 mb-2" onclick={() => { setScreen(`Stats`); }}>
+			<button class="btn btn-square bg-base-100 border-0 p-1 mb-4 shadow-none hover:bg-transparent hover:scale-125" onclick={() => { setScreen(`Stats`); }}>
 				<SvgIcon name="Bars"/>
 			</button>
-			<button class="btn btn-square btn-primary p-1 mb-2" onclick={() => { setScreen(`Settings`); }}>
+			<button class="btn btn-square bg-base-100 border-0 p-1 mb-4 shadow-none hover:bg-transparent hover:scale-125" onclick={() => { setScreen(`Settings`); }}>
 				<SvgIcon name="Gear"/>
 			</button>
-			<button class="btn btn-square btn-primary p-1 mb-2" onclick={() => { setScreen(`StartGame`); }}>
+			<button class="btn btn-square bg-base-100 border-0 p-1 mb-4 shadow-none hover:bg-transparent hover:scale-125" onclick={() => { setScreen(`StartGame`); }}>
 				<SvgIcon name="KanjiCards"/>
 			</button>
 		</ul>
