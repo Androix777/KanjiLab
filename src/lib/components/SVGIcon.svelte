@@ -9,7 +9,7 @@
 	const
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		{
-			name = `KanjiCardsBlack`,
+			name = `KanjiCards`,
 		}: Props = $props();
 
 	async function getIcon(name: string)

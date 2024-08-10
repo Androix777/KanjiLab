@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="512"
+   height="512"
+   viewBox="0 0 512 512"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="KanjiCardsBlackT.svg"
+   inkscape:export-filename="Bars.svg"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="true"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     inkscape:zoom="3.2070312"
+     inkscape:cx="292.95007"
+     inkscape:cy="333.486"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1"
+     inkscape:export-bgcolor="#ffffff00" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="swatch1"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop1" />
+    </linearGradient>
+  </defs>
+  <path
+     style="fill:none;stroke:#000000;stroke-width:20;stroke-dasharray:none;stroke-dashoffset:1521.85;stroke-opacity:1"
+     d="M 144.6821,16.838003 C 113.55792,110.82418 74.937189,188.05338 15.590743,253.8173"
+     id="path38"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:20;stroke-dasharray:none;stroke-dashoffset:1521.85;stroke-opacity:1"
+     d="M 96.662608,135.52254 V 497.26919"
+     id="path39"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:20;stroke-dasharray:none;stroke-dashoffset:1521.85;stroke-opacity:1"
+     d="m 175.23995,70.470159 h 329.2765"
+     id="path40" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:20;stroke-dasharray:none;stroke-dashoffset:1521.85;stroke-opacity:1"
+     d="M 440.90622,71.093789 V 486.43119 h -80.44824"
+     id="path41" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:20;stroke-dasharray:none;stroke-dashoffset:1521.85;stroke-opacity:1"
+     d="M 203.92692,190.8307 H 336.76005 V 329.2765 H 203.92692 Z"
+     id="path42" />
+</svg>

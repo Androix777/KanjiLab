@@ -33,17 +33,16 @@
 	<div class="w-16 min-h-full text-center bg-base-100">
 		<ul class="">
 			<button class="btn btn-square btn-primary p-1 my-2" onclick={() => { setScreen(`GameTest`); }}>
-				GL
+				<SvgIcon name="Nani"/>
 			</button>
 			<button class="btn btn-square btn-primary p-1 mb-2" onclick={() => { setScreen(`Stats`); }}>
-				St
+				<SvgIcon name="Bars"/>
 			</button>
 			<button class="btn btn-square btn-primary p-1 mb-2" onclick={() => { setScreen(`Settings`); }}>
-				S
+				<SvgIcon name="Gear"/>
 			</button>
 			<button class="btn btn-square btn-primary p-1 mb-2" onclick={() => { setScreen(`StartGame`); }}>
-				<SvgIcon
-					name="KanjiCardsBlack"/>
+				<SvgIcon name="KanjiCards"/>
 			</button>
 		</ul>
 	</div>
