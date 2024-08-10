@@ -3,6 +3,7 @@ import type { AnswerRecord, ClientInfo, OutNotifChatSentPayload, OutNotifClientA
 import { getSettings } from "$lib/globalSettings.svelte";
 import DatabaseService from "./databaseService";
 import { SvelteMap } from "svelte/reactivity";
+import * as uuid from "uuid";
 
 class WebSocketClient
 {
@@ -93,7 +94,7 @@ class WebSocketClient
 		this.serverConnector.addEventListener(`OUT_NOTIF_roundEnded`, (event) =>
 		{
 			const customEvent: CustomEvent<OutNotifRoundEndedPayload> = <CustomEvent<OutNotifRoundEndedPayload>>event;
-			this.endRound(customEvent.detail);
+			void this.endRound(customEvent.detail);
 			this.serverStatus = `WaitingQuestion`;
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_clientAnswered`, (event) =>
@@ -221,7 +222,7 @@ class WebSocketClient
 		});
 	}
 
-	public endRound(roundResults: OutNotifRoundEndedPayload)
+	public async endRound(roundResults: OutNotifRoundEndedPayload)
 	{
 		this.gameHistory[this.gameHistory.length - 1].question = roundResults.question;
 		roundResults.answers.forEach((answer) =>
@@ -237,6 +238,19 @@ class WebSocketClient
 			const e2Score = this.gameHistory.reduce((acc, round) => acc + (round.answers.get(e2.id)?.answerStatus == `Correct` ? 1 : 0), 0);
 			return (e1Score < e2Score) ? 1 : (e1Score > e2Score) ? -1 : 0;
 		});
+
+		const databaseService = await DatabaseService.getInstance();
+		const wordID = uuid.parse(uuid.v5(`${this.gameHistory.at(-1)?.question.question}`, uuid.v5.DNS));
+
+		if (this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`)
+		{
+			const readingID = uuid.parse(uuid.v5(`${this.gameHistory.at(-1)?.question.question}|||${this.gameHistory.at(-1)?.answers.get(this.id)?.answer}`, uuid.v5.DNS));
+			await databaseService.addAnswerResult(wordID, readingID);
+		}
+		else
+		{
+			await databaseService.addAnswerResult(wordID, null);
+		}
 	}
 
 	public async stopGame()

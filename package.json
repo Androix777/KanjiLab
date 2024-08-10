@@ -20,6 +20,7 @@
 		"@tauri-apps/cli": "^2.0.0-beta.17",
 		"@types/d3": "^7.4.3",
 		"@types/eslint": "^8.56.0",
+		"@types/uuid": "^10.0.0",
 		"@typescript-eslint/eslint-plugin": "^7.0.0",
 		"@typescript-eslint/parser": "^7.0.0",
 		"autoprefixer": "^10.4.19",
@@ -41,6 +42,7 @@
 		"@tauri-apps/plugin-sql": "^2.0.0-beta.3",
 		"d3": "^7.9.0",
 		"theme-change": "^2.5.0",
+		"uuid": "^10.0.0",
 		"wanakana": "^5.3.1"
 	}
 }
