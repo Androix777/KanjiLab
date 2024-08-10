@@ -64,7 +64,10 @@
 		themeChange(false);
 		setInterval(() =>
 		{
-			timerValue -= 0.01;
+			if (serverStatus == `AnswerQuestion`)
+			{
+				timerValue -= 0.01;
+			}
 		}, 10);
 	});
 </script>
