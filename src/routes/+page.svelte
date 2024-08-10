@@ -5,6 +5,7 @@
 	import StartGameScreen from "$lib/components/StartGameScreen.svelte";
 	import { FontLoader } from '$lib/fontLoader';
 	import { themeChange } from 'theme-change';
+    import SvgIcon from "$lib/components/SVGIcon.svelte";
 
 	type ScreenType = `GameTest` | `Settings` | `Stats` | `StartGame`;
 	let currentScreenType: ScreenType = $state(`StartGame`);
@@ -31,10 +32,19 @@
 <div class="flex h-screen">
 	<div class="w-16 min-h-full text-center bg-base-100">
 		<ul class="">
-			<button class="btn btn-primary" onclick={() => { setScreen(`GameTest`); }}>Gl</button>
-			<button class="btn btn-primary" onclick={() => { setScreen(`Stats`); }}>St</button>
-			<button class="btn btn-primary" onclick={() => { setScreen(`Settings`); }}>S</button>
-			<button class="btn btn-primary" onclick={() => { setScreen(`StartGame`); }}>G</button>
+			<button class="btn btn-square btn-primary p-1 my-2" onclick={() => { setScreen(`GameTest`); }}>
+				GL
+			</button>
+			<button class="btn btn-square btn-primary p-1 mb-2" onclick={() => { setScreen(`Stats`); }}>
+				St
+			</button>
+			<button class="btn btn-square btn-primary p-1 mb-2" onclick={() => { setScreen(`Settings`); }}>
+				S
+			</button>
+			<button class="btn btn-square btn-primary p-1 mb-2" onclick={() => { setScreen(`StartGame`); }}>
+				<SvgIcon
+					name="KanjiCardsBlack"/>
+			</button>
 		</ul>
 	</div>
 	<div class="flex-1 bg-base-300">
