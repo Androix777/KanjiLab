@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="512"
+   height="512"
+   viewBox="0 0 512 512"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="Quiz.svg"
+   inkscape:export-filename="Bars.svg"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="true"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     inkscape:zoom="3.2070312"
+     inkscape:cx="292.95007"
+     inkscape:cy="333.486"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1"
+     inkscape:export-bgcolor="#ffffff00" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="swatch1"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop1" />
+    </linearGradient>
+  </defs>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="Layer 3">
+    <path
+       style="fill:none;stroke:#000000;stroke-width:20.3404;stroke-linecap:butt;stroke-dasharray:none;stroke-dashoffset:1521.85"
+       d="M 119.89832,43.375901 C 126.3432,16.065463 154.6085,5.512456 174.8263,25.296085 200.79916,55.824014 149.99886,67.329747 150.43828,103.10795"
+       id="path4"
+       sodipodi:nodetypes="ccc" />
+    <circle
+       style="display:none;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.63636;stroke-dasharray:none;stroke-dashoffset:1521.85;stroke-opacity:1"
+       id="path6"
+       cx="147.37953"
+       cy="125.77187"
+       r="8.181818" />
+    <rect
+       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:15.9576;stroke-linecap:butt;stroke-dasharray:none;stroke-dashoffset:1521.85;stroke-opacity:1"
+       id="rect7"
+       width="4.042387"
+       height="4.0423765"
+       x="148.65582"
+       y="120.01939" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:20.3404;stroke-linecap:butt;stroke-dasharray:none;stroke-dashoffset:1521.85"
+       d="M 309.89832,43.375901 C 316.3432,16.065463 344.6085,5.512456 364.8263,25.296085 390.79916,55.824014 339.99886,67.329747 340.43828,103.10795"
+       id="path8"
+       sodipodi:nodetypes="ccc" />
+    <rect
+       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:15.9576;stroke-linecap:butt;stroke-dasharray:none;stroke-dashoffset:1521.85;stroke-opacity:1"
+       id="rect8"
+       width="4.042387"
+       height="4.0423765"
+       x="338.65582"
+       y="120.01939" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer 2">
+    <path
+       style="fill:none;stroke:#000000;stroke-width:28.5294;stroke-dasharray:none;stroke-dashoffset:1521.85"
+       d="M 171.13436,155 V 262.19509"
+       id="path11" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:28.5294;stroke-dasharray:none;stroke-dashoffset:1521.85"
+       d="M 238.74288,262.19509 H 101.30186"
+       id="path12" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:28.5294;stroke-dasharray:none;stroke-dashoffset:1521.85"
+       d="M 87.958082,204.37201 H 253.19865"
+       id="path13" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:28.5294;stroke-dasharray:none;stroke-dashoffset:1521.85"
+       d="m 95.2647,353.28242 v -44.03224 h 146.56449 v 43.56047"
+       id="path14"
+       sodipodi:nodetypes="cccc" />
+    <path
+       style="display:inline;fill:none;stroke:#000000;stroke-width:28.5294;stroke-dasharray:none;stroke-dashoffset:1521.85"
+       d="m 96.837285,487.26627 c 34.649175,-24.68951 43.665295,-75.16934 43.088695,-127.379 h 65.10484 c 0.21454,53.41901 -10.4398,104.60781 44.97579,86.96368"
+       id="path15"
+       sodipodi:nodetypes="cccc" />
+    <path
+       style="display:inline;fill:none;stroke:#000000;stroke-width:28.5294;stroke-dasharray:none;stroke-dashoffset:1521.85"
+       d="m 265.73241,284.40341 c 34.02016,-34.96372 32.02824,-62.22178 32.70967,-111.02418 h 68.87902 c 0.55503,51.20982 -11.78891,123.10249 47.92363,96.69596"
+       id="path16"
+       sodipodi:nodetypes="cccc" />
+    <path
+       style="display:inline;fill:none;stroke:#000000;stroke-width:28.5294;stroke-dasharray:none;stroke-dashoffset:1521.85"
+       d="m 267.30499,328.43566 h 128.9516 c -32.91937,84.39516 -74.0161,131.04836 -156.31447,166.37899"
+       id="path17"
+       sodipodi:nodetypes="ccc" />
+    <path
+       style="display:inline;fill:none;stroke:#000000;stroke-width:28.5294;stroke-dasharray:none;stroke-dashoffset:1521.85"
+       d="m 287.74855,328.43566 c 30.9274,90.37096 61.5403,119.09674 136.18544,161.66127"
+       id="path18"
+       sodipodi:nodetypes="cc" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer1"
+     inkscape:label="Layer 1"
+     style="display:none">
+    <text
+       xml:space="preserve"
+       style="font-size:277.925px;font-family:'Yu Gothic';-inkscape-font-specification:'Yu Gothic';fill:none;stroke:#000000;stroke-width:2.89505;stroke-dasharray:none;stroke-dashoffset:1521.85"
+       x="116.13284"
+       y="258.41083"
+       id="text10"
+       transform="scale(0.98907674,1.0110439)"><tspan
+         sodipodi:role="line"
+         id="tspan10"
+         x="116.13284"
+         y="258.41083"
+         style="stroke-width:2.89505">殻</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:205.628px;font-family:'Yu Gothic';-inkscape-font-specification:'Yu Gothic';fill:none;stroke:#000000;stroke-width:2.14196;stroke-dasharray:none;stroke-dashoffset:1521.85"
+       x="49.073269"
+       y="460.35828"
+       id="text11"
+       transform="scale(0.9721971,1.028598)"
+       inkscape:label="text11"><tspan
+         sodipodi:role="line"
+         id="tspan11"
+         x="49.073269"
+         y="460.35828"
+         style="stroke-width:2.14196">か＿</tspan></text>
+  </g>
+</svg>

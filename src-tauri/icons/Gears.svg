@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="512"
+   height="512"
+   viewBox="0 0 512 512"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="Gear.svg"
+   inkscape:export-filename="KanjiCardsBlackT.svg"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="true"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     inkscape:zoom="3.2070312"
+     inkscape:cx="292.95007"
+     inkscape:cy="333.486"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1"
+     inkscape:export-bgcolor="#ffffff00" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="swatch1"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop1" />
+    </linearGradient>
+  </defs>
+  <g
+     inkscape:label="Rendered Gears"
+     transform="matrix(3.0322699,0,0,3.0322677,312.00998,311.76797)"
+     id="g28"
+     style="stroke-width:6.59572;stroke-dasharray:none">
+    <path
+       style="fill:none;stroke:#000000;stroke-width:6.59572;stroke-dasharray:none"
+       d="m 49.951,-9.93587 13.5078,4.85343 V 5.08244 L 49.951,9.93587 42.3464,28.295 48.466,41.2783 41.2783,48.466 28.295,42.3464 9.93587,49.951 5.08244,63.4588 H -5.08244 L -9.93587,49.951 -28.295,42.3464 -41.2783,48.466 -48.466,41.2783 -42.3464,28.295 -49.951,9.93587 -63.4588,5.08244 V -5.08244 l 13.5078,-4.85343 7.6046,-18.35913 -6.1196,-12.9833 7.1877,-7.1877 12.9833,6.1196 18.35913,-7.6046 4.85343,-13.5078 H 5.08244 l 4.85343,13.5078 18.35913,7.6046 12.9833,-6.1196 7.1877,7.1877 -6.1196,12.9833 z"
+       id="path27"
+       sodipodi:nodetypes="ccccccccccccccccccccccccccccccccc" />
+    <circle
+       style="fill:none;stroke:#000000;stroke-width:6.59572;stroke-dasharray:none"
+       id="path28"
+       cx="0"
+       cy="0"
+       r="30" />
+  </g>
+  <g
+     inkscape:label="Rendered Gears"
+     transform="matrix(2.2742024,0,0,2.2742008,150.00289,150.64286)"
+     id="g1"
+     style="stroke-width:8.7943;stroke-dasharray:none">
+    <path
+       style="fill:none;stroke:#000000;stroke-width:8.7943;stroke-dasharray:none"
+       d="M -5.08244,63.4588 -9.93587,49.951 -28.295,42.3464 -41.2783,48.466 -48.466,41.2783 -42.3464,28.295 -49.951,9.93587 -63.4588,5.08244 V -5.08244 l 13.5078,-4.85343 7.6046,-18.35913 -6.1196,-12.9833 7.1877,-7.1877 12.9833,6.1196 18.35913,-7.6046 4.85343,-13.5078 H 5.08244 l 4.85343,13.5078 18.35913,7.6046 12.9833,-6.1196 7.1877,7.1877 -6.1196,12.9833 7.6046,18.35913 13.5078,4.85343"
+       id="path1"
+       sodipodi:nodetypes="cccccccccccccccccccccccc" />
+    <path
+       id="circle1"
+       style="fill:none;stroke:#000000;stroke-width:8.7943;stroke-dasharray:none"
+       d="M 11.677354,27.642451 C 8.0882034,29.160534 4.1421356,30 0,30 -16.568542,30 -30,16.568542 -30,0 c 0,-16.568542 13.431458,-30 30,-30 16.568542,0 30,13.431458 30,30 0,4.1421356 -0.839466,8.0882034 -2.357549,11.677354"
+       sodipodi:nodetypes="cssssc" />
+  </g>
+</svg>
