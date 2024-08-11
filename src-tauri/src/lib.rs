@@ -36,3 +36,27 @@ async fn launch_server() -> String {
 async fn stop_server() {
     kanjilab_server::call_stop_server().await;
 }
+
+#[test]
+fn get_svg_text() {
+	use rusttype::{Font, Point};
+	use text_svg::Text;
+	use std::{fs::File, io::Read};
+
+    let x = 10.;
+    let y = 20.;
+
+    let font_path = "x.ttc";
+    let mut file = File::open(font_path).unwrap();
+    let mut font_data = Vec::new();
+    file.read_to_end(&mut font_data).unwrap();
+    
+    let font = Font::try_from_vec(font_data).unwrap();
+
+    let text = Text::builder()
+        .size(50.0)
+        .start(Point { x, y })
+        .build(&font, "人差し指");
+
+    println!("{}", text.path.to_string())
+}
