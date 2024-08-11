@@ -26,17 +26,7 @@
 	let inputElement: HTMLInputElement;
 
 	let readingInput = $state(``);
-	let currentSvgUrl = ``;
-	let svgUrl = $derived(() =>
-	{
-		if (currentSvgUrl)
-		{
-			URL.revokeObjectURL(currentSvgUrl);
-		}
-		let blob = new Blob([gameHistory.at(-1)?.question_svg || ``], { type: `image/svg+xml` });
-		currentSvgUrl = URL.createObjectURL(blob);
-		return currentSvgUrl;
-	});
+	let currentSvgUrl = $derived(URL.createObjectURL(new Blob([gameHistory.at(-1)?.question_svg || ``], { type: `image/svg+xml` })));
 
 	let currentQuestionInfo = $derived(gameHistory.at(-1)?.question);
 	let previousQuestionInfo = $derived(gameHistory.at(-2)?.question);
@@ -88,8 +78,13 @@
 
     <div class="flex items-center justify-center flex-none my-4 h-24">
 		{#key currentQuestionInfo?.question}
-			<div class="text-7xl absolute" transition:fade={{ duration: 200 }}>
+			<!-- <div class="text-7xl absolute" transition:fade={{ duration: 200 }}>
 				<img src={svgUrl()} alt="">
+			</div> -->
+			<div class="bg-base-content" style="
+				mask-image: url({currentSvgUrl});
+				mask-size: 100% 100%;">
+				<img src={currentSvgUrl} alt="" class="opacity-0">
 			</div>
 		{/key}
     </div>

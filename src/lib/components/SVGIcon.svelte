@@ -25,7 +25,7 @@
 	{#await getIcon(name)}
 		<span class="loading loading-ring loading-xs"></span>
 	{:then { icon }}
-		<div class="h-full w-full bg-primary" style="-webkit-mask-image: url({icon});
+		<div class="h-full w-full bg-primary" style="
 			mask-image: url({icon});
 			mask-size: 100% 100%;">
 		</div>
