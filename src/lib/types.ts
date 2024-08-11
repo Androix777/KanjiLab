@@ -42,6 +42,7 @@ export type AnswerRecord = {
 
 export type RoundHistory = {
 	question: QuestionInfo;
+	question_svg: string;
 	answers: SvelteMap<string, AnswerRecord>;
 };
 
@@ -144,6 +145,7 @@ export type OutReqQuestionMessage = BaseMessage<OutReqQuestionPayload, `OUT_REQ_
 
 export type InRespQuestionPayload = {
 	question: QuestionInfo;
+	question_svg: string;
 };
 export type InRespQuestionMessage = BaseMessage<InRespQuestionPayload, `IN_RESP_question`>;
 
@@ -178,7 +180,7 @@ export type OutNotifGameStartedPayload = {
 export type OutNotifGameStartedMessage = BaseMessage<OutNotifGameStartedPayload, `OUT_NOTIF_gameStarted`>;
 
 export type OutNotifQuestionPayload = {
-	question: string;
+	question_svg: string;
 };
 export type OutNotifQuestionMessage = BaseMessage<OutNotifQuestionPayload, `OUT_NOTIF_question`>;
 

@@ -4,6 +4,8 @@ import { getSettings } from "$lib/globalSettings.svelte";
 import DatabaseService from "./databaseService";
 import { SvelteMap } from "svelte/reactivity";
 import * as uuid from "uuid";
+import { invoke } from "@tauri-apps/api/core";
+import { GET_SVG_TEXT } from "./tauriFunctions";
 
 class WebSocketClient
 {
@@ -82,7 +84,7 @@ class WebSocketClient
 		});
 		this.serverConnector.addEventListener(`OUT_REQ_question`, (event) =>
 		{
-			const customEvent: CustomEvent<(question: string, answers: string[]) => void> = <CustomEvent<(question: string, answers: string[]) => void>>event;
+			const customEvent: CustomEvent<(question: string, answers: string[], question_svg: string) => void> = <CustomEvent<(question: string, answers: string[], question_svg: string) => void>>event;
 			void this.respondToQuestionRequest(customEvent);
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_question`, (event) =>
@@ -145,13 +147,13 @@ class WebSocketClient
 		this.serverConnector?.sendChatMessage(message);
 	}
 
-	public async respondToQuestionRequest(event: CustomEvent<(question: string, answers: string[]) => void>)
+	public async respondToQuestionRequest(event: CustomEvent<(question: string, answers: string[], question_svg: string) => void>)
 	{
-		const question: { question: string; answers: string[] } = await this.getQuestion();
-		event.detail(question.question, question.answers);
+		const question: { question: string; answers: string[]; question_svg: string } = await this.getQuestion();
+		event.detail(question.question, question.answers, question.question_svg);
 	}
 
-	public async getQuestion(): Promise<{ question: string; answers: string[] }>
+	public async getQuestion(): Promise<{ question: string; answers: string[]; question_svg: string }>
 	{
 		try
 		{
@@ -159,9 +161,11 @@ class WebSocketClient
 			const words = await databaseService.getRandomWords(1);
 			const lastWord = words[0];
 			const readings = lastWord.wordReadings.map(reading => reading.reading);
-			const question: { question: string; answers: string[] } = {
+			const svg: string = await invoke(GET_SVG_TEXT, { text: lastWord.word });
+			const question: { question: string; answers: string[]; question_svg: string } = {
 				question: lastWord.word,
 				answers: readings,
+				question_svg: svg,
 			};
 			return question;
 		}
@@ -193,9 +197,10 @@ class WebSocketClient
 	{
 		this.gameHistory.push({
 			question: {
-				question: questionPayload.question,
+				question: ``,
 				answers: [],
 			},
+			question_svg: questionPayload.question_svg,
 			answers: new SvelteMap<string, AnswerRecord>(),
 		});
 		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {

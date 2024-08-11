@@ -261,16 +261,16 @@ export class ServerConnector extends EventTarget
 		}
 	}
 
-	public sendQuestion(correlation_id: string, question: string, answers: string[])
+	public sendQuestion(correlation_id: string, question: string, answers: string[], question_svg: string)
 	{
 		if (!this.webSocket) throw new Error(`missingWebsocket`);
-		const sendChatMessage: InRespQuestionMessage = {
+		const message: InRespQuestionMessage = {
 			message_type: `IN_RESP_question`,
 			correlation_id: correlation_id,
-			payload: { question: { question: question, answers: answers } },
+			payload: { question: { question: question, answers: answers }, question_svg: question_svg },
 		};
 
-		this.webSocket.send(JSON.stringify(sendChatMessage));
+		this.webSocket.send(JSON.stringify(message));
 	}
 
 	public async sendAnswer(answer: string)
@@ -379,9 +379,9 @@ export class ServerConnector extends EventTarget
 			case `OUT_REQ_question`:
 			{
 				const concreteMessage = <OutReqQuestionMessage>message;
-				const event = new CustomEvent<(question: string, answers: string[]) => void>(`OUT_REQ_question`, { detail: (question: string, answers: string[]) =>
+				const event = new CustomEvent<(question: string, answers: string[], question_svg: string) => void>(`OUT_REQ_question`, { detail: (question: string, answers: string[], question_svg: string) =>
 				{
-					this.sendQuestion(concreteMessage.correlation_id, question, answers);
+					this.sendQuestion(concreteMessage.correlation_id, question, answers, question_svg);
 				} });
 				this.dispatchEvent(event);
 				break;

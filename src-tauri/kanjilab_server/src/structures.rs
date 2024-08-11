@@ -102,6 +102,7 @@ pub struct OutReqQuestionPayload {}
 #[message_type("IN_RESP_question")]
 pub struct InRespQuestionPayload {
     pub question: QuestionInfo,
+    pub question_svg: String,
 }
 // #endregion
 
@@ -148,7 +149,7 @@ pub struct OutNotifGameStoppedPayload {}
 #[derive(Serialize, Deserialize, MessageType)]
 #[message_type("OUT_NOTIF_question")]
 pub struct OutNotifQuestionPayload {
-    pub question: String,
+    pub question_svg: String,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]

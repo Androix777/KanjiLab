@@ -486,7 +486,7 @@ async fn handle_question(client_id: &str, incoming_message: BaseMessage) {
             set_current_question(payload.question.clone());
 
             let event_payload = OutNotifQuestionPayload {
-                question: payload.question.question.clone(),
+                question_svg: payload.question_svg,
             };
             let event = BaseMessage::new(event_payload, None);
             send_all(event).await;

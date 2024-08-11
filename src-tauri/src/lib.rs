@@ -8,7 +8,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_executable_file_path,
             launch_server,
-            stop_server
+            stop_server,
+			get_svg_text,
         ])
         .plugin(tauri_plugin_sql::Builder::default().build())
         .run(tauri::generate_context!())
@@ -37,11 +38,12 @@ async fn stop_server() {
     kanjilab_server::call_stop_server().await;
 }
 
-#[test]
-fn get_svg_text() {
-	use rusttype::{Font, Point};
-	use text_svg::Text;
-	use std::{fs::File, io::Read};
+#[tauri::command]
+fn get_svg_text(text: &str) -> String {
+    use rusttype::{Font, Point};
+    use text_svg::Text;
+    use std::{fs::File, io::Read};
+    use svg::Document;
 
     let x = 10.;
     let y = 20.;
@@ -54,9 +56,14 @@ fn get_svg_text() {
     let font = Font::try_from_vec(font_data).unwrap();
 
     let text = Text::builder()
-        .size(50.0)
+        .size(100.0)
         .start(Point { x, y })
-        .build(&font, "人差し指");
+        .build(&font, text);
 
-    println!("{}", text.path.to_string())
+    let document = Document::new()
+		.set("width", text.bounding_box.max.x + x)
+        .set("height", text.bounding_box.max.y + y)
+        .add(text.path);
+
+    document.to_string()
 }
