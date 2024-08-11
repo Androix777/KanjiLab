@@ -153,27 +153,34 @@ class WebSocketClient
 		event.detail(question.question, question.answers, question.question_svg);
 	}
 
-	public async getQuestion(): Promise<{ question: string; answers: string[]; question_svg: string }>
+	public async getQuestion(maxRetries: number = 3): Promise<{ question: string; answers: string[]; question_svg: string }>
 	{
-		try
+		for (let attempt = 0; attempt < maxRetries; attempt++)
 		{
-			const databaseService = await DatabaseService.getInstance();
-			const words = await databaseService.getRandomWords(1);
-			const lastWord = words[0];
-			const readings = lastWord.wordReadings.map(reading => reading.reading);
-			const svg: string = await invoke(GET_SVG_TEXT, { text: lastWord.word });
-			const question: { question: string; answers: string[]; question_svg: string } = {
-				question: lastWord.word,
-				answers: readings,
-				question_svg: svg,
-			};
-			return question;
+			try
+			{
+				const databaseService = await DatabaseService.getInstance();
+				const words = await databaseService.getRandomWords(1);
+				const lastWord = words[0];
+				const readings = lastWord.wordReadings.map(reading => reading.reading);
+				const svg: string = await invoke(GET_SVG_TEXT, { text: lastWord.word });
+				const question: { question: string; answers: string[]; question_svg: string } = {
+					question: lastWord.word,
+					answers: readings,
+					question_svg: svg,
+				};
+				return question;
+			}
+			catch (error)
+			{
+				console.error(`Attempt ${attempt + 1} failed:`, error);
+				if (attempt === maxRetries - 1)
+				{
+					throw new Error(`getQuestionFailed`);
+				}
+			}
 		}
-		catch (error)
-		{
-			console.error(error);
-			throw new Error(`getQuestionFailed`);
-		}
+		throw new Error(`UnexpectedErrorInGetQuestion`);
 	}
 
 	public async makeAdmin()

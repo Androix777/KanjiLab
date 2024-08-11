@@ -25,6 +25,7 @@ serde_json = "1.0"
 text-svg = "0.1.2"
 rusttype = "0.9.3"
 svg = "0.12.1"
+rand = "0.8.5"
 
 [dependencies.tauri-plugin-sql]
 features = ["sqlite"]

@@ -92,6 +92,7 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "kanjilab_server",
+ "rand 0.8.5",
  "rusttype",
  "serde_json",
  "svg",
