@@ -78,12 +78,10 @@
 
     <div class="flex items-center justify-center flex-none my-4 h-24">
 		{#key currentQuestionInfo?.question}
-			<!-- <div class="text-7xl absolute" transition:fade={{ duration: 200 }}>
-				<img src={svgUrl()} alt="">
-			</div> -->
-			<div class="bg-base-content" style="
+			<div class="bg-base-content absolute" style="
 				mask-image: url({currentSvgUrl});
-				mask-size: 100% 100%;">
+				mask-size: 100% 100%;"
+				transition:fade={{ duration: 400 }}>
 				<img src={currentSvgUrl} alt="" class="opacity-0">
 			</div>
 		{/key}
@@ -99,15 +97,15 @@
 		/>
 	</div>
 
-	<div class="h-1/2 mt-auto mb-0 w-full flex justify-center flex-grow">
-		<div class="card w-full flex-grow border border-base-100">
-			{#key previousAnswerRecord?.answer}
-				<div class="flex-none divider {previousAnswerRecord?.answerStatus == `Correct` ? `divider-success text-success` : previousAnswerRecord?.answerStatus == `Incorrect` ? `divider-error text-error` : `divider-neutral text-neutral-content`}" in:fade={{ duration: 200 }}>
+	<div class="flex-grow"></div>
+
+	<div class="h-1/2 w-full flex justify-center flex-none">
+		{#key [previousQuestionInfo?.question, previousAnswerRecord?.answer]}
+		<div class="absolute w-full flex-grow border border-base-100" transition:fade={{ duration: 400 }}>
+				<div class="flex-none divider mx-2 {previousAnswerRecord?.answerStatus == `Correct` ? `divider-success text-success` : previousAnswerRecord?.answerStatus == `Incorrect` ? `divider-error text-error` : `divider-neutral text-neutral-content`}">
 					{ previousAnswerRecord?.answer }
 				</div>
-			{/key}
-			{#key previousQuestionInfo?.question}
-				<div class="flex flex-col space-y-2 text-xl overflow-y-auto flex-grow" in:fade={{ duration: 200 }}>
+				<div class="flex flex-col space-y-2 text-xl overflow-y-auto flex-grow">
 					<div class="justify-center">
 						<div class="">
 							{ previousQuestionInfo?.question }
@@ -120,8 +118,8 @@
 						<div>{ previousQuestionInfo?.question ? `Word description` : `` }</div>
 					</div>
 				</div>
-			{/key}
 		</div>
+		{/key}
 	</div>
 
 </div>
