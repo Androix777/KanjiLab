@@ -122,6 +122,8 @@ class WebSocketClient
 			this.isGameStarted = false;
 			this.gameHistory = [];
 			this.serverStatus = `Lobby`;
+
+			clearInterval(this.timerInterval);
 		});
 
 		try
