@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as wanakana from "wanakana";
 	import { themeChange } from 'theme-change';
-    import type { RoundHistory, ServerStatus } from "$lib/types";
+    import type { RoundHistory } from "$lib/types";
 	import { fade } from 'svelte/transition';
     import { onMount } from "svelte";
 
@@ -9,7 +9,7 @@
 		gameHistory: Array<RoundHistory>;
 		clientID: string;
 		roundDuration: number;
-		serverStatus: ServerStatus;
+		timerValue: number;
 		onAnswer: (answer: string) => void;
 	};
 
@@ -19,7 +19,7 @@
 			gameHistory = [],
 			clientID = ``,
 			roundDuration = 0,
-			serverStatus = `Lobby`,
+			timerValue = 0,
 			onAnswer = () => {},
 		}: Props = $props();
 
@@ -32,7 +32,6 @@
 	let previousQuestionInfo = $derived(gameHistory.at(-2)?.question);
 	let currentAnswerRecord = $derived(gameHistory.at(-1)?.answers.get(clientID));
 	let previousAnswerRecord = $derived(gameHistory.at(-2)?.answers.get(clientID));
-	let timerValue: number = $state(roundDuration);
 
 	function checkWord(e: KeyboardEvent)
 	{
@@ -50,26 +49,11 @@
 		return 0;
 	}
 
-	$effect(() =>
-	{
-		if (serverStatus == `AnswerQuestion`)
-		{
-			timerValue = roundDuration;
-		}
-	});
-
 	onMount(() =>
 	{
 		inputElement.focus();
 		wanakana.bind(inputElement);
 		themeChange(false);
-		setInterval(() =>
-		{
-			if (serverStatus == `AnswerQuestion`)
-			{
-				timerValue -= 0.01;
-			}
-		}, 10);
 	});
 </script>
 

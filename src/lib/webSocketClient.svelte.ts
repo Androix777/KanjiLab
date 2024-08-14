@@ -25,6 +25,8 @@ class WebSocketClient
 	public gameHistory: Array<RoundHistory> = $state([]);
 
 	public roundDuration: number = 0;
+	public timerValue: number = $state(0);
+	public timerInterval: number = 0;
 
 	public static getInstance()
 	{
@@ -92,12 +94,20 @@ class WebSocketClient
 			const customEvent: CustomEvent<OutNotifQuestionPayload> = <CustomEvent<OutNotifQuestionPayload>>event;
 			this.showQuestion(customEvent.detail);
 			this.serverStatus = `AnswerQuestion`;
+
+			this.timerValue = this.roundDuration;
+			this.timerInterval = setInterval(() =>
+			{
+				this.timerValue -= 0.01;
+			}, 10);
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_roundEnded`, (event) =>
 		{
 			const customEvent: CustomEvent<OutNotifRoundEndedPayload> = <CustomEvent<OutNotifRoundEndedPayload>>event;
 			void this.endRound(customEvent.detail);
 			this.serverStatus = `WaitingQuestion`;
+
+			clearInterval(this.timerInterval);
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_clientAnswered`, (event) =>
 		{
