@@ -6,6 +6,7 @@ import { SvelteMap } from "svelte/reactivity";
 import * as uuid from "uuid";
 import { invoke } from "@tauri-apps/api/core";
 import { GET_SVG_TEXT } from "./tauriFunctions";
+import { getRandomFont } from "./FontTools";
 
 class WebSocketClient
 {
@@ -175,7 +176,9 @@ class WebSocketClient
 				const words = await databaseService.getRandomWords(1);
 				const lastWord = words[0];
 				const readings = lastWord.wordReadings.map(reading => reading.reading);
-				const svg: string = await invoke(GET_SVG_TEXT, { text: lastWord.word });
+				const font = await getRandomFont();
+				console.log(font);
+				const svg: string = await invoke(GET_SVG_TEXT, { text: lastWord.word, fontName: font });
 				const question: { question: string; answers: string[]; question_svg: string } = {
 					question: lastWord.word,
 					answers: readings,
