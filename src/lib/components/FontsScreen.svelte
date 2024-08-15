@@ -14,7 +14,14 @@
 		fontNames = await getAllFonts();
 		for (let i = 0; i < fontNames.length; i++)
 		{
-			fontSVGs.set(fontNames[i], await invoke(GET_SVG_TEXT, { text: `文字`, fontName: fontNames[i] }));
+			try
+			{
+				fontSVGs.set(fontNames[i], await invoke(GET_SVG_TEXT, { text: `文字`, fontName: fontNames[i] }));
+			}
+			catch
+			{
+				console.log();
+			}
 		}
 	});
 
