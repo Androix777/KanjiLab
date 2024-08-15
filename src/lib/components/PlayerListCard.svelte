@@ -26,14 +26,14 @@
 	let getLastAnswers = $derived(() =>
 	{
 		let paddedGameHistory = Array<RoundHistory>();
-		paddedGameHistory.push({ question: { question: ``, answers: [] }, answers: new SvelteMap() });
+		paddedGameHistory.push({ question: { question: ``, answers: [] }, question_svg: ``, answers: new SvelteMap() });
 		gameHistory.slice(-3).reverse().map((roundHistory) =>
 		{
 			paddedGameHistory.push(roundHistory);
 		});
 		while (paddedGameHistory.length < 4)
 		{
-			paddedGameHistory.push({ question: { question: ``, answers: [] }, answers: new SvelteMap() });
+			paddedGameHistory.push({ question: { question: ``, answers: [] }, question_svg: ``, answers: new SvelteMap() });
 		}
 		return paddedGameHistory;
 	});
