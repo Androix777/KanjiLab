@@ -21,6 +21,7 @@ const settings = {
 	roundDuration: createStateVar(10),
 	roundsCount: createStateVar(10),
 	wordPart: createStateVar(``),
+	selectedFonts: createStateVar(new Array<string>()),
 };
 
 export function getSettings()

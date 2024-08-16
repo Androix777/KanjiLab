@@ -176,7 +176,15 @@ class WebSocketClient
 				const words = await databaseService.getRandomWords(1);
 				const lastWord = words[0];
 				const readings = lastWord.wordReadings.map(reading => reading.reading);
-				const font = await getRandomFont();
+				let font: string;
+				if (getSettings().selectedFonts.get().length > 0)
+				{
+					font = getSettings().selectedFonts.get().at(Math.floor(Math.random() * getSettings().selectedFonts.get().length)) || ``;
+				}
+				else
+				{
+					font = await getRandomFont();
+				}
 				console.log(font);
 				const svg: string = await invoke(GET_SVG_TEXT, { text: lastWord.word, fontName: font });
 				const question: { question: string; answers: string[]; question_svg: string } = {

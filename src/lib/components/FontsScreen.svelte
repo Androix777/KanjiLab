@@ -3,6 +3,7 @@
 	import { invoke } from "@tauri-apps/api/core";
     import FontCard from "./FontCard.svelte";
     import { GET_SVG_TEXT } from "$lib/tauriFunctions";
+    import { getSettings } from "$lib/globalSettings.svelte";
 
 	type FontRecord =
 	{
@@ -10,7 +11,7 @@
 		fontSVG: string;
 	};
 
-	let pageSize: number = 2;
+	let pageSize: number = 10;
 	let currentPage: number = $state(1);
 
 	let fontRecords: Array<FontRecord> = $state([]);
@@ -43,14 +44,6 @@
 	<div class="flex flex-column justify-center items-center">
 		<div class="card card-bordered bg-base-100 shadow-xl mb-4 p-4 min-w-96 max-w-screen-sm flex-1">
 			<div class="card-title">Fonts</div>
-			<div class="border-2 border-secondary">
-				{#each fontRecords as fontRecord}
-					<FontCard
-						fontName = {fontRecord.fontName}
-						fontSVG = {fontRecord.fontSVG || ``}
-						/>
-				{/each}
-			</div>
 			<div class="join flex justify-center">
 				<button class="join-item btn" onclick={ () =>
 				{
@@ -61,6 +54,28 @@
 				{
 					currentPage++;
 				} }>»</button>
+			</div>
+			<div class="border-2 border-secondary">
+				{#each fontRecords as fontRecord}
+					<FontCard
+						fontName = {fontRecord.fontName}
+						fontSVG = {fontRecord.fontSVG || ``}
+						onFontCheck = {(fontName: string, added: boolean) =>
+						{
+							if (added)
+							{
+								getSettings().selectedFonts.get().push(fontName);
+							}
+							else
+							{
+								getSettings().selectedFonts.set(getSettings().selectedFonts.get().filter(e => e != fontName));
+							}
+						}}
+						/>
+				{/each}
+				{#each getSettings().selectedFonts.get() as fontName}
+					{fontName}
+				{/each}
 			</div>
 		</div>
 	</div>
