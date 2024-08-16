@@ -16,13 +16,18 @@
 </script>
 
 <div>
-	<div class="flex flex-row p-4 border border-primary w-full text-center">
-		<div class="w-1/2 flex align-middle justify-center">{fontName}</div>
-		<div class="w-1/2">
-			<div class="bg-base-content" style="
-			mask-image: url({fontSvgUrl});
-			mask-size: 100% 100%;">
-				<img src={fontSvgUrl} alt="" class="opacity-0">
+	<div class="flex flex-row p-2 w-full text-center card card-bordered border-primary">
+		<div class="w-1/6 my-auto justify-center">
+			<input type="checkbox" checked={true} class="checkbox" />
+		</div>
+		<div class="w-1/2 my-auto justify-center">{fontName}</div>
+		<div class="w-1/3 m-auto flex justify-center">
+			<div class="w-1/2">
+				<div class="bg-base-content max-h-full max-w-full" style="
+				mask-image: url({fontSvgUrl});
+				mask-size: 100% 100%;">
+					<img src={fontSvgUrl} alt="" class="opacity-0">
+			</div>
 			</div>
 		</div>
 	</div>
