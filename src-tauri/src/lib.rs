@@ -1,4 +1,3 @@
-use kanjilab_server;
 use ttf_parser::{name_id, Face};
 use std::{fs::{self, File}, io::Read, panic::{self, AssertUnwindSafe}, path::PathBuf};
 
