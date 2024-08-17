@@ -5,6 +5,7 @@
     import { getSettings } from "$lib/globalSettings.svelte";
     import type { FontInfo } from "$lib/types";
     import { onMount } from "svelte";
+    import { fade } from "svelte/transition";
 
 	type FontRecord =
 	{
@@ -12,13 +13,15 @@
 		fontSVG: string;
 	};
 
-	let pageSize: number = 10;
-	let currentPage: number = $state(1);
-
 	let fontRecords: Array<FontRecord> = $state([]);
-	let fontList: Array<FontInfo> = [];
+	let fontList: Array<FontInfo> = $state([]);
+	let filteredFontList: Array<FontInfo> = $state([]);
+	let controlsDisabled: boolean = $state(false);
 
+	let pageSize: number = 5;
+	let currentPage: number = $state(1);
 	let showOnlySelected: boolean = $state(false);
+	let maxPages: number = $state(0);
 
 	onMount(() =>
 	{
@@ -31,20 +34,36 @@
 		{
 			fontList = await invoke(GET_ALL_FONTS_INFO);
 		}
+		if (currentPage > maxPages) currentPage = maxPages;
+		if (currentPage < 1) currentPage = 1;
 		fontRecords = [];
-		let fontPage = (showOnlySelected ? fontList.filter(fontInfo => getSettings().selectedFonts.get().includes(fontInfo.font_file)) : fontList).slice(pageSize * (currentPage - 1), pageSize * currentPage);
+		let fontPage = (showOnlySelected ? filteredFontList : fontList).slice(pageSize * (currentPage - 1), pageSize * currentPage);
+		maxPages = Math.ceil((showOnlySelected ? filteredFontList : fontList).length / pageSize);
 		for (let i = 0; i < fontPage.length; i++)
+		{
+			fontRecords.push({ fontInfo: fontPage[i], fontSVG: `` });
+		}
+		void loadSVGForFonts();
+	}
+
+	async function loadSVGForFonts()
+	{
+		for (let i = 0; i < fontRecords.length; i++)
 		{
 			try
 			{
-				fontRecords.push({ fontInfo: fontPage[i], fontSVG: await invoke(GET_SVG_TEXT, { text: `読書`, fontName: fontPage[i].font_file }) });
+				fontRecords[i].fontSVG = await invoke(GET_SVG_TEXT, { text: `文字`, fontName: fontRecords[i].fontInfo.font_file });
 			}
 			catch
 			{
-				fontRecords.push({ fontInfo: fontPage[i], fontSVG: `` });
-				console.log(`Failed to get SVG for font: ${fontPage[i].full_name}`);
+				console.log(`Failed to get SVG for font: ${fontRecords[i].fontInfo.font_file}`);
 			}
 		}
+	}
+
+	function generateSelectedFonts()
+	{
+		filteredFontList = fontList.filter(fontInfo => getSettings().selectedFonts.get().includes(fontInfo.font_file));
 	}
 
 </script>
@@ -52,41 +71,86 @@
 <div class="p-4">
 	<div class="flex flex-column justify-center items-center">
 		<div class="card card-bordered bg-base-100 shadow-xl mb-4 p-4 min-w-96 max-w-screen-sm flex-1">
-			<div class="card-title">Fonts</div>
-			<div class="join flex justify-center">
+			<div class="card-title mb-4">Fonts</div>
+			<div class="flex flex-row mb-4">
+				<div class="join flex-none">
+					<button
+						class="btn btn-primary join-item"
+						onclick={() =>
+						{
+							let selectedFonts: Array<string> = [];
+							fontList.forEach(fontInfo => selectedFonts.push(fontInfo.font_file));
+							getSettings().selectedFonts.set(selectedFonts);
+							void updateFontsPage();
+						}}>Select all</button>
+					<button
+						class="btn btn-primary join-item"
+						onclick={() =>
+						{
+							getSettings().selectedFonts.set([]);
+							void updateFontsPage();
+						}}>Unselect all</button>
+				</div>
+				<div class="flex-grow"></div>
+				<div class="flex flex-col justify-center flex-none">
+					<div class="{showOnlySelected ? `text-primary` : ``}">Only selected</div>
+					<div class="mx-auto">
+					<input
+						type="checkbox"
+						class="toggle toggle-primary"
+						onchange={async () =>
+						{
+							controlsDisabled = true;
+							currentPage = 1;
+							generateSelectedFonts();
+							await updateFontsPage();
+							controlsDisabled = false;
+						}}
+						bind:checked={showOnlySelected}
+						disabled={controlsDisabled} />
+				</div>
+				</div>
+			</div>
+			<div class="join flex justify-center mb-4">
 				<button class="join-item btn" onclick={ () =>
 				{
+					if (currentPage <= 1) return;
 					currentPage--;
 					void updateFontsPage();
-				} }>«</button>
-				<button class="join-item btn">Page {currentPage}</button>
+				} }>←</button>
+				<!--<button class="join-item btn">Page {currentPage}/{maxPages}</button>-->
+				<input type="text" class="join-item input w-10 p-0 text-center"
+					style="background-color: oklch(var(--btn-color, var(--b2)) / var(--tw-bg-opacity)); line-height: 1em;"
+					bind:value={currentPage}
+					onchange={updateFontsPage}/>
+				<button class="join-item btn">/</button>
+				<button class="join-item btn">{maxPages}</button>
 				<button class="join-item btn" onclick={ () =>
 				{
+					if (currentPage >= maxPages) return;
 					currentPage++;
 					void updateFontsPage();
-				} }>»</button>
-				<input type="checkbox"
-					class="checkbox"
-					onchange={() => updateFontsPage()}
-					bind:checked={showOnlySelected} />
+				} }>→</button>
 			</div>
-			<div class="border-2 border-secondary">
-				{#each fontRecords as fontRecord}
-					<FontCard
-						fontInfo = {fontRecord.fontInfo}
-						fontSVG = {fontRecord.fontSVG || ``}
-						onFontCheck = {(fontName: string, added: boolean) =>
-						{
-							if (added)
+			<div class="">
+				{#each fontRecords as fontRecord(fontRecord.fontInfo.font_file)}
+					<div in:fade>
+						<FontCard
+							fontInfo = {fontRecord.fontInfo}
+							fontSVG = {fontRecord.fontSVG || ``}
+							onFontCheck = {(fontName: string, added: boolean) =>
 							{
-								getSettings().selectedFonts.get().push(fontName);
-							}
-							else
-							{
-								getSettings().selectedFonts.set(getSettings().selectedFonts.get().filter(e => e != fontName));
-							}
-						}}
-						/>
+								if (added)
+								{
+									getSettings().selectedFonts.get().push(fontName);
+								}
+								else
+								{
+									getSettings().selectedFonts.set(getSettings().selectedFonts.get().filter(e => e != fontName));
+								}
+							}}
+							/>
+						</div>
 				{/each}
 			</div>
 		</div>
