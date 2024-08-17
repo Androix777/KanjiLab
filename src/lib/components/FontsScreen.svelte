@@ -4,6 +4,7 @@
     import { GET_SVG_TEXT, GET_ALL_FONTS_INFO } from "$lib/tauriFunctions";
     import { getSettings } from "$lib/globalSettings.svelte";
     import type { FontInfo } from "$lib/types";
+    import { onMount } from "svelte";
 
 	type FontRecord =
 	{
@@ -19,19 +20,19 @@
 
 	let showOnlySelected: boolean = $state(false);
 
-	$effect(() =>
+	onMount(() =>
 	{
-		void getFontsPage(currentPage);
+		void updateFontsPage();
 	});
 
-	async function getFontsPage(pageNumber: number)
+	async function updateFontsPage()
 	{
 		if (fontList.length == 0)
 		{
 			fontList = await invoke(GET_ALL_FONTS_INFO);
 		}
 		fontRecords = [];
-		let fontPage = (showOnlySelected ? fontList.filter(fontInfo => getSettings().selectedFonts.get().includes(fontInfo.font_file)) : fontList).slice(pageSize * (pageNumber - 1), pageSize * pageNumber);
+		let fontPage = (showOnlySelected ? fontList.filter(fontInfo => getSettings().selectedFonts.get().includes(fontInfo.font_file)) : fontList).slice(pageSize * (currentPage - 1), pageSize * currentPage);
 		for (let i = 0; i < fontPage.length; i++)
 		{
 			try
@@ -56,15 +57,17 @@
 				<button class="join-item btn" onclick={ () =>
 				{
 					currentPage--;
+					void updateFontsPage();
 				} }>«</button>
 				<button class="join-item btn">Page {currentPage}</button>
 				<button class="join-item btn" onclick={ () =>
 				{
 					currentPage++;
+					void updateFontsPage();
 				} }>»</button>
 				<input type="checkbox"
 					class="checkbox"
-					onchange={() => getFontsPage(currentPage)}
+					onchange={() => updateFontsPage()}
 					bind:checked={showOnlySelected} />
 			</div>
 			<div class="border-2 border-secondary">
