@@ -60,6 +60,8 @@
 <div class="flex flex-col flex-grow min-h-0">
 	<progress class="progress progress-primary" value={timerValue} max={roundDuration}></progress>
 
+	<div class="flex-grow"></div>
+
     <div class="flex items-center justify-center flex-none my-4 h-24">
 		{#key currentQuestionInfo?.question}
 			<div class="bg-base-content absolute" style="
@@ -70,6 +72,8 @@
 			</div>
 		{/key}
     </div>
+
+	<div class="flex-grow"></div>
 
 	<div class="w-full flex justify-center flex-none my-4">
 		<input

@@ -35,6 +35,37 @@ export type AnswerInfo = {
 	is_correct: boolean;
 };
 
+export type FontInfo = {
+	font_file: string;
+	copyright_notice: string;
+	family: string;
+	subfamily: string;
+	unique_id: string;
+	full_name: string;
+	version: string;
+	post_script_name: string;
+	trademark: string;
+	manufacturer: string;
+	designer: string;
+	description: string;
+	vendor_url: string;
+	designer_url: string;
+	license: string;
+	license_url: string;
+	typographic_family: string;
+	typographic_subfamily: string;
+	compatible_full: string;
+	sample_text: string;
+	post_script_cid: string;
+	wws_family: string;
+	wws_subfamily: string;
+	light_background_palette: string;
+	dark_background_palette: string;
+	variations_post_script_name_prefix: string;
+	num_glyphs: number;
+	units_per_em: number;
+};
+
 export type AnswerRecord = {
 	answer: string;
 	answerStatus: AnswerStatus;

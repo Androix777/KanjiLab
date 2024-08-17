@@ -1,13 +1,13 @@
 <script lang="ts">
-    import { getAllFonts } from "$lib/FontTools";
 	import { invoke } from "@tauri-apps/api/core";
     import FontCard from "./FontCard.svelte";
-    import { GET_SVG_TEXT } from "$lib/tauriFunctions";
+    import { GET_SVG_TEXT, GET_ALL_FONTS_INFO } from "$lib/tauriFunctions";
     import { getSettings } from "$lib/globalSettings.svelte";
+    import type { FontInfo } from "$lib/types";
 
 	type FontRecord =
 	{
-		fontName: string;
+		fontInfo: FontInfo;
 		fontSVG: string;
 	};
 
@@ -15,6 +15,9 @@
 	let currentPage: number = $state(1);
 
 	let fontRecords: Array<FontRecord> = $state([]);
+	let fontList: Array<FontInfo> = [];
+
+	let showOnlySelected: boolean = $state(false);
 
 	$effect(() =>
 	{
@@ -23,17 +26,22 @@
 
 	async function getFontsPage(pageNumber: number)
 	{
+		if (fontList.length == 0)
+		{
+			fontList = await invoke(GET_ALL_FONTS_INFO);
+		}
 		fontRecords = [];
-		let fontNames = (await getAllFonts()).slice(pageSize * (pageNumber - 1), pageSize * pageNumber);
-		for (let i = 0; i < fontNames.length; i++)
+		let fontPage = (showOnlySelected ? fontList.filter(fontInfo => getSettings().selectedFonts.get().includes(fontInfo.font_file)) : fontList).slice(pageSize * (pageNumber - 1), pageSize * pageNumber);
+		for (let i = 0; i < fontPage.length; i++)
 		{
 			try
 			{
-				fontRecords.push({ fontName: fontNames[i], fontSVG: await invoke(GET_SVG_TEXT, { text: `文字`, fontName: fontNames[i] }) });
+				fontRecords.push({ fontInfo: fontPage[i], fontSVG: await invoke(GET_SVG_TEXT, { text: `読書`, fontName: fontPage[i].font_file }) });
 			}
 			catch
 			{
-				console.log(`Failed to get SVG for font: ${fontNames[i]}`);
+				fontRecords.push({ fontInfo: fontPage[i], fontSVG: `` });
+				console.log(`Failed to get SVG for font: ${fontPage[i].full_name}`);
 			}
 		}
 	}
@@ -54,11 +62,15 @@
 				{
 					currentPage++;
 				} }>»</button>
+				<input type="checkbox"
+					class="checkbox"
+					onchange={() => getFontsPage(currentPage)}
+					bind:checked={showOnlySelected} />
 			</div>
 			<div class="border-2 border-secondary">
 				{#each fontRecords as fontRecord}
 					<FontCard
-						fontName = {fontRecord.fontName}
+						fontInfo = {fontRecord.fontInfo}
 						fontSVG = {fontRecord.fontSVG || ``}
 						onFontCheck = {(fontName: string, added: boolean) =>
 						{
@@ -72,9 +84,6 @@
 							}
 						}}
 						/>
-				{/each}
-				{#each getSettings().selectedFonts.get() as fontName}
-					{fontName}
 				{/each}
 			</div>
 		</div>
