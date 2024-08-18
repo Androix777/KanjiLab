@@ -28,6 +28,8 @@ rusttype = "0.9.3"
 svg = "0.12.1"
 rand = "0.8.5"
 ttf-parser = "0.24.1"
+sqlx = { version = "0.8", features = [ "runtime-tokio", "macros" ] }
+tokio = { version = "1.0", features = ["full"] }
 
 [dependencies.tauri-plugin-sql]
 features = ["sqlite"]

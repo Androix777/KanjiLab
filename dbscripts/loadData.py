@@ -20,31 +20,31 @@ def create_tables(conn):
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word (
-            id BLOB PRIMARY KEY,
-            word TEXT UNIQUE,
+            id BLOB PRIMARY KEY NOT NULL,
+            word TEXT UNIQUE NOT NULL,
             frequency INTEGER
         );
     ''')
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word_reading (
-            id BLOB PRIMARY KEY,
-            word_id BLOB,
-            word_reading TEXT,
+            id BLOB PRIMARY KEY NOT NULL,
+            word_id BLOB NOT NULL,
+            word_reading TEXT NOT NULL,
             FOREIGN KEY(word_id) REFERENCES word(id)
         );
     ''')
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word_part_reading (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            word_part TEXT,
-            word_part_reading TEXT,
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            word_part TEXT NOT NULL,
+            word_part_reading TEXT NOT NULL,
             UNIQUE (word_part, word_part_reading)
         );
     ''')
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word_reading_word_part_reading (
-            word_reading_id BLOB,
-            word_part_reading_id INTEGER,
+            word_reading_id BLOB NOT NULL,
+            word_part_reading_id INTEGER NOT NULL,
             FOREIGN KEY(word_reading_id) REFERENCES word_reading(id),
             FOREIGN KEY(word_part_reading_id) REFERENCES word_part_reading(id),
             PRIMARY KEY (word_reading_id, word_part_reading_id)
@@ -52,10 +52,10 @@ def create_tables(conn):
     ''')
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word_answer_results (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            word_id BLOB,
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            word_id BLOB NOT NULL,
             word_reading_id BLOB,
-            answer_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            answer_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
             FOREIGN KEY(word_reading_id) REFERENCES word_reading(id)
             FOREIGN KEY(word_id) REFERENCES word(id)
         );

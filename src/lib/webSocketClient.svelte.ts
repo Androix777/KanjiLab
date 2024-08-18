@@ -1,12 +1,12 @@
 import { ServerConnector } from "$lib/webSocketConnector";
 import type { AnswerRecord, ClientInfo, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory, ServerStatus } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
-import DatabaseService from "./databaseService";
 import { SvelteMap } from "svelte/reactivity";
 import * as uuid from "uuid";
 import { invoke } from "@tauri-apps/api/core";
 import { GET_SVG_TEXT } from "./tauriFunctions";
 import { getRandomFont } from "./FontTools";
+import { addAnswerResult, getRandomWords } from "./databaseTools";
 
 class WebSocketClient
 {
@@ -172,10 +172,9 @@ class WebSocketClient
 		{
 			try
 			{
-				const databaseService = await DatabaseService.getInstance();
-				const words = await databaseService.getRandomWords(1);
+				const words = await getRandomWords(1);
 				const lastWord = words[0];
-				const readings = lastWord.wordReadings.map(reading => reading.reading);
+				const readings = lastWord.readings.map(reading => reading.reading);
 				let font: string;
 				if (getSettings().selectedFonts.get().length > 0)
 				{
@@ -274,17 +273,16 @@ class WebSocketClient
 			return (e1Score < e2Score) ? 1 : (e1Score > e2Score) ? -1 : 0;
 		});
 
-		const databaseService = await DatabaseService.getInstance();
 		const wordID = uuid.parse(uuid.v5(`${this.gameHistory.at(-1)?.question.question}`, uuid.v5.DNS));
 
 		if (this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`)
 		{
 			const readingID = uuid.parse(uuid.v5(`${this.gameHistory.at(-1)?.question.question}|||${this.gameHistory.at(-1)?.answers.get(this.id)?.answer}`, uuid.v5.DNS));
-			await databaseService.addAnswerResult(wordID, readingID);
+			await addAnswerResult(wordID, readingID);
 		}
 		else
 		{
-			await databaseService.addAnswerResult(wordID, null);
+			await addAnswerResult(wordID, null);
 		}
 	}
 

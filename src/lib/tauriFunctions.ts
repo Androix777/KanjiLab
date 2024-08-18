@@ -5,3 +5,6 @@ export const GET_SVG_TEXT: string = `get_svg_text`;
 export const GET_FONT_LIST: string = `get_font_list`;
 export const GET_FONT_INFO: string = `get_font_info`;
 export const GET_ALL_FONTS_INFO: string = `get_all_fonts_info`;
+export const GET_WORDS: string = `get_words`;
+export const GET_STATS: string = `get_stats`;
+export const ADD_ANSWER_RESULT: string = `add_answer_result`;

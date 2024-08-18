@@ -95,12 +95,14 @@ dependencies = [
  "rusttype",
  "serde",
  "serde_json",
+ "sqlx",
  "svg",
  "tauri",
  "tauri-build",
  "tauri-plugin-fs",
  "tauri-plugin-sql",
  "text-svg",
+ "tokio",
  "ttf-parser 0.24.1",
 ]
 

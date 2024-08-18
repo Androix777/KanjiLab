@@ -1,5 +1,11 @@
+pub mod db;
+use std::{
+    fs::{self, File},
+    io::Read,
+    panic::{self, AssertUnwindSafe},
+    path::PathBuf,
+};
 use ttf_parser::{name_id, Face};
-use std::{fs::{self, File}, io::Read, panic::{self, AssertUnwindSafe}, path::PathBuf};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -10,9 +16,12 @@ pub fn run() {
             launch_server,
             stop_server,
             get_svg_text,
-			get_font_list,
-			get_font_info,
-			get_all_fonts_info,
+            get_font_list,
+            get_font_info,
+            get_all_fonts_info,
+            db::get_words,
+            db::get_stats,
+            db::add_answer_result,
         ])
         .plugin(tauri_plugin_sql::Builder::default().build())
         .run(tauri::generate_context!())
@@ -63,7 +72,7 @@ fn get_svg_text(text: &str, font_name: &str) -> Result<String, String> {
 
     let mut file = File::open(&font_path)
         .map_err(|e| format!("Failed to open font file '{}': {}", font_name, e))?;
-    
+
     let mut font_data = Vec::new();
     file.read_to_end(&mut font_data)
         .map_err(|e| format!("Failed to read font file '{}': {}", font_name, e))?;
@@ -72,9 +81,12 @@ fn get_svg_text(text: &str, font_name: &str) -> Result<String, String> {
         .ok_or_else(|| format!("Failed to parse font data from '{}'", font_name))?;
 
     if !can_render_string(&font, text) {
-        return Err(format!("The font '{}' lacks the necessary characters.", font_name));
+        return Err(format!(
+            "The font '{}' lacks the necessary characters.",
+            font_name
+        ));
     }
-	
+
     let x = 25.;
     let y = 25.;
 
@@ -88,7 +100,10 @@ fn get_svg_text(text: &str, font_name: &str) -> Result<String, String> {
     let text = match result {
         Ok(text) => text,
         Err(_panic_error) => {
-            return Err(format!("The font '{}' lacks the necessary characters.", font_name));
+            return Err(format!(
+                "The font '{}' lacks the necessary characters.",
+                font_name
+            ));
         }
     };
 
@@ -107,11 +122,7 @@ fn get_font_list() -> Result<Vec<String>, String> {
 
     let font_list = fs::read_dir(fonts_dir)
         .map_err(|e| format!("Failed to read fonts directory: {}", e))?
-        .filter_map(|entry| {
-            entry.ok().and_then(|e| 
-                e.file_name().into_string().ok()
-            )
-        })
+        .filter_map(|entry| entry.ok().and_then(|e| e.file_name().into_string().ok()))
         .collect::<Vec<String>>();
 
     Ok(font_list)
@@ -119,35 +130,34 @@ fn get_font_list() -> Result<Vec<String>, String> {
 
 #[tauri::command]
 fn get_font_info(font_name: &str) -> Result<FontInfo, String> {
-	let exe_path = get_executable_file_path()?;
-	let fonts_dir = exe_path.join("fonts");
-	let font_path = fonts_dir.join(font_name);
+    let exe_path = get_executable_file_path()?;
+    let fonts_dir = exe_path.join("fonts");
+    let font_path = fonts_dir.join(font_name);
 
-	if !font_path.exists() {
-		return Err(format!("Font file '{}' not found", font_name));
-	}
+    if !font_path.exists() {
+        return Err(format!("Font file '{}' not found", font_name));
+    }
 
-	let mut file = File::open(&font_path)
-		.map_err(|e| format!("Failed to open font file '{}': {}", font_name, e))?;
-	
-	let mut font_data = Vec::new();
-	file.read_to_end(&mut font_data)
-		.map_err(|e| format!("Failed to read font file '{}': {}", font_name, e))?;
+    let mut file = File::open(&font_path)
+        .map_err(|e| format!("Failed to open font file '{}': {}", font_name, e))?;
+
+    let mut font_data = Vec::new();
+    file.read_to_end(&mut font_data)
+        .map_err(|e| format!("Failed to read font file '{}': {}", font_name, e))?;
 
     let face = Face::parse(&font_data, 0)
         .map_err(|e| format!("Failed to parse font data from '{}': {:?}", font_name, e))?;
 
     let get_name = |id| {
-		face.names()
-			.into_iter()
-			.filter(|name| name.name_id == id)
-			.find_map(|name| name.to_string())
-			.unwrap_or_else(|| "".to_string())
-	};
-	
+        face.names()
+            .into_iter()
+            .filter(|name| name.name_id == id)
+            .find_map(|name| name.to_string())
+            .unwrap_or_else(|| "".to_string())
+    };
 
     let f = FontInfo {
-		font_file: font_name.to_string(),
+        font_file: font_name.to_string(),
         copyright_notice: get_name(name_id::COPYRIGHT_NOTICE),
         family: get_name(name_id::FAMILY),
         subfamily: get_name(name_id::SUBFAMILY),
@@ -197,7 +207,7 @@ fn get_all_fonts_info() -> Result<Vec<FontInfo>, String> {
 
 #[derive(serde::Serialize, Debug)]
 struct FontInfo {
-	font_file: String,
+    font_file: String,
     copyright_notice: String,
     family: String,
     subfamily: String,

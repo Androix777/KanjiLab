@@ -41,12 +41,6 @@
 			<button class="btn btn-square bg-base-100 border-0 p-1 mb-4 shadow-none hover:bg-transparent hover:scale-125" onclick={() => { setScreen(`Stats`); }}>
 				<SvgIcon name="Bars"/>
 			</button>
-			<button class="btn btn-square bg-base-100 border-0 p-1 mb-4 shadow-none hover:bg-transparent hover:scale-125" onclick={() => { setScreen(`Dictionaries`); }}>
-				<SvgIcon name="KanjiCards"/>
-			</button>
-			<button class="btn btn-square bg-base-100 border-0 p-1 mb-4 shadow-none hover:bg-transparent hover:scale-125" onclick={() => { setScreen(`Fonts`); }}>
-				<SvgIcon name="Fonts"/>
-			</button>
 			<button class="btn btn-square bg-base-100 border-0 p-1 mb-4 shadow-none hover:bg-transparent hover:scale-125" onclick={() => { setScreen(`Settings`); }}>
 				<SvgIcon name="Gears"/>
 			</button>

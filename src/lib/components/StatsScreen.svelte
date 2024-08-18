@@ -1,17 +1,11 @@
 <script lang="ts">
-	import DatabaseService from "$lib/databaseService";
     import type { StatsInfo } from "$lib/types";
     import { onMount } from "svelte";
 	import { PieChart } from "$lib/charts";
+    import { getStats } from "$lib/databaseTools";
 
 	let stats: StatsInfo = $state({ correctCount: 0, wrongCount: 0 });
 	let answersDiv: HTMLElement;
-
-	async function getStats()
-	{
-		const databaseService = await DatabaseService.getInstance();
-		stats = await databaseService.getStats();
-	}
 
 	function drawAnswerChart()
 	{
@@ -30,7 +24,7 @@
 
 	onMount(async () =>
 	{
-		await getStats();
+		stats = await getStats();
 		drawAnswerChart();
 	});
 </script>
