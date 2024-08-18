@@ -15,10 +15,6 @@
     "core:image:default",
     "core:menu:default",
     "core:tray:default",
-    "sql:allow-select",
-    "sql:allow-close",
-    "sql:allow-load",
-    "sql:allow-execute",
     "fs:write-all",
 	"fs:read-all",
 	{
