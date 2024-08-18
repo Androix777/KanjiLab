@@ -18,7 +18,7 @@
 	let filteredFontList: Array<FontInfo> = $state([]);
 	let controlsDisabled: boolean = $state(false);
 
-	let pageSize: number = 5;
+	let pageSize: number = 4;
 	let currentPage: number = $state(1);
 	let showOnlySelected: boolean = $state(false);
 	let maxPages: number = $state(0);
@@ -70,7 +70,7 @@
 
 <div class="p-4">
 	<div class="flex flex-column justify-center items-center">
-		<div class="card card-bordered bg-base-100 shadow-xl mb-4 p-4 min-w-96 max-w-screen-sm flex-1">
+		<div class="card card-bordered bg-base-100 shadow-xl mb-4 p-4 flex-1" style="min-width: 50vw; max-width: 90vw;">
 			<div class="card-title mb-4">Fonts</div>
 			<div class="flex flex-row mb-4">
 				<div class="join flex-none">
