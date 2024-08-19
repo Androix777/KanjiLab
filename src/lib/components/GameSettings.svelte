@@ -116,15 +116,13 @@
 			<div class="flex-1 text-left my-auto">
 				Selected fonts
 			</div>
-			<div class="flex flex-col w-1/2">
-				<textarea class="textarea textarea-bordered resize-none" placeholder="No fonts selected">{getSettings().selectedFonts.get().join(` `)}</textarea>
+			<div class="flex flex-row w-1/2 join">
+				<input disabled={true} class="input input-bordered input-disabled input-sm flex-grow text-center join-item" value={`${getSettings().selectedFonts.get().length} font(s) selected`}>
+				<button
+					class="btn btn-primary btn-sm join-item"
+					onclick={() => { fontsModal.showModal(); }}
+					>Edit</button>
 			</div>
-		</div>
-		<div class="flex flex-row">
-			<button
-				class="btn btn-primary ml-auto -my-12"
-				onclick={() => { fontsModal.showModal(); }}
-				>Edit</button>
 		</div>
 		<dialog bind:this={fontsModal} class="h-screen w-screen rounded-md bg-black bg-opacity-50" style="min-height: 200vh; min-width: 200vw; margin-left: -50vw;">
 			<form method="dialog">
