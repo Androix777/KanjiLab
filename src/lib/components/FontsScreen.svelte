@@ -20,6 +20,7 @@
 
 	let pageSize: number = 4;
 	let currentPage: number = $state(1);
+	let savedPage: number = 1;
 	let showOnlySelected: boolean = $state(false);
 	let maxPages: number = $state(0);
 
@@ -101,9 +102,17 @@
 						onchange={async () =>
 						{
 							controlsDisabled = true;
-							currentPage = 1;
 							generateSelectedFonts();
+							if (showOnlySelected)
+							{
+								savedPage = currentPage;
+								currentPage = 1;
+							}
 							await updateFontsPage();
+							if (!showOnlySelected)
+							{
+								currentPage = savedPage;
+							}
 							controlsDisabled = false;
 						}}
 						bind:checked={showOnlySelected}
@@ -117,8 +126,7 @@
 					if (currentPage <= 1) return;
 					currentPage--;
 					void updateFontsPage();
-				} }>←</button>
-				<!--<button class="join-item btn">Page {currentPage}/{maxPages}</button>-->
+				} }>🠈</button>
 				<input type="text" class="join-item input w-10 p-0 text-center"
 					style="background-color: oklch(var(--btn-color, var(--b2)) / var(--tw-bg-opacity)); line-height: 1em;"
 					bind:value={currentPage}
@@ -130,7 +138,7 @@
 					if (currentPage >= maxPages) return;
 					currentPage++;
 					void updateFontsPage();
-				} }>→</button>
+				} }>🠊</button>
 			</div>
 			<div class="">
 				{#each fontRecords as fontRecord(fontRecord.fontInfo.font_file)}
