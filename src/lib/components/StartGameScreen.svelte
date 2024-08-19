@@ -9,6 +9,7 @@
     import MessageCard from "./MessageCard.svelte";
     import GameSettings from "./GameSettings.svelte";
     import { flip } from "svelte/animate";
+    import { fade } from "svelte/transition";
 
 	let webSocketClient: WebSocketClient | null = $state(null);
 	let chatMessage: string = $state(``);
@@ -148,7 +149,9 @@
 				<div class="flex-grow flex flex-col overflow-y-auto overflow-x-hidden [&>*:nth-child(even)]:bg-base-200 pb-2" style="scrollbar-gutter: stable;" bind:this={chatDiv}>
 					{#if webSocketClient && webSocketClient.chatList}
 						{#each webSocketClient.chatList as chatMessage}
-							<MessageCard player={chatMessage.name} message={chatMessage.message} />
+							<div transition:fade>
+								<MessageCard player={chatMessage.name} message={chatMessage.message} />
+							</div>
 						{/each}
 					{/if}
 				</div>
