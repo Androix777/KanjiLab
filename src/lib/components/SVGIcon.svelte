@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { convertFileSrc } from "@tauri-apps/api/core";
-    import { resolveResource } from "@tauri-apps/api/path";
 
 	type Props = {
 		name: string;
@@ -9,13 +7,12 @@
 	const
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		{
-			name = `KanjiCards`,
+			name,
 		}: Props = $props();
 
-	async function getIcon(name: string)
+	function getIcon(name: string)
 	{
-		let iconPath = resolveResource(`icons/${name}.svg`);
-		const icon = convertFileSrc(await iconPath);
+		const icon = `icons/${name}.svg`;
 		return { icon: icon };
 	}
 
