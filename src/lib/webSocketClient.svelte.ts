@@ -85,6 +85,7 @@ class WebSocketClient
 			const customEvent: CustomEvent<OutNotifGameStartedPayload> = <CustomEvent<OutNotifGameStartedPayload>>event;
 			this.roundDuration = customEvent.detail.round_duration;
 			this.roundsCount = customEvent.detail.rounds_count;
+			this.currentRound = 0;
 			this.gameHistory.length = 0;
 			this.isGameStarted = true;
 			this.serverStatus = `WaitingQuestion`;
@@ -101,6 +102,7 @@ class WebSocketClient
 			this.serverStatus = `AnswerQuestion`;
 
 			this.timerValue = this.roundDuration;
+			clearInterval(this.timerInterval);
 			this.timerInterval = setInterval(() =>
 			{
 				this.timerValue -= 0.01;
