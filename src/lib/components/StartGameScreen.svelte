@@ -158,10 +158,15 @@
 				<div class="join">
 					<input
 						bind:value={chatMessage}
+						disabled={webSocketClient?.connectionStatus != `Connected`}
 						onkeydown={chatOnKeyDown}
 						placeholder="{getSettings().userName.get()}:"
 						class="input input-bordered text-left w-full placeholder:text-base-content placeholder:text-opacity-30 join-item"/>
-					<button class="btn btn-primary join-item" onclick={() => { sendChatMessage(); }}>Send</button>
+					<button
+						class="btn btn-primary join-item"
+						disabled={webSocketClient?.connectionStatus != `Connected`}
+						onclick={() => { sendChatMessage(); }}
+						>Send</button>
 				</div>
 			</div>
 		</div>
