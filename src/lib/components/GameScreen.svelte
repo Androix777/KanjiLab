@@ -10,17 +10,21 @@
 		clientID: string;
 		roundDuration: number;
 		timerValue: number;
+		roundsCount: number;
+		currentRound: number;
 		onAnswer: (answer: string) => void;
 	};
 
 	const
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		{
-			gameHistory = [],
-			clientID = ``,
-			roundDuration = 0,
-			timerValue = 0,
-			onAnswer = () => {},
+			gameHistory,
+			clientID,
+			roundDuration,
+			timerValue,
+			roundsCount,
+			currentRound,
+			onAnswer,
 		}: Props = $props();
 
 	let inputElement: HTMLInputElement;
@@ -59,6 +63,8 @@
 
 <div class="flex flex-col flex-grow min-h-0">
 	<progress class="progress progress-primary" value={timerValue} max={roundDuration}></progress>
+
+	<div>Round {currentRound} of {roundsCount}</div>
 
 	<div class="flex-grow"></div>
 

@@ -123,6 +123,8 @@
 					clientID = { webSocketClient.id }
 					roundDuration = {webSocketClient.roundDuration}
 					timerValue = {webSocketClient.timerValue}
+					roundsCount = {webSocketClient.roundsCount}
+					currentRound = {webSocketClient.currentRound}
 					onAnswer={(answer: string) => webSocketClient?.sendAnswer(answer)} />
 			{:else if true}
 				<GameSettings
