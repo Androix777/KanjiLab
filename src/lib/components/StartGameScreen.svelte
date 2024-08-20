@@ -39,7 +39,7 @@
 
 	async function joinServer()
 	{
-		await webSocketClient?.connectToServer(getSettings().ipAddress.get());
+		await webSocketClient?.connectToServer(`ws://${getSettings().ipAddress.get()}:${getSettings().joinPort.get()}`);
 	}
 
 	function leaveServer()
@@ -91,7 +91,7 @@
 							onclick={() => { void launchServer(); }}>Host Game</button>
 				{/if}
 				<div class="text-center join ml-auto mr-0">
-					<input class="input input-bordered text-center join-item"
+					<input class="input input-bordered text-center join-item w-40"
 							value={getSettings().ipAddress.get()}
 							disabled={ webSocketClient?.connectionStatus != `Disconnected` }
 							oninput={(event) =>
@@ -99,6 +99,17 @@
 								if (event.target instanceof HTMLInputElement)
 								{
 									getSettings().ipAddress.set(event.target.value);
+								}
+							}}
+							/>
+					<input class="input input-bordered text-center join-item w-20"
+							value={getSettings().joinPort.get()}
+							disabled={ webSocketClient?.connectionStatus != `Disconnected` }
+							oninput={(event) =>
+							{
+								if (event.target instanceof HTMLInputElement)
+								{
+									getSettings().joinPort.set(event.target.value);
 								}
 							}}
 							/>

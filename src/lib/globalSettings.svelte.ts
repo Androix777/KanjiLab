@@ -14,7 +14,8 @@ function createStateVar<T>(initial: T): StateVar<T>
 
 const settings = {
 	userName: createStateVar(`NoName`),
-	ipAddress: createStateVar(`ws://127.0.0.1:8080`),
+	ipAddress: createStateVar(`127.0.0.1`),
+	joinPort: createStateVar(`8080`),
 	adminPassword: createStateVar(``),
 	minFrequency: createStateVar(0),
 	maxFrequency: createStateVar(10000),
