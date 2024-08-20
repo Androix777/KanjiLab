@@ -2,7 +2,6 @@ import { ServerConnector } from "$lib/webSocketConnector";
 import type { AnswerRecord, ClientInfo, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory, ServerStatus } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 import { SvelteMap } from "svelte/reactivity";
-import * as uuid from "uuid";
 import { invoke } from "@tauri-apps/api/core";
 import { GET_SVG_TEXT } from "./tauriFunctions";
 import { getRandomFont } from "./FontTools";
@@ -278,16 +277,12 @@ class WebSocketClient
 			return (e1Score < e2Score) ? 1 : (e1Score > e2Score) ? -1 : 0;
 		});
 
-		const wordID = uuid.parse(uuid.v5(`${this.gameHistory.at(-1)?.question.question}`, uuid.v5.DNS));
+		const word = this.gameHistory.at(-1)?.question.question;
+		const answer = this.gameHistory.at(-1)?.answers.get(this.id)?.answer || ``;
 
-		if (this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`)
+		if (word)
 		{
-			const readingID = uuid.parse(uuid.v5(`${this.gameHistory.at(-1)?.question.question}|||${this.gameHistory.at(-1)?.answers.get(this.id)?.answer}`, uuid.v5.DNS));
-			await addAnswerResult(wordID, readingID);
-		}
-		else
-		{
-			await addAnswerResult(wordID, null);
+			await addAnswerResult(word, answer, this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`);
 		}
 	}
 

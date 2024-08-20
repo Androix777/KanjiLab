@@ -16,14 +16,14 @@ static DB_POOL: LazyLock<SqlitePool> = LazyLock::new(|| {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Reading {
-    id: Vec<u8>,
+    id: i64,
     reading: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WordWithReadings {
-    id: Vec<u8>,
+    id: i64,
     word: String,
     readings: Vec<Reading>,
 }
@@ -37,9 +37,9 @@ pub async fn get_words(
 ) -> Result<Vec<WordWithReadings>, String> {
     #[derive(Debug, Deserialize)]
     struct RawData {
-        word_id: Vec<u8>,
+        word_id: i64,
         word: String,
-        reading_id: Vec<u8>,
+        reading_id: i64,
         word_reading: String,
     }
 
@@ -68,13 +68,13 @@ pub async fn get_words(
         .map_err(|e| e.to_string())?
     };
 
-    let mut word_map: HashMap<Vec<u8>, WordWithReadings> = HashMap::new();
+    let mut word_map: HashMap<i64, WordWithReadings> = HashMap::new();
 
     for raw_word in raw_data {
         word_map
-            .entry(raw_word.word_id.clone())
+            .entry(raw_word.word_id)
             .or_insert_with(|| WordWithReadings {
-                id: raw_word.word_id.clone(),
+                id: raw_word.word_id,
                 word: raw_word.word.clone(),
                 readings: Vec::new(),
             })
@@ -109,14 +109,16 @@ pub async fn get_stats() -> Result<StatsInfo, String> {
 
 #[tauri::command]
 pub async fn add_answer_result(
-    word_id: Vec<u8>,
-    word_reading_id: Option<Vec<u8>>,
+    word: &str,
+    word_reading: Option<&str>,
+	is_correct: bool,
 ) -> Result<(), String> {
     query_file_as!(
         StatsInfo,
         "./src/queries/add_answer_result.sql",
-        word_id,
-        word_reading_id,
+        word,
+        word_reading,
+		is_correct,
     )
     .execute(&*DB_POOL)
     .await

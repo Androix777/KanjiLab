@@ -1,13 +1,13 @@
-SELECT sum(
+SELECT SUM(
 		CASE
-			WHEN word_reading_id NOT NULL THEN 1
+			WHEN is_correct = 1 THEN 1
 			ELSE 0
 		END
 	) AS "correct_count!",
-	sum(
+	SUM(
 		CASE
-			WHEN word_reading_id NOT NULL THEN 0
-			ELSE 1
+			WHEN is_correct = 0 THEN 1
+			ELSE 0
 		END
-	) as "wrong_count!"
-FROM word_answer_results
+	) AS "wrong_count!"
+FROM word_answer_results;

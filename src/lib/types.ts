@@ -1,9 +1,9 @@
 import type { SvelteMap } from "svelte/reactivity";
 
 export type WordInfo = {
-	id: Uint8Array;
+	id: number;
 	word: string;
-	readings: { id: Uint8Array; reading: string }[];
+	readings: { id: number; reading: string }[];
 };
 
 export type StatsInfo = {

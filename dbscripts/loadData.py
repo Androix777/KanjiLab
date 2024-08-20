@@ -18,21 +18,45 @@ def load_json(file_path):
 
 def create_tables(conn):
     cursor = conn.cursor()
+    
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS word (
-            id BLOB PRIMARY KEY NOT NULL,
-            word TEXT UNIQUE NOT NULL,
-            frequency INTEGER
+        CREATE TABLE IF NOT EXISTS dictionary (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            name TEXT UNIQUE NOT NULL
         );
     ''')
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS word (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            word TEXT UNIQUE NOT NULL,
+            frequency INTEGER,
+            dictionary_id INTEGER NOT NULL,
+            FOREIGN KEY(dictionary_id) REFERENCES dictionary(id)
+        );
+    ''')
+    
+    cursor.execute('''
+		CREATE UNIQUE INDEX IF NOT EXISTS idx_word_1 ON word (word, dictionary_id);
+	''')
+
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word_reading (
-            id BLOB PRIMARY KEY NOT NULL,
-            word_id BLOB NOT NULL,
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            word_id INTEGER NOT NULL,
             word_reading TEXT NOT NULL,
             FOREIGN KEY(word_id) REFERENCES word(id)
         );
     ''')
+    
+    cursor.execute('''
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_word_reading_1 ON word_reading (word_id, word_reading);
+    ''')
+    
+    cursor.execute('''
+        CREATE INDEX idx_word_reading_2 ON word_reading (word_id);
+    ''')
+    
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word_part_reading (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -43,36 +67,33 @@ def create_tables(conn):
     ''')
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word_reading_word_part_reading (
-            word_reading_id BLOB NOT NULL,
+            word_reading_id INTEGER NOT NULL,
             word_part_reading_id INTEGER NOT NULL,
             FOREIGN KEY(word_reading_id) REFERENCES word_reading(id),
             FOREIGN KEY(word_part_reading_id) REFERENCES word_part_reading(id),
             PRIMARY KEY (word_reading_id, word_part_reading_id)
         );
     ''')
+    
+    cursor.execute('''
+        CREATE INDEX idx_word_reading_word_part_reading_1 ON word_reading_word_part_reading (word_part_reading_id);
+    ''')
+
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word_answer_results (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            word_id BLOB NOT NULL,
-            word_reading_id BLOB,
-            answer_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-            FOREIGN KEY(word_reading_id) REFERENCES word_reading(id)
-            FOREIGN KEY(word_id) REFERENCES word(id)
+            word TEXT NOT NULL,
+            word_reading TEXT NOT NULL,
+            is_correct INTEGER NOT NULL,
+            answer_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
         );
     ''')
-    
-    cursor.execute('''
-		CREATE INDEX "word_reading_id_index" ON "word_reading" ("word_id");
-	''')
 
-    cursor.execute('''
-		CREATE INDEX "word_part_reading_id_index" ON "word_reading_word_part_reading" ("word_part_reading_id");
-	''')
-
-    
     conn.commit()
 
-def insert_jmdict_data(conn, data):
+
+
+def insert_jmdict_data(conn, data, jmdict_id):
     cursor = conn.cursor()
 
     for entry in tqdm(data.findall('entry'), desc="Inserting word data"):
@@ -84,10 +105,10 @@ def insert_jmdict_data(conn, data):
             result = cursor.fetchone()
             
             if result:
-                word_uuid = result[0]
+                word_id = result[0]
             else:
-                word_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, keb.text).bytes
-                cursor.execute('INSERT INTO word (id, word) VALUES (?, ?)', (word_uuid, keb.text))
+                cursor.execute('INSERT INTO word (word, dictionary_id) VALUES (?, ?)', (keb.text, jmdict_id))
+                word_id = cursor.lastrowid
 
             for r_ele in entry.findall('r_ele'):
                 reb = r_ele.find('reb')
@@ -100,12 +121,12 @@ def insert_jmdict_data(conn, data):
                         continue
                 try:
                     reading_hiragana = wanakana.to_hiragana(reb.text)
-                    reading_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, keb.text + "|||" + reading_hiragana).bytes
-                    cursor.execute('INSERT OR IGNORE INTO word_reading (id, word_id, word_reading) VALUES (?, ?, ?)', (reading_uuid, word_uuid, reading_hiragana))
+                    cursor.execute('INSERT OR IGNORE INTO word_reading (word_id, word_reading) VALUES (?, ?)', (word_id, reading_hiragana))
                 except:
                     print(reb.text)
 
     conn.commit()
+
 
 def insert_furigana_data(conn, data):
     cursor = conn.cursor()
@@ -186,11 +207,20 @@ def main():
 
     create_tables(conn)
 
-    insert_jmdict_data(conn, xml_data)
+    cursor = conn.cursor()
+    
+    cursor.execute('INSERT OR IGNORE INTO dictionary (name) VALUES (?)', ('JMDict',))
+    conn.commit()
+
+    cursor.execute('SELECT id FROM dictionary WHERE name = ?', ('JMDict',))
+    jmdict_id = cursor.fetchone()[0]
+
+    insert_jmdict_data(conn, xml_data, jmdict_id)
     insert_furigana_data(conn, furigana_data)
     insert_freq_data(conn, freq_data)
 
     conn.close()
+    
 
 if __name__ == "__main__":
     import os

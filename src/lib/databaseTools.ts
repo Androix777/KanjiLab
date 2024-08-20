@@ -17,12 +17,13 @@ export async function getRandomWords(count: number): Promise<WordInfo[]>
 	return data;
 }
 
-export async function addAnswerResult(wordId: Uint8Array, wordReadingId: Uint8Array | null): Promise<void>
+export async function addAnswerResult(word: string, word_reading: string | null, is_correct: boolean): Promise<void>
 {
 	await invoke(ADD_ANSWER_RESULT,
 		{
-			wordId: Array.from(wordId),
-			wordReadingId: wordReadingId == null ? null : Array.from(wordReadingId),
+			word: word,
+			wordReading: word_reading,
+			isCorrect: is_correct,
 		});
 }
 
