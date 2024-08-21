@@ -35,11 +35,11 @@
 		{
 			fontList = await invoke(GET_ALL_FONTS_INFO);
 		}
+		maxPages = Math.ceil((showOnlySelected ? filteredFontList : fontList).length / pageSize);
 		if (currentPage > maxPages) currentPage = maxPages;
 		if (currentPage < 1) currentPage = 1;
 		fontRecords = [];
 		let fontPage = (showOnlySelected ? filteredFontList : fontList).slice(pageSize * (currentPage - 1), pageSize * currentPage);
-		maxPages = Math.ceil((showOnlySelected ? filteredFontList : fontList).length / pageSize);
 		for (let i = 0; i < fontPage.length; i++)
 		{
 			fontRecords.push({ fontInfo: fontPage[i], fontSVG: `` });
@@ -108,11 +108,11 @@
 								savedPage = currentPage;
 								currentPage = 1;
 							}
-							await updateFontsPage();
 							if (!showOnlySelected)
 							{
 								currentPage = savedPage;
 							}
+							await updateFontsPage();
 							controlsDisabled = false;
 						}}
 						bind:checked={showOnlySelected}
