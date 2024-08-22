@@ -1,11 +1,11 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { AnswerRecord, ClientInfo, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory, ServerStatus } from "./types";
+import type { AnswerRecord, ClientInfo, FontInfo, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory, ServerStatus } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 import { SvelteMap } from "svelte/reactivity";
 import { invoke } from "@tauri-apps/api/core";
-import { GET_SVG_TEXT } from "./tauriFunctions";
+import { GET_FONT_ID, GET_FONT_INFO, GET_SVG_TEXT } from "./tauriFunctions";
 import { getRandomFont } from "./FontTools";
-import { addAnswerResult, getRandomWords } from "./databaseTools";
+import { addAnswerStats, addGameStats, getRandomWords } from "./databaseTools";
 
 class WebSocketClient
 {
@@ -30,6 +30,7 @@ class WebSocketClient
 
 	public roundsCount: number = 0;
 	public currentRound: number = 0;
+	public currentGameId: number = 0;
 
 	public static getInstance()
 	{
@@ -79,19 +80,29 @@ class WebSocketClient
 				throw new Error(`noAdmin`);
 			}
 		});
-		this.serverConnector.addEventListener(`OUT_NOTIF_gameStarted`, (event) =>
+		this.serverConnector.addEventListener(`OUT_NOTIF_gameStarted`, async (event) =>
 		{
 			const customEvent: CustomEvent<OutNotifGameStartedPayload> = <CustomEvent<OutNotifGameStartedPayload>>event;
 			this.roundDuration = customEvent.detail.round_duration;
 			this.roundsCount = customEvent.detail.rounds_count;
 			this.currentRound = 0;
 			this.gameHistory.length = 0;
+
+			this.currentGameId = await addGameStats(
+				customEvent.detail.rounds_count,
+				customEvent.detail.round_duration,
+				getSettings().minFrequency.get(),
+				getSettings().maxFrequency.get(),
+				null,
+				1,
+			);
+
 			this.isGameStarted = true;
 			this.serverStatus = `WaitingQuestion`;
 		});
 		this.serverConnector.addEventListener(`OUT_REQ_question`, (event) =>
 		{
-			const customEvent: CustomEvent<(question: string, answers: string[], question_svg: string) => void> = <CustomEvent<(question: string, answers: string[], question_svg: string) => void>>event;
+			const customEvent: CustomEvent<(question: string, answers: string[], fontName: string, questionSvg: string) => void> = <CustomEvent<(question: string, answers: string[], fontName: string, questionSvg: string) => void>>event;
 			void this.respondToQuestionRequest(customEvent);
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_question`, (event) =>
@@ -166,13 +177,13 @@ class WebSocketClient
 		this.serverConnector?.sendChatMessage(message);
 	}
 
-	public async respondToQuestionRequest(event: CustomEvent<(question: string, answers: string[], question_svg: string) => void>)
+	public async respondToQuestionRequest(event: CustomEvent<(question: string, answers: string[], fontName: string, questionSvg: string) => void>)
 	{
-		const question: { question: string; answers: string[]; question_svg: string } = await this.getQuestion();
-		event.detail(question.question, question.answers, question.question_svg);
+		const question: { question: string; answers: string[]; fontName: string; questionSvg: string } = await this.getQuestion();
+		event.detail(question.question, question.answers, question.fontName, question.questionSvg);
 	}
 
-	public async getQuestion(maxRetries: number = 3): Promise<{ question: string; answers: string[]; question_svg: string }>
+	public async getQuestion(maxRetries: number = 3): Promise<{ question: string; answers: string[]; fontName: string; questionSvg: string }>
 	{
 		for (let attempt = 0; attempt < maxRetries; attempt++)
 		{
@@ -190,12 +201,13 @@ class WebSocketClient
 				{
 					font = await getRandomFont();
 				}
-				console.log(font);
+				const fontInfo: FontInfo = await invoke(GET_FONT_INFO, { fontName: font });
 				const svg: string = await invoke(GET_SVG_TEXT, { text: lastWord.word, fontName: font });
-				const question: { question: string; answers: string[]; question_svg: string } = {
+				const question: { question: string; answers: string[]; fontName: string; questionSvg: string } = {
 					question: lastWord.word,
 					answers: readings,
-					question_svg: svg,
+					questionSvg: svg,
+					fontName: fontInfo.full_name,
 				};
 				return question;
 			}
@@ -234,6 +246,7 @@ class WebSocketClient
 			question: {
 				question: ``,
 				answers: [],
+				font_name: ``,
 			},
 			question_svg: questionPayload.question_svg,
 			answers: new SvelteMap<string, AnswerRecord>(),
@@ -284,7 +297,8 @@ class WebSocketClient
 
 		if (word)
 		{
-			await addAnswerResult(word, answer, this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`);
+			const fontId: number = await invoke(GET_FONT_ID, { name: roundResults.question.font_name });
+			await addAnswerStats(this.currentGameId, word, answer, 0, this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`, fontId);
 		}
 	}
 

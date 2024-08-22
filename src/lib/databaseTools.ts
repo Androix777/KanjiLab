@@ -1,6 +1,6 @@
 import type { WordInfo } from "$lib/types";
 import { invoke } from "@tauri-apps/api/core";
-import { ADD_ANSWER_RESULT, GET_STATS, GET_WORDS } from "$lib/tauriFunctions";
+import { ADD_ANSWER_STATS, ADD_GAME_STATS, GET_FONT_ID, GET_STATS, GET_WORDS } from "$lib/tauriFunctions";
 import type { StatsInfo } from "$lib/types";
 import { getSettings } from "$lib/globalSettings.svelte";
 
@@ -17,14 +17,40 @@ export async function getRandomWords(count: number): Promise<WordInfo[]>
 	return data;
 }
 
-export async function addAnswerResult(word: string, word_reading: string | null, is_correct: boolean): Promise<void>
+export async function getFontId(name: string): Promise<number>
 {
-	await invoke(ADD_ANSWER_RESULT,
+	return await invoke(GET_FONT_ID,
 		{
-			word: word,
-			wordReading: word_reading,
-			isCorrect: is_correct,
+			name: name,
 		});
+}
+
+export async function addAnswerStats(gameStatsId: number, word: string, wordReading: string, duration: number, isCorrect: boolean, fontId: number): Promise<void>
+{
+	await invoke(ADD_ANSWER_STATS,
+		{
+			gameStatsId: gameStatsId,
+			word: word,
+			wordReading: wordReading,
+			duration: duration,
+			isCorrect: isCorrect,
+			fontId: fontId,
+		});
+}
+
+export async function addGameStats(roundsCount: number, roundDuration: number, minFrequency: number, maxFrequency: number, fontId: number | null, dictionaryId: number): Promise<number>
+{
+	const index: number = await invoke(ADD_GAME_STATS,
+		{
+			roundsCount: roundsCount,
+			roundDuration: roundDuration,
+			minFrequency: minFrequency,
+			maxFrequency: maxFrequency,
+			fontId: fontId,
+			dictionaryId: dictionaryId,
+		});
+
+	return index;
 }
 
 export async function getStats(): Promise<StatsInfo>

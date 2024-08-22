@@ -20,6 +20,7 @@ export type ClientInfo = {
 export type QuestionInfo = {
 	question: string;
 	answers: string[];
+	font_name: string;
 };
 
 export type AnswerInfo = {

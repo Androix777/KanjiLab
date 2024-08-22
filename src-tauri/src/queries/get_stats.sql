@@ -10,4 +10,4 @@ SELECT SUM(
 			ELSE 0
 		END
 	) AS "wrong_count!"
-FROM word_answer_results;
+FROM answer_stats;

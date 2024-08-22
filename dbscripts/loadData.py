@@ -21,14 +21,21 @@ def create_tables(conn):
     
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS dictionary (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            id INTEGER PRIMARY KEY NOT NULL,
+            name TEXT UNIQUE NOT NULL
+        );
+    ''')
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS font (
+            id INTEGER PRIMARY KEY NOT NULL,
             name TEXT UNIQUE NOT NULL
         );
     ''')
     
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            id INTEGER PRIMARY KEY NOT NULL,
             word TEXT UNIQUE NOT NULL,
             frequency INTEGER,
             dictionary_id INTEGER NOT NULL,
@@ -42,7 +49,7 @@ def create_tables(conn):
 
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word_reading (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            id INTEGER PRIMARY KEY NOT NULL,
             word_id INTEGER NOT NULL,
             word_reading TEXT NOT NULL,
             FOREIGN KEY(word_id) REFERENCES word(id)
@@ -59,7 +66,7 @@ def create_tables(conn):
     
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS word_part_reading (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            id INTEGER PRIMARY KEY NOT NULL,
             word_part TEXT NOT NULL,
             word_part_reading TEXT NOT NULL,
             UNIQUE (word_part, word_part_reading)
@@ -80,12 +87,31 @@ def create_tables(conn):
     ''')
 
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS word_answer_results (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        CREATE TABLE IF NOT EXISTS answer_stats (
+            id INTEGER PRIMARY KEY NOT NULL,
+            game_stats_id INTEGER NOT NULL,
             word TEXT NOT NULL,
             word_reading TEXT NOT NULL,
+            duration INTEGER NOT NULL,
             is_correct INTEGER NOT NULL,
-            answer_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            font_id INTEGER NOT NULL,
+            FOREIGN KEY(game_stats_id) REFERENCES game_stats(id),
+            FOREIGN KEY(font_id) REFERENCES font(id)
+        );
+    ''')
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS game_stats (
+            id INTEGER PRIMARY KEY NOT NULL,
+            rounds_count INTEGER NOT NULL,
+            round_duration INTEGER NOT NULL,
+            min_frequency INTEGER NOT NULL,
+            max_frequency INTEGER NOT NULL,
+            font_id INTEGER,
+            dictionary_id INTEGER NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            FOREIGN KEY(font_id) REFERENCES font(id)
         );
     ''')
 

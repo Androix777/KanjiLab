@@ -35,7 +35,6 @@ pub async fn get_words(
     max_frequency: u32,
     word_part: Option<&str>,
 ) -> Result<Vec<WordWithReadings>, String> {
-    #[derive(Debug, Deserialize)]
     struct RawData {
         word_id: i64,
         word: String,
@@ -108,21 +107,75 @@ pub async fn get_stats() -> Result<StatsInfo, String> {
 }
 
 #[tauri::command]
-pub async fn add_answer_result(
+pub async fn get_font_id(name: String) -> Result<i64, String> {
+    struct RawData {
+        id: i64,
+    }
+
+    let font_id = sqlx::query_file_as!(RawData, "./src/queries/get_or_create_font.sql", name, name)
+        .fetch_one(&*DB_POOL)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(font_id.id)
+}
+
+#[tauri::command]
+pub async fn add_answer_stats(
+    game_stats_id: i64,
     word: &str,
-    word_reading: Option<&str>,
-	is_correct: bool,
-) -> Result<(), String> {
-    query_file_as!(
-        StatsInfo,
-        "./src/queries/add_answer_result.sql",
+    word_reading: &str,
+    duration: i64,
+    is_correct: bool,
+    font_id: i64,
+) -> Result<i64, String> {
+	struct RawData {
+		id: i64,
+	}
+	
+    let result = query_file_as!(
+        RawData,
+        "./src/queries/add_answer_stats.sql",
+        game_stats_id,
         word,
         word_reading,
-		is_correct,
+        duration,
+        is_correct,
+        font_id,
     )
-    .execute(&*DB_POOL)
+    .fetch_one(&*DB_POOL)
     .await
     .map_err(|e| e.to_string())?;
 
-    Ok(())
+    Ok(result.id)
+}
+
+#[tauri::command]
+pub async fn add_game_stats(
+    rounds_count: i64,
+    round_duration: i64,
+    min_frequency: i64,
+    max_frequency: i64,
+    font_id: Option<i64>,
+    dictionary_id: i64,
+) -> Result<i64, String> {
+	struct RawData {
+		id: i64,
+	}
+
+    let result = sqlx::query_file_as!(
+        RawData,
+        "./src/queries/add_game_stats.sql",
+        rounds_count,
+        round_duration,
+        min_frequency,
+        max_frequency,
+        font_id,
+        dictionary_id
+    )
+    .fetch_one(&*DB_POOL)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(result.id)
 }

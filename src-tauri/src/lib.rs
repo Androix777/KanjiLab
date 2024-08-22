@@ -21,7 +21,9 @@ pub fn run() {
             get_all_fonts_info,
             db::get_words,
             db::get_stats,
-            db::add_answer_result,
+            db::add_answer_stats,
+            db::add_game_stats,
+            db::get_font_id,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
