@@ -30,7 +30,7 @@
 	let inputElement: HTMLInputElement;
 
 	let readingInput = $state(``);
-	let currentSvgUrl = $derived(URL.createObjectURL(new Blob([gameHistory.at(-1)?.question_svg || ``], { type: `image/svg+xml` })));
+	let currentSvgUrl = $derived(URL.createObjectURL(new Blob([gameHistory.at(-1)?.questionSvg || ``], { type: `image/svg+xml` })));
 
 	let currentQuestionInfo = $derived(gameHistory.at(-1)?.question);
 	let previousQuestionInfo = $derived(gameHistory.at(-2)?.question);

@@ -52,13 +52,13 @@ export class ServerConnector extends EventTarget
 			{
 				const message: BaseMessage<object, MessageType> = <BaseMessage<object, MessageType>>JSON.parse(event.data);
 				console.log(`Received message: ` + event.data);
-				if (!message.correlation_id) return;
+				if (!message.correlationId) return;
 
-				const callback = this.messagePool.get(message.correlation_id);
+				const callback = this.messagePool.get(message.correlationId);
 				if (callback)
 				{
 					callback(message);
-					this.messagePool.delete(message.correlation_id);
+					this.messagePool.delete(message.correlationId);
 				}
 				else
 				{
@@ -111,7 +111,7 @@ export class ServerConnector extends EventTarget
 				reject(new Error(`timeoutError`));
 			}, timeout);
 
-			this.messagePool.set(message.correlation_id, (response: BaseMessage<object, MessageType>) =>
+			this.messagePool.set(message.correlationId, (response: BaseMessage<object, MessageType>) =>
 			{
 				clearTimeout(timeoutId);
 				resolve(response);
@@ -125,8 +125,8 @@ export class ServerConnector extends EventTarget
 	public async sendRegisterClientMessage()
 	{
 		const message: InReqRegisterClientMessage = {
-			message_type: `IN_REQ_registerClient`,
-			correlation_id: crypto.randomUUID(),
+			messageType: `IN_REQ_registerClient`,
+			correlationId: crypto.randomUUID(),
 			payload: {
 				name: getSettings().userName.get(),
 			},
@@ -134,7 +134,7 @@ export class ServerConnector extends EventTarget
 
 		const response = await this.sendWebSocketMessage(message);
 
-		switch (response.message_type)
+		switch (response.messageType)
 		{
 			case `OUT_RESP_clientRegistered`:
 			{
@@ -147,7 +147,7 @@ export class ServerConnector extends EventTarget
 				throw new Error(statusMessage.payload.status);
 			}
 			default:
-				console.log(`Received unknown message type: ${message.message_type}`);
+				console.log(`Received unknown message type: ${message.messageType}`);
 				throw new Error(`unknownMessageType`);
 		}
 	}
@@ -155,14 +155,14 @@ export class ServerConnector extends EventTarget
 	public async sendGetClientListMessage()
 	{
 		const message: InReqGetClientListMessage = {
-			message_type: `IN_REQ_clientList`,
-			correlation_id: crypto.randomUUID(),
+			messageType: `IN_REQ_clientList`,
+			correlationId: crypto.randomUUID(),
 			payload: {},
 		};
 
 		const response = await this.sendWebSocketMessage(message);
 
-		switch (response.message_type)
+		switch (response.messageType)
 		{
 			case `OUT_RESP_clientList`:
 			{
@@ -175,7 +175,7 @@ export class ServerConnector extends EventTarget
 				throw new Error(statusMessage.payload.status);
 			}
 			default:
-				console.log(`Received unknown message type: ${message.message_type}`);
+				console.log(`Received unknown message type: ${message.messageType}`);
 				throw new Error(`unknownMessageType`);
 		}
 	}
@@ -183,17 +183,17 @@ export class ServerConnector extends EventTarget
 	public async sendMakeAdmin(adminPassword: string, clientID: string)
 	{
 		const message: InReqMakeAdminMessage = {
-			message_type: `IN_REQ_makeAdmin`,
-			correlation_id: crypto.randomUUID(),
+			messageType: `IN_REQ_makeAdmin`,
+			correlationId: crypto.randomUUID(),
 			payload: {
-				admin_password: adminPassword,
-				client_id: clientID,
+				adminPassword: adminPassword,
+				clientId: clientID,
 			},
 		};
 
 		const response = await this.sendWebSocketMessage(message);
 
-		switch (response.message_type)
+		switch (response.messageType)
 		{
 			case `OUT_RESP_status`:
 			{
@@ -209,7 +209,7 @@ export class ServerConnector extends EventTarget
 				}
 			}
 			default:
-				console.log(`Received unknown message type: ${message.message_type}`);
+				console.log(`Received unknown message type: ${message.messageType}`);
 				throw new Error(`unknownMessageType`);
 		}
 	}
@@ -219,8 +219,8 @@ export class ServerConnector extends EventTarget
 		if (!this.webSocket) throw new Error(`missingWebsocket`);
 		const correlation_id = crypto.randomUUID();
 		const sendChatMessage: InReqSendChatMessage = {
-			message_type: `IN_REQ_sendChat`,
-			correlation_id: correlation_id,
+			messageType: `IN_REQ_sendChat`,
+			correlationId: correlation_id,
 			payload: { message: message },
 		};
 
@@ -230,17 +230,17 @@ export class ServerConnector extends EventTarget
 	public async sendStartGame(roundDuration: number, roundsCount: number)
 	{
 		const message: InReqStartGameMessage = {
-			message_type: `IN_REQ_startGame`,
-			correlation_id: crypto.randomUUID(),
+			messageType: `IN_REQ_startGame`,
+			correlationId: crypto.randomUUID(),
 			payload: {
-				round_duration: roundDuration,
-				rounds_count: roundsCount,
+				roundDuration: roundDuration,
+				roundsCount: roundsCount,
 			},
 		};
 
 		const response = await this.sendWebSocketMessage(message);
 
-		switch (response.message_type)
+		switch (response.messageType)
 		{
 			case `OUT_RESP_status`:
 			{
@@ -256,7 +256,7 @@ export class ServerConnector extends EventTarget
 				}
 			}
 			default:
-				console.log(`Received unknown message type: ${message.message_type}`);
+				console.log(`Received unknown message type: ${message.messageType}`);
 				throw new Error(`unknownMessageType`);
 		}
 	}
@@ -265,9 +265,9 @@ export class ServerConnector extends EventTarget
 	{
 		if (!this.webSocket) throw new Error(`missingWebsocket`);
 		const message: InRespQuestionMessage = {
-			message_type: `IN_RESP_question`,
-			correlation_id: correlation_id,
-			payload: { question: { question: question, answers: answers, font_name: fontName }, question_svg: question_svg },
+			messageType: `IN_RESP_question`,
+			correlationId: correlation_id,
+			payload: { question: { question: question, answers: answers, fontName: fontName }, questionSvg: question_svg },
 		};
 
 		this.webSocket.send(JSON.stringify(message));
@@ -276,8 +276,8 @@ export class ServerConnector extends EventTarget
 	public async sendAnswer(answer: string)
 	{
 		const message: InReqSendAnswerMessage = {
-			message_type: `IN_REQ_sendAnswer`,
-			correlation_id: crypto.randomUUID(),
+			messageType: `IN_REQ_sendAnswer`,
+			correlationId: crypto.randomUUID(),
 			payload: {
 				answer: answer,
 			},
@@ -285,7 +285,7 @@ export class ServerConnector extends EventTarget
 
 		const response = await this.sendWebSocketMessage(message);
 
-		switch (response.message_type)
+		switch (response.messageType)
 		{
 			case `OUT_RESP_status`:
 			{
@@ -301,7 +301,7 @@ export class ServerConnector extends EventTarget
 				}
 			}
 			default:
-				console.log(`Received unknown message type: ${message.message_type}`);
+				console.log(`Received unknown message type: ${message.messageType}`);
 				throw new Error(`unknownMessageType`);
 		}
 	}
@@ -309,14 +309,14 @@ export class ServerConnector extends EventTarget
 	public async sendStopGame()
 	{
 		const message: InReqStopGameMessage = {
-			message_type: `IN_REQ_stopGame`,
-			correlation_id: crypto.randomUUID(),
+			messageType: `IN_REQ_stopGame`,
+			correlationId: crypto.randomUUID(),
 			payload: {},
 		};
 
 		const response = await this.sendWebSocketMessage(message);
 
-		switch (response.message_type)
+		switch (response.messageType)
 		{
 			case `OUT_RESP_status`:
 			{
@@ -332,14 +332,14 @@ export class ServerConnector extends EventTarget
 				}
 			}
 			default:
-				console.log(`Received unknown message type: ${message.message_type}`);
+				console.log(`Received unknown message type: ${message.messageType}`);
 				throw new Error(`unknownMessageType`);
 		}
 	}
 
 	private handleReceivedMessage(message: BaseMessage<object, MessageType>)
 	{
-		switch (message.message_type)
+		switch (message.messageType)
 		{
 			case `OUT_NOTIF_clientRegistered`:
 			{
@@ -381,7 +381,7 @@ export class ServerConnector extends EventTarget
 				const concreteMessage = <OutReqQuestionMessage>message;
 				const event = new CustomEvent<(question: string, answers: string[], fontName: string, questionSvg: string) => void>(`OUT_REQ_question`, { detail: (question: string, answers: string[], fontName: string, questionSvg: string) =>
 				{
-					this.sendQuestion(concreteMessage.correlation_id, question, answers, fontName, questionSvg);
+					this.sendQuestion(concreteMessage.correlationId, question, answers, fontName, questionSvg);
 				} });
 				this.dispatchEvent(event);
 				break;
@@ -415,7 +415,7 @@ export class ServerConnector extends EventTarget
 				break;
 			}
 			default:
-				console.log(`Received unknown message type: ${message.message_type}`);
+				console.log(`Received unknown message type: ${message.messageType}`);
 		}
 	}
 }

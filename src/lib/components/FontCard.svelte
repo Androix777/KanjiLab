@@ -21,10 +21,10 @@
 
 	function selectFont(added: boolean)
 	{
-		onFontCheck(fontInfo.font_file, added);
+		onFontCheck(fontInfo.fontFile, added);
 	}
 
-	let fontSelected: boolean = $derived(getSettings().selectedFonts.get().includes(fontInfo.font_file));
+	let fontSelected: boolean = $derived(getSettings().selectedFonts.get().includes(fontInfo.fontFile));
 </script>
 
 <div>
@@ -42,9 +42,9 @@
 				checked={fontSelected} />
 		</div>
 		<div class="w-1/2 my-auto justify-center">
-			<div>File: {fontInfo.font_file}</div>
-			<div>Full name: {fontInfo.full_name}</div>
-			<div>Number of glyphs: {fontInfo.num_glyphs}</div>
+			<div>File: {fontInfo.fontFile}</div>
+			<div>Full name: {fontInfo.fullName}</div>
+			<div>Number of glyphs: {fontInfo.numGlyphs}</div>
 		</div>
 		{#if fontSVG != ``}
 		<div class="w-1/3 m-auto flex justify-center" transition:fade>

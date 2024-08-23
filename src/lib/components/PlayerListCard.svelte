@@ -16,7 +16,7 @@
 			clientInfo = {
 				id: `NULL`,
 				name: `NULL`,
-				is_admin: false,
+				isAdmin: false,
 			},
 			isMe = false,
 			gameHistory = [],
@@ -26,14 +26,14 @@
 	let getLastAnswers = $derived(() =>
 	{
 		let paddedGameHistory = Array<RoundHistory>();
-		paddedGameHistory.push({ question: { question: ``, answers: [] }, question_svg: ``, answers: new SvelteMap() });
+		paddedGameHistory.push({ question: { question: ``, answers: [] }, questionSvg: ``, answers: new SvelteMap() });
 		gameHistory.slice(-3).reverse().map((roundHistory) =>
 		{
 			paddedGameHistory.push(roundHistory);
 		});
 		while (paddedGameHistory.length < 4)
 		{
-			paddedGameHistory.push({ question: { question: ``, answers: [] }, question_svg: ``, answers: new SvelteMap() });
+			paddedGameHistory.push({ question: { question: ``, answers: [] }, questionSvg: ``, answers: new SvelteMap() });
 		}
 		return paddedGameHistory;
 	});
@@ -49,7 +49,7 @@
 				{score}
 			</div>
 			<div class="flex-grow font-semibold text-base text-primary}">
-				<span class="text-primary">{clientInfo.is_admin ? `♔ ` : ``}</span>{clientInfo.name}
+				<span class="text-primary">{clientInfo.isAdmin ? `♔ ` : ``}</span>{clientInfo.name}
 			</div>
 		</div>
 		<div class="flex flex-row justify-center items-center overflow-x-hidden min-w-0" style="border-bottom-right-radius: var(--rounded-box, 1rem); border-bottom-left-radius: var(--rounded-box, 1rem);">

@@ -7,6 +7,7 @@ pub trait MessageType {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct BaseMessage {
     pub correlation_id: String,
     pub message_type: String,
@@ -28,18 +29,21 @@ impl BaseMessage {
 // #region IN_REQ
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("IN_REQ_registerClient")]
 pub struct InReqRegisterClientPayload {
     pub name: String,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("IN_REQ_sendChat")]
 pub struct InReqSendChatPayload {
     pub message: String,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("IN_REQ_makeAdmin")]
 pub struct InReqMakeAdminPayload {
     pub admin_password: String,
@@ -47,10 +51,12 @@ pub struct InReqMakeAdminPayload {
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("IN_REQ_clientList")]
 pub struct InReqClientListPayload {}
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("IN_REQ_startGame")]
 pub struct InReqStartGamePayload {
     pub round_duration: u64,
@@ -58,10 +64,12 @@ pub struct InReqStartGamePayload {
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("IN_REQ_stopGame")]
 pub struct InReqStopGamePayload {}
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("IN_REQ_sendAnswer")]
 pub struct InReqSendAnswerPayload {
     pub answer: String,
@@ -71,18 +79,21 @@ pub struct InReqSendAnswerPayload {
 // #region OUT_RESP
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("OUT_RESP_clientRegistered")]
 pub struct OutRespClientRegisteredPayload {
     pub id: String,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("OUT_RESP_status")]
 pub struct OutRespStatusPayload {
     pub status: String,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("OUT_RESP_clientList")]
 pub struct OutRespClientListPayload {
     pub clients: Vec<ClientInfo>,
@@ -92,6 +103,7 @@ pub struct OutRespClientListPayload {
 // #region OUT_REQ
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("OUT_REQ_question")]
 pub struct OutReqQuestionPayload {}
 // #endregion
@@ -99,6 +111,7 @@ pub struct OutReqQuestionPayload {}
 // #region IN_RESP
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("IN_RESP_question")]
 pub struct InRespQuestionPayload {
     pub question: QuestionInfo,
@@ -109,6 +122,7 @@ pub struct InRespQuestionPayload {
 // #region OUT_NOTIF
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("OUT_NOTIF_clientRegistered")]
 pub struct OutNotifClientRegisteredPayload {
     pub id: String,
@@ -116,6 +130,7 @@ pub struct OutNotifClientRegisteredPayload {
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("OUT_NOTIF_clientDisconnected")]
 pub struct OutNotifClientDisconnectedPayload {
     pub id: String,
@@ -123,6 +138,7 @@ pub struct OutNotifClientDisconnectedPayload {
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("OUT_NOTIF_chatSent")]
 pub struct OutNotifChatSentPayload {
     pub id: String,
@@ -130,12 +146,14 @@ pub struct OutNotifChatSentPayload {
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("OUT_NOTIF_adminMade")]
 pub struct OutNotifAdminMadePayload {
     pub id: String,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("OUT_NOTIF_gameStarted")]
 pub struct OutNotifGameStartedPayload {
     pub round_duration: u64,
@@ -143,22 +161,26 @@ pub struct OutNotifGameStartedPayload {
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("OUT_NOTIF_gameStopped")]
 pub struct OutNotifGameStoppedPayload {}
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("OUT_NOTIF_question")]
 pub struct OutNotifQuestionPayload {
     pub question_svg: String,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("OUT_NOTIF_clientAnswered")]
 pub struct OutNotifClientAnsweredPayload {
     pub id: String,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("OUT_NOTIF_roundEnded")]
 pub struct OutNotifRoundEndedPayload {
     pub question: QuestionInfo,
@@ -168,6 +190,7 @@ pub struct OutNotifRoundEndedPayload {
 // #endregion
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct ClientInfo {
     pub id: String,
     pub name: String,
@@ -175,6 +198,7 @@ pub struct ClientInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct QuestionInfo {
     pub question: String,
     pub answers: Vec<String>,
@@ -182,6 +206,7 @@ pub struct QuestionInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct AnswerInfo {
     pub id: String,
     pub answer: String,

@@ -53,18 +53,18 @@
 		{
 			try
 			{
-				fontRecords[i].fontSVG = await invoke(GET_SVG_TEXT, { text: `文字`, fontName: fontRecords[i].fontInfo.font_file });
+				fontRecords[i].fontSVG = await invoke(GET_SVG_TEXT, { text: `文字`, fontName: fontRecords[i].fontInfo.fontFile });
 			}
 			catch
 			{
-				console.log(`Failed to get SVG for font: ${fontRecords[i].fontInfo.font_file}`);
+				console.log(`Failed to get SVG for font: ${fontRecords[i].fontInfo.fontFile}`);
 			}
 		}
 	}
 
 	function generateSelectedFonts()
 	{
-		filteredFontList = fontList.filter(fontInfo => getSettings().selectedFonts.get().includes(fontInfo.font_file));
+		filteredFontList = fontList.filter(fontInfo => getSettings().selectedFonts.get().includes(fontInfo.fontFile));
 	}
 
 </script>
@@ -80,7 +80,7 @@
 						onclick={() =>
 						{
 							let selectedFonts: Array<string> = [];
-							fontList.forEach(fontInfo => selectedFonts.push(fontInfo.font_file));
+							fontList.forEach(fontInfo => selectedFonts.push(fontInfo.fontFile));
 							getSettings().selectedFonts.set(selectedFonts);
 							void updateFontsPage();
 						}}>Select all</button>
@@ -141,7 +141,7 @@
 				} }>🠊</button>
 			</div>
 			<div class="">
-				{#each fontRecords as fontRecord(fontRecord.fontInfo.font_file)}
+				{#each fontRecords as fontRecord(fontRecord.fontInfo.fontFile)}
 					<div in:fade>
 						<FontCard
 							fontInfo = {fontRecord.fontInfo}

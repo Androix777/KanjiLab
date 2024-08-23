@@ -14,50 +14,50 @@ export type StatsInfo = {
 export type ClientInfo = {
 	id: string;
 	name: string;
-	is_admin: boolean;
+	isAdmin: boolean;
 };
 
 export type QuestionInfo = {
 	question: string;
 	answers: string[];
-	font_name: string;
+	fontName: string;
 };
 
 export type AnswerInfo = {
 	id: string;
 	answer: string;
-	is_correct: boolean;
+	isCorrect: boolean;
 };
 
 export type FontInfo = {
-	font_file: string;
-	copyright_notice: string;
+	fontFile: string;
+	copyrightNotice: string;
 	family: string;
 	subfamily: string;
-	unique_id: string;
-	full_name: string;
+	uniqueId: string;
+	fullName: string;
 	version: string;
-	post_script_name: string;
+	postScriptName: string;
 	trademark: string;
 	manufacturer: string;
 	designer: string;
 	description: string;
-	vendor_url: string;
-	designer_url: string;
+	vendorUrl: string;
+	designerUrl: string;
 	license: string;
-	license_url: string;
-	typographic_family: string;
-	typographic_subfamily: string;
-	compatible_full: string;
-	sample_text: string;
-	post_script_cid: string;
-	wws_family: string;
-	wws_subfamily: string;
-	light_background_palette: string;
-	dark_background_palette: string;
-	variations_post_script_name_prefix: string;
-	num_glyphs: number;
-	units_per_em: number;
+	licenseUrl: string;
+	typographicFamily: string;
+	typographicSubfamily: string;
+	compatibleFull: string;
+	sampleText: string;
+	postScriptCid: string;
+	wwsFamily: string;
+	wwsSubfamily: string;
+	lightBackgroundPalette: string;
+	darkBackgroundPalette: string;
+	variationsPostScriptNamePrefix: string;
+	numGlyphs: number;
+	unitsPerEm: number;
 };
 
 export type AnswerRecord = {
@@ -67,7 +67,7 @@ export type AnswerRecord = {
 
 export type RoundHistory = {
 	question: QuestionInfo;
-	question_svg: string;
+	questionSvg: string;
 	answers: SvelteMap<string, AnswerRecord>;
 };
 
@@ -102,8 +102,8 @@ export type MessageType =
 	| `OUT_NOTIF_gameStopped`;
 
 export type BaseMessage<T extends object, M extends MessageType> = {
-	message_type: M;
-	correlation_id: string;
+	messageType: M;
+	correlationId: string;
 	payload: T;
 };
 
@@ -117,8 +117,8 @@ export type InReqGetClientListPayload = object;
 export type InReqGetClientListMessage = BaseMessage<InReqGetClientListPayload, `IN_REQ_clientList`>;
 
 export type InReqMakeAdminPayload = {
-	admin_password: string;
-	client_id: string;
+	adminPassword: string;
+	clientId: string;
 };
 export type InReqMakeAdminMessage = BaseMessage<InReqMakeAdminPayload, `IN_REQ_makeAdmin`>;
 
@@ -128,8 +128,8 @@ export type InReqSendChatPayload = {
 export type InReqSendChatMessage = BaseMessage<InReqSendChatPayload, `IN_REQ_sendChat`>;
 
 export type InReqStartGamePayload = {
-	round_duration: number;
-	rounds_count: number;
+	roundDuration: number;
+	roundsCount: number;
 };
 export type InReqStartGameMessage = BaseMessage<InReqStartGamePayload, `IN_REQ_startGame`>;
 
@@ -157,7 +157,7 @@ export type OutRespClientListPayload = {
 	{
 		id: string;
 		name: string;
-		is_admin: boolean;
+		isAdmin: boolean;
 	}[];
 };
 export type OutRespClientListMessage = BaseMessage<OutRespClientListPayload, `OUT_RESP_clientList`>;
@@ -170,7 +170,7 @@ export type OutReqQuestionMessage = BaseMessage<OutReqQuestionPayload, `OUT_REQ_
 
 export type InRespQuestionPayload = {
 	question: QuestionInfo;
-	question_svg: string;
+	questionSvg: string;
 };
 export type InRespQuestionMessage = BaseMessage<InRespQuestionPayload, `IN_RESP_question`>;
 
@@ -199,13 +199,13 @@ export type OutNotifAdminMadePayload = {
 export type OutNotifAdminMadeMessage = BaseMessage<OutNotifAdminMadePayload, `OUT_NOTIF_adminMade`>;
 
 export type OutNotifGameStartedPayload = {
-	round_duration: number;
-	rounds_count: number;
+	roundDuration: number;
+	roundsCount: number;
 };
 export type OutNotifGameStartedMessage = BaseMessage<OutNotifGameStartedPayload, `OUT_NOTIF_gameStarted`>;
 
 export type OutNotifQuestionPayload = {
-	question_svg: string;
+	questionSvg: string;
 };
 export type OutNotifQuestionMessage = BaseMessage<OutNotifQuestionPayload, `OUT_NOTIF_question`>;
 

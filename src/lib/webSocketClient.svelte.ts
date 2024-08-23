@@ -51,7 +51,7 @@ class WebSocketClient
 		this.serverConnector.addEventListener(`OUT_NOTIF_clientRegistered`, (event) =>
 		{
 			const customEvent: CustomEvent<OutNotifClientRegisteredPayload> = <CustomEvent<OutNotifClientRegisteredPayload>>event;
-			this.clientList.push({ id: customEvent.detail.id, name: customEvent.detail.name, is_admin: false });
+			this.clientList.push({ id: customEvent.detail.id, name: customEvent.detail.name, isAdmin: false });
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_clientDisconnected`, (event) =>
 		{
@@ -69,7 +69,7 @@ class WebSocketClient
 			const client = this.clientList.find(client => client.id === customEvent.detail.id);
 			if (client)
 			{
-				client.is_admin = true;
+				client.isAdmin = true;
 				if (client.id == this.id)
 				{
 					this.isAdmin = true;
@@ -83,14 +83,14 @@ class WebSocketClient
 		this.serverConnector.addEventListener(`OUT_NOTIF_gameStarted`, async (event) =>
 		{
 			const customEvent: CustomEvent<OutNotifGameStartedPayload> = <CustomEvent<OutNotifGameStartedPayload>>event;
-			this.roundDuration = customEvent.detail.round_duration;
-			this.roundsCount = customEvent.detail.rounds_count;
+			this.roundDuration = customEvent.detail.roundDuration;
+			this.roundsCount = customEvent.detail.roundsCount;
 			this.currentRound = 0;
 			this.gameHistory.length = 0;
 
 			this.currentGameId = await addGameStats(
-				customEvent.detail.rounds_count,
-				customEvent.detail.round_duration,
+				customEvent.detail.roundsCount,
+				customEvent.detail.roundDuration,
 				getSettings().minFrequency.get(),
 				getSettings().maxFrequency.get(),
 				null,
@@ -207,7 +207,7 @@ class WebSocketClient
 					question: lastWord.word,
 					answers: readings,
 					questionSvg: svg,
-					fontName: fontInfo.full_name,
+					fontName: fontInfo.fullName,
 				};
 				return question;
 			}
@@ -246,9 +246,9 @@ class WebSocketClient
 			question: {
 				question: ``,
 				answers: [],
-				font_name: ``,
+				fontName: ``,
 			},
-			question_svg: questionPayload.question_svg,
+			questionSvg: questionPayload.questionSvg,
 			answers: new SvelteMap<string, AnswerRecord>(),
 		});
 		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {
@@ -282,7 +282,7 @@ class WebSocketClient
 		{
 			this.gameHistory[this.gameHistory.length - 1].answers.set(answer.id, {
 				answer: answer.answer,
-				answerStatus: answer.is_correct ? `Correct` : `Incorrect`,
+				answerStatus: answer.isCorrect ? `Correct` : `Incorrect`,
 			});
 		});
 		this.clientList.sort((e1, e2) =>
@@ -297,7 +297,7 @@ class WebSocketClient
 
 		if (word)
 		{
-			const fontId: number = await invoke(GET_FONT_ID, { name: roundResults.question.font_name });
+			const fontId: number = await invoke(GET_FONT_ID, { name: roundResults.question.fontName });
 			await addAnswerStats(this.currentGameId, word, answer, 0, this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`, fontId);
 		}
 	}

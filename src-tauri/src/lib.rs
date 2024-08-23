@@ -207,6 +207,7 @@ fn get_all_fonts_info() -> Result<Vec<FontInfo>, String> {
 }
 
 #[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 struct FontInfo {
     font_file: String,
     copyright_notice: String,
