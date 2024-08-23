@@ -5,7 +5,7 @@ use tokio::sync::{broadcast, oneshot};
 use tokio::time::sleep;
 use uuid::Uuid;
 
-use crate::structures::{AnswerInfo, QuestionInfo};
+use crate::structures::{AnswerInfo, GameSettings, QuestionInfo};
 
 // #region StructuresEnumerations
 #[derive(Clone)]
@@ -35,15 +35,13 @@ static GAME_STATE_NOTIFIER: LazyLock<broadcast::Sender<GameState>> = LazyLock::n
     sender
 });
 static CURRENT_ROUND_INDEX: LazyLock<RwLock<u64>> = LazyLock::new(|| RwLock::new(0));
-static ROUNDS_COUNT: LazyLock<RwLock<u64>> = LazyLock::new(|| RwLock::new(0));
+static GAME_SETTINGS: LazyLock<RwLock<GameSettings>> = LazyLock::new(Default::default);
 static END_GAME_MARKER: LazyLock<RwLock<bool>> = LazyLock::new(|| RwLock::new(false));
 static ANSWERS_BY_ROUND: LazyLock<
     RwLock<HashMap<u64, (QuestionInfo, HashMap<String, AnswerInfo>)>>,
 > = LazyLock::new(Default::default);
 static ROUND_TIMER_CANCEL: LazyLock<RwLock<Option<oneshot::Sender<()>>>> =
     LazyLock::new(|| RwLock::new(None));
-static ROUND_DURATION: LazyLock<RwLock<Duration>> =
-    LazyLock::new(|| RwLock::new(Duration::from_secs(600)));
 // #endregion
 
 // #region Initialization
@@ -123,9 +121,8 @@ pub fn get_admin_password() -> String {
     ADMIN_PASSWORD.read().unwrap().clone()
 }
 
-pub fn start_game(round_duration: Duration, rounds_count: u64) -> bool {
-    *ROUNDS_COUNT.write().unwrap() = rounds_count;
-    *ROUND_DURATION.write().unwrap() = round_duration;
+pub fn start_game(game_settings: GameSettings) -> bool {
+    *GAME_SETTINGS.write().unwrap() = game_settings;
     let current_state = get_game_state();
     if current_state == GameState::Lobby {
         *CURRENT_ROUND_INDEX.write().unwrap() = 0;
@@ -167,7 +164,7 @@ pub fn set_current_question(question: QuestionInfo) {
 
     let (cancel_sender, cancel_receiver) = oneshot::channel();
     *ROUND_TIMER_CANCEL.write().unwrap() = Some(cancel_sender);
-    let duration = ROUND_DURATION.read().unwrap().clone();
+    let duration = Duration::from_secs(GAME_SETTINGS.read().unwrap().round_duration);
 
     tokio::spawn(async move {
         tokio::select! {
@@ -181,7 +178,7 @@ pub fn set_current_question(question: QuestionInfo) {
                 GameState::Lobby
             } else {
                 let mut index = CURRENT_ROUND_INDEX.write().unwrap();
-                if (*index + 1) >= *ROUNDS_COUNT.read().unwrap() {
+                if (*index + 1) >= GAME_SETTINGS.read().unwrap().rounds_count {
                     GameState::Lobby
                 } else {
                     *index += 1;
@@ -255,12 +252,8 @@ pub fn get_current_round() -> u64 {
     *CURRENT_ROUND_INDEX.read().unwrap()
 }
 
-pub fn get_round_duration() -> u64 {
-    ROUND_DURATION.read().unwrap().as_secs()
-}
-
-pub fn get_rounds_count() -> u64 {
-    *ROUNDS_COUNT.read().unwrap()
+pub fn get_game_settings() -> GameSettings {
+    GAME_SETTINGS.read().unwrap().clone()
 }
 
 pub fn all_clients_answered() -> bool {

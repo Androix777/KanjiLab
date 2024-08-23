@@ -1,5 +1,5 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { AnswerRecord, ClientInfo, FontInfo, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory, ServerStatus } from "./types";
+import type { AnswerRecord, ClientInfo, FontInfo, GameSettingsData, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory, ServerStatus } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 import { SvelteMap } from "svelte/reactivity";
 import { invoke } from "@tauri-apps/api/core";
@@ -83,14 +83,14 @@ class WebSocketClient
 		this.serverConnector.addEventListener(`OUT_NOTIF_gameStarted`, async (event) =>
 		{
 			const customEvent: CustomEvent<OutNotifGameStartedPayload> = <CustomEvent<OutNotifGameStartedPayload>>event;
-			this.roundDuration = customEvent.detail.roundDuration;
-			this.roundsCount = customEvent.detail.roundsCount;
+			this.roundDuration = customEvent.detail.gameSettings.roundDuration;
+			this.roundsCount = customEvent.detail.gameSettings.roundsCount;
 			this.currentRound = 0;
 			this.gameHistory.length = 0;
 
 			this.currentGameId = await addGameStats(
-				customEvent.detail.roundsCount,
-				customEvent.detail.roundDuration,
+				customEvent.detail.gameSettings.roundsCount,
+				customEvent.detail.gameSettings.roundDuration,
 				getSettings().minFrequency.get(),
 				getSettings().maxFrequency.get(),
 				null,
@@ -236,8 +236,27 @@ class WebSocketClient
 
 	public async startGame()
 	{
-		await this.serverConnector?.sendStartGame(getSettings().roundDuration.get(), getSettings().roundsCount.get());
+		await this.serverConnector?.sendStartGame(await this.getGameSettings());
 		this.isGameStarted = true;
+	}
+
+	async getGameSettings(): Promise<GameSettingsData>
+	{
+		const fontsCount = getSettings().selectedFonts.get().length;
+		const font = fontsCount == 0 ? null : getSettings().selectedFonts.get()[0];
+		const fontInfo: FontInfo | null = font ? null : await invoke(GET_FONT_INFO, { fontName: font });
+
+		const data: GameSettingsData = {
+			minFrequency: getSettings().minFrequency.get(),
+			maxFrequency: getSettings().maxFrequency.get(),
+			roundDuration: getSettings().roundDuration.get(),
+			roundsCount: getSettings().roundsCount.get(),
+			wordPart: getSettings().wordPart.get() == `` ? null : getSettings().wordPart.get(),
+			fontsCount: fontsCount,
+			firstFontName: fontInfo?.fullName ?? null,
+		};
+
+		return data;
 	}
 
 	public showQuestion(questionPayload: OutNotifQuestionPayload)

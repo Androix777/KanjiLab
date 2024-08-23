@@ -59,8 +59,7 @@ pub struct InReqClientListPayload {}
 #[serde(rename_all = "camelCase")]
 #[message_type("IN_REQ_startGame")]
 pub struct InReqStartGamePayload {
-    pub round_duration: u64,
-    pub rounds_count: u64,
+    pub game_settings: GameSettings,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
@@ -73,6 +72,13 @@ pub struct InReqStopGamePayload {}
 #[message_type("IN_REQ_sendAnswer")]
 pub struct InReqSendAnswerPayload {
     pub answer: String,
+}
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
+#[message_type("IN_REQ_sendGameSettings")]
+pub struct InReqSendGameSettingsPayload {
+    pub game_settings: GameSettings,
 }
 // #endregion
 
@@ -156,8 +162,7 @@ pub struct OutNotifAdminMadePayload {
 #[serde(rename_all = "camelCase")]
 #[message_type("OUT_NOTIF_gameStarted")]
 pub struct OutNotifGameStartedPayload {
-    pub round_duration: u64,
-    pub rounds_count: u64,
+    pub game_settings: GameSettings,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
@@ -187,6 +192,13 @@ pub struct OutNotifRoundEndedPayload {
     pub answers: Vec<AnswerInfo>,
 }
 
+#[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
+#[message_type("OUT_NOTIF_gameSettingsChanged")]
+pub struct OutNotifGameSettingsChangedPayload {
+    pub game_settings: GameSettings,
+}
+
 // #endregion
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -202,7 +214,7 @@ pub struct ClientInfo {
 pub struct QuestionInfo {
     pub question: String,
     pub answers: Vec<String>,
-	pub font_name: String,
+    pub font_name: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -211,4 +223,16 @@ pub struct AnswerInfo {
     pub id: String,
     pub answer: String,
     pub is_correct: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct GameSettings {
+    pub min_frequency: u64,
+    pub max_frequency: u64,
+    pub round_duration: u64,
+    pub rounds_count: u64,
+    pub word_part: Option<String>,
+    pub fonts_count: u64,
+    pub first_font_name: Option<String>,
 }

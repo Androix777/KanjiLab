@@ -7,7 +7,6 @@ use serde_json::{self, Value};
 use std::collections::HashMap;
 use std::future::Future;
 use std::sync::{Arc, LazyLock};
-use std::time::Duration;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::runtime::Runtime;
 use tokio::sync::{oneshot, Mutex};
@@ -188,6 +187,9 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
             "IN_REQ_startGame" => handle_start_game(&client_id, incoming_message).await,
             "IN_REQ_stopGame" => handle_stop_game(&client_id, incoming_message).await,
             "IN_REQ_sendAnswer" => handle_send_answer(&client_id, incoming_message).await,
+            "IN_REQ_sendGameSettings" => {
+                handle_send_game_settings(&client_id, incoming_message).await
+            }
             _ => handle_unknown_message(&client_id, incoming_message).await,
         };
     }
@@ -264,13 +266,13 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
         let event = BaseMessage::new(event_payload, None);
         send_all(event).await;
 
-		if *IS_AUTO_SERVER.lock().await && get_admin_id().is_none() {
-			let payload = InReqMakeAdminPayload {
-				admin_password: get_admin_password(),
-				client_id: client_id.to_string(),
-			};
-			handle_make_admin(&client_id, BaseMessage::new(payload, None)).await;
-		}
+        if *IS_AUTO_SERVER.lock().await && get_admin_id().is_none() {
+            let payload = InReqMakeAdminPayload {
+                admin_password: get_admin_password(),
+                client_id: client_id.to_string(),
+            };
+            handle_make_admin(&client_id, BaseMessage::new(payload, None)).await;
+        }
     }
 }
 
@@ -395,10 +397,7 @@ async fn handle_start_game(client_id: &str, incoming_message: BaseMessage) {
             return;
         }
 
-        start_game(
-            Duration::from_secs(payload.round_duration),
-            payload.rounds_count,
-        );
+        start_game(payload.game_settings);
         send_status(client_id, &incoming_message.correlation_id, "success").await;
     }
 }
@@ -467,6 +466,28 @@ async fn handle_send_answer(client_id: &str, incoming_message: BaseMessage) {
     }
 }
 
+async fn handle_send_game_settings(client_id: &str, incoming_message: BaseMessage) {
+    if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
+        return;
+    }
+
+    if let Ok(payload) = validate_payload::<InReqSendGameSettingsPayload>(
+        client_id,
+        &incoming_message.correlation_id,
+        incoming_message.payload,
+    )
+    .await
+    {
+        let event_payload = OutNotifGameSettingsChangedPayload {
+            game_settings: payload.game_settings,
+        };
+        let event = BaseMessage::new(event_payload, None);
+        send_all(event).await;
+
+        send_status(client_id, &incoming_message.correlation_id, "success").await;
+    }
+}
+
 async fn handle_question(client_id: &str, incoming_message: BaseMessage) {
     if let Err(_) = check_client_exists(client_id, &incoming_message.correlation_id).await {
         return;
@@ -519,8 +540,7 @@ async fn handle_state_waiting_question() {
 
 async fn handle_state_game_starting() {
     let event_payload = OutNotifGameStartedPayload {
-        round_duration: get_round_duration(),
-		rounds_count: get_rounds_count(),
+        game_settings: get_game_settings(),
     };
     let event = BaseMessage::new(event_payload, None);
     send_all(event).await;

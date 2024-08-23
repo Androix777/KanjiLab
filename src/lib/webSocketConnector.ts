@@ -30,6 +30,7 @@ import {
 	type OutNotifGameStoppedPayload,
 	type OutNotifGameStartedMessage,
 	type OutNotifGameStartedPayload,
+	type GameSettingsData,
 } from "./types";
 
 export class ServerConnector extends EventTarget
@@ -227,14 +228,13 @@ export class ServerConnector extends EventTarget
 		this.webSocket.send(JSON.stringify(sendChatMessage));
 	}
 
-	public async sendStartGame(roundDuration: number, roundsCount: number)
+	public async sendStartGame(gameSettings: GameSettingsData)
 	{
 		const message: InReqStartGameMessage = {
 			messageType: `IN_REQ_startGame`,
 			correlationId: crypto.randomUUID(),
 			payload: {
-				roundDuration: roundDuration,
-				roundsCount: roundsCount,
+				gameSettings: gameSettings,
 			},
 		};
 

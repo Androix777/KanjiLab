@@ -71,6 +71,16 @@ export type RoundHistory = {
 	answers: SvelteMap<string, AnswerRecord>;
 };
 
+export type GameSettingsData = {
+	minFrequency: number;
+	maxFrequency: number;
+	roundDuration: number;
+	roundsCount: number;
+	wordPart: string | null;
+	fontsCount: number;
+	firstFontName: string | null;
+};
+
 export type AnswerStatus = `Correct` | `Incorrect` | `Unknown`;
 export type ServerStatus = `Lobby` | `WaitingQuestion` | `AnswerQuestion`;
 
@@ -128,8 +138,7 @@ export type InReqSendChatPayload = {
 export type InReqSendChatMessage = BaseMessage<InReqSendChatPayload, `IN_REQ_sendChat`>;
 
 export type InReqStartGamePayload = {
-	roundDuration: number;
-	roundsCount: number;
+	gameSettings: GameSettingsData;
 };
 export type InReqStartGameMessage = BaseMessage<InReqStartGamePayload, `IN_REQ_startGame`>;
 
@@ -199,8 +208,7 @@ export type OutNotifAdminMadePayload = {
 export type OutNotifAdminMadeMessage = BaseMessage<OutNotifAdminMadePayload, `OUT_NOTIF_adminMade`>;
 
 export type OutNotifGameStartedPayload = {
-	roundDuration: number;
-	roundsCount: number;
+	gameSettings: GameSettingsData;
 };
 export type OutNotifGameStartedMessage = BaseMessage<OutNotifGameStartedPayload, `OUT_NOTIF_gameStarted`>;
 
