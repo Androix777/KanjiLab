@@ -26,6 +26,42 @@ impl BaseMessage {
     }
 }
 
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ClientInfo {
+    pub id: String,
+    pub name: String,
+    pub is_admin: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct QuestionInfo {
+    pub question: String,
+    pub answers: Vec<String>,
+    pub font_name: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AnswerInfo {
+    pub id: String,
+    pub answer: String,
+    pub is_correct: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct GameSettings {
+    pub min_frequency: u64,
+    pub max_frequency: u64,
+    pub round_duration: u64,
+    pub rounds_count: u64,
+    pub word_part: Option<String>,
+    pub fonts_count: u64,
+    pub first_font_name: Option<String>,
+}
+
 // #region IN_REQ
 
 #[derive(Serialize, Deserialize, MessageType)]
@@ -89,6 +125,7 @@ pub struct InReqSendGameSettingsPayload {
 #[message_type("OUT_RESP_clientRegistered")]
 pub struct OutRespClientRegisteredPayload {
     pub id: String,
+	pub game_settings: GameSettings,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
@@ -200,39 +237,3 @@ pub struct OutNotifGameSettingsChangedPayload {
 }
 
 // #endregion
-
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct ClientInfo {
-    pub id: String,
-    pub name: String,
-    pub is_admin: bool,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct QuestionInfo {
-    pub question: String,
-    pub answers: Vec<String>,
-    pub font_name: String,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct AnswerInfo {
-    pub id: String,
-    pub answer: String,
-    pub is_correct: bool,
-}
-
-#[derive(Serialize, Deserialize, Clone, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct GameSettings {
-    pub min_frequency: u64,
-    pub max_frequency: u64,
-    pub round_duration: u64,
-    pub rounds_count: u64,
-    pub word_part: Option<String>,
-    pub fonts_count: u64,
-    pub first_font_name: Option<String>,
-}

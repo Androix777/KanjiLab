@@ -150,7 +150,7 @@
 							{
 								if (added)
 								{
-									getSettings().selectedFonts.get().push(fontName);
+									getSettings().selectedFonts.set([...getSettings().selectedFonts.get(), fontName]);
 								}
 								else
 								{

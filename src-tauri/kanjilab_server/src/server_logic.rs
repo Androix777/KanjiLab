@@ -122,7 +122,7 @@ pub fn get_admin_password() -> String {
 }
 
 pub fn start_game(game_settings: GameSettings) -> bool {
-    *GAME_SETTINGS.write().unwrap() = game_settings;
+    set_game_settings(game_settings);
     let current_state = get_game_state();
     if current_state == GameState::Lobby {
         *CURRENT_ROUND_INDEX.write().unwrap() = 0;
@@ -254,6 +254,10 @@ pub fn get_current_round() -> u64 {
 
 pub fn get_game_settings() -> GameSettings {
     GAME_SETTINGS.read().unwrap().clone()
+}
+
+pub fn set_game_settings(game_settings: GameSettings) {
+    *GAME_SETTINGS.write().unwrap() = game_settings;
 }
 
 pub fn all_clients_answered() -> bool {

@@ -11,14 +11,13 @@
     import { flip } from "svelte/animate";
     import { fade } from "svelte/transition";
 
-	let webSocketClient: WebSocketClient | null = $state(null);
+	let webSocketClient: WebSocketClient = $state(WebSocketClient.getInstance());
 	let chatMessage: string = $state(``);
 	let chatDiv: HTMLElement;
 
 	async function launchServer()
 	{
 		getSettings().adminPassword.set(await invoke(LAUNCH_SERVER));
-		webSocketClient = WebSocketClient.getInstance();
 		webSocketClient.isConnectedToSelf = true;
 		await webSocketClient.connectToServer(`ws://127.0.0.1:8080`);
 		await webSocketClient.makeAdmin();
@@ -26,30 +25,29 @@
 
 	async function stopServer()
 	{
-		webSocketClient = WebSocketClient.getInstance();
-		webSocketClient.isConnectedToSelf = false;
 		leaveServer();
 		await invoke(STOP_SERVER);
 	}
 
 	async function stopGame()
 	{
-		await webSocketClient?.stopGame();
+		await webSocketClient.stopGame();
 	}
 
 	async function joinServer()
 	{
-		await webSocketClient?.connectToServer(`ws://${getSettings().ipAddress.get()}:${getSettings().joinPort.get()}`);
+		webSocketClient.isConnectedToSelf = false;
+		await webSocketClient.connectToServer(`ws://${getSettings().ipAddress.get()}:${getSettings().joinPort.get()}`);
 	}
 
 	function leaveServer()
 	{
-		webSocketClient?.disconnectFromServer();
+		webSocketClient.disconnectFromServer();
 	}
 
 	function sendChatMessage()
 	{
-		webSocketClient?.sendChatMessage(chatMessage);
+		void webSocketClient.sendChatMessage(chatMessage);
 		chatMessage = ``;
 	}
 
@@ -64,7 +62,6 @@
 
 	onMount(() =>
 	{
-		webSocketClient = WebSocketClient.getInstance();
 		const observer = new MutationObserver(() =>
 		{
 			chatDiv.scroll({ top: chatDiv.scrollHeight });
@@ -77,7 +74,7 @@
 
 	<div class="card card-bordered bg-base-100 shadow-xl mb-4 p-4">
 		<div class="flex flex-none">
-			{#if webSocketClient?.isAdmin && webSocketClient.gameStatus != `Off` && webSocketClient.gameStatus != `Connecting`}
+			{#if webSocketClient.isAdmin && webSocketClient.gameStatus != `Off` && webSocketClient.gameStatus != `Connecting`}
 				<button class="btn btn-primary mx-2"
 						onclick={() => { void stopGame(); }}
 						disabled={webSocketClient.gameStatus != `WaitingQuestion` && webSocketClient.gameStatus != `AnswerQuestion`}>Stop Game</button>
@@ -86,14 +83,14 @@
 						onclick={() => { void stopServer(); }}>Stop Server</button>
 				{/if}
 			{:else}
-				{#if webSocketClient?.gameStatus == `Off`}
+				{#if webSocketClient.gameStatus == `Off`}
 					<button class="btn btn-primary"
 							onclick={() => { void launchServer(); }}>Host Game</button>
 				{/if}
 				<div class="text-center join ml-auto mr-0">
 					<input class="input input-bordered text-center join-item w-40"
 							value={getSettings().ipAddress.get()}
-							disabled={ webSocketClient?.gameStatus != `Off` }
+							disabled={ webSocketClient.gameStatus != `Off` }
 							oninput={(event) =>
 							{
 								if (event.target instanceof HTMLInputElement)
@@ -104,7 +101,7 @@
 							/>
 					<input class="input input-bordered text-center join-item w-20"
 							value={getSettings().joinPort.get()}
-							disabled={ webSocketClient?.gameStatus != `Off` }
+							disabled={ webSocketClient.gameStatus != `Off` }
 							oninput={(event) =>
 							{
 								if (event.target instanceof HTMLInputElement)
@@ -113,13 +110,13 @@
 								}
 							}}
 							/>
-					{#if webSocketClient?.gameStatus != `Off` && webSocketClient?.gameStatus != `Connecting`}
+					{#if webSocketClient.gameStatus != `Off` && webSocketClient.gameStatus != `Connecting`}
 						<button class="btn btn-outline btn-error join-item"
 								onclick={() => { leaveServer(); }}>Leave Server</button>
 					{:else}
 						<button class="btn btn-primary join-item"
 								onclick={() => { void joinServer(); }}
-								disabled={ webSocketClient?.gameStatus == `Connecting` }>Join Game</button>
+								disabled={ webSocketClient.gameStatus == `Connecting` }>Join Game</button>
 					{/if}
 				</div>
 			{/if}
@@ -128,25 +125,25 @@
 
 	<div class="flex-grow flex min-h-0 flex-row">
 		<div class="text-center flex flex-1 min-h-0 card card-bordered bg-base-100 shadow-xl p-4">
-			{#if webSocketClient?.gameStatus == `WaitingQuestion` || webSocketClient?.gameStatus == `AnswerQuestion`}
+			{#if webSocketClient.gameStatus == `WaitingQuestion` || webSocketClient.gameStatus == `AnswerQuestion`}
 				<GameScreen
 					gameHistory = { webSocketClient.gameHistory }
 					clientID = { webSocketClient.id }
-					roundDuration = {webSocketClient.roundDuration}
+					roundDuration = {getSettings().roundDuration.get()}
 					timerValue = {webSocketClient.timerValue}
-					roundsCount = {webSocketClient.roundsCount}
+					roundsCount = {getSettings().roundsCount.get()}
 					currentRound = {webSocketClient.currentRound}
-					onAnswer={(answer: string) => webSocketClient?.sendAnswer(answer)} />
+					onAnswer={(answer: string) => webSocketClient.sendAnswer(answer)} />
 			{:else if true}
 				<GameSettings
-					startFunction={() => { void webSocketClient?.startGame(); }}
-					isAdmin={webSocketClient?.isAdmin || false}
+					startFunction={() => { void webSocketClient.startGame(); }}
+					isAdmin={webSocketClient.isAdmin || false}
 				/>
 			{/if}
 		</div>
 		<div class="flex flex-col ml-4" style="width: 30vw;">
 			<div class="flex-1 text-center card card-bordered bg-base-100 shadow-xl overflow-y-auto overflow-x-hidden p-4 mb-4" style="scrollbar-width: none;">
-					{#if webSocketClient && webSocketClient.clientList}
+					{#if webSocketClient.clientList}
 						{#each webSocketClient.clientList as client(client.id)}
 							<div animate:flip>
 								<PlayerListCard
@@ -160,7 +157,7 @@
 			</div>
 			<div class="flex-1 text-center flex flex-col min-h-0 card card-bordered bg-base-100 shadow-xl p-4">
 				<div class="flex-grow flex flex-col overflow-y-auto overflow-x-hidden [&>*:nth-child(even)]:bg-base-200 pb-2" style="scrollbar-gutter: stable;" bind:this={chatDiv}>
-					{#if webSocketClient && webSocketClient.chatList}
+					{#if webSocketClient.chatList}
 						{#each webSocketClient.chatList as chatMessage}
 							<div transition:fade>
 								<MessageCard player={chatMessage.name} message={chatMessage.message} />
@@ -171,13 +168,13 @@
 				<div class="join">
 					<input
 						bind:value={chatMessage}
-						disabled={webSocketClient?.gameStatus == `Off` || webSocketClient?.gameStatus == `Connecting`}
+						disabled={webSocketClient.gameStatus == `Off` || webSocketClient.gameStatus == `Connecting`}
 						onkeydown={chatOnKeyDown}
 						placeholder="{getSettings().userName.get()}:"
 						class="input input-bordered text-left w-full placeholder:text-base-content placeholder:text-opacity-30 join-item"/>
 					<button
 						class="btn btn-primary join-item"
-						disabled={webSocketClient?.gameStatus == `Off` || webSocketClient?.gameStatus == `Connecting`}
+						disabled={webSocketClient.gameStatus == `Off` || webSocketClient.gameStatus == `Connecting`}
 						onclick={() => { sendChatMessage(); }}
 						>Send</button>
 				</div>

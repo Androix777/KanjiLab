@@ -1,5 +1,5 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { AnswerRecord, ClientInfo, FontInfo, GameSettingsData, InRespQuestionPayload, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory, GameStatus } from "./types";
+import type { AnswerRecord, ClientInfo, FontInfo, GameSettingsData, InRespQuestionPayload, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory, GameStatus, OutNotifGameSettingsChangedPayload } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 import { SvelteMap } from "svelte/reactivity";
 import { invoke } from "@tauri-apps/api/core";
@@ -10,7 +10,7 @@ import { addAnswerStats, addGameStats, getRandomWords } from "./databaseTools";
 class WebSocketClient
 {
 	public gameStatus: GameStatus = $state(`Off`);
-	public isConnectedToSelf: boolean = $state(false);
+	public isConnectedToSelf: boolean = $state(true);
 	public clientList: Array<ClientInfo> = $state([]);
 	public chatList: Array<{ name: string; message: string }> = $state([]);
 	public id: string = $state(``);
@@ -19,8 +19,8 @@ class WebSocketClient
 	public timerValue: number = $state(0);
 	public currentRound: number = 0;
 
-	public roundDuration: number = 0;
-	public roundsCount: number = 0;
+	public onlineFirstFontName: string = $state(``);
+	public onlineFontsCount: number = $state(0);
 
 	private static instance: WebSocketClient | null;
 	private serverConnector: ServerConnector | null = null;
@@ -83,11 +83,24 @@ class WebSocketClient
 		{
 			this.handleNotifGameStopped();
 		});
+		this.serverConnector.addEventListener(`OUT_NOTIF_gameSettingsChanged`, (event) =>
+		{
+			this.handleNotifGameSettingsChanged(event);
+		});
 
 		try
 		{
 			await this.serverConnector.connect(ipAddress);
-			this.id = await this.serverConnector.sendRegisterClientMessage();
+			const payload = await this.serverConnector.sendRegisterClientMessage();
+			this.id = payload.id;
+			if (!this.isConnectedToSelf)
+			{
+				this.setGameSettings(payload.gameSettings);
+			}
+			else
+			{
+				await this.sendNewSettings();
+			}
 			this.clientList = await this.serverConnector.sendGetClientListMessage();
 		}
 		catch (e)
@@ -109,11 +122,12 @@ class WebSocketClient
 		this.id = ``;
 		this.isAdmin = false;
 		this.gameHistory = [];
+		this.isConnectedToSelf = true;
 	}
 
-	public sendChatMessage(message: string)
+	public async sendChatMessage(message: string)
 	{
-		this.serverConnector?.sendChatMessage(message);
+		await this.serverConnector?.sendChatMessage(message);
 	}
 
 	public async makeAdmin()
@@ -142,6 +156,11 @@ class WebSocketClient
 		await this.serverConnector?.sendStopGame();
 	}
 
+	public async sendNewSettings()
+	{
+		await this.serverConnector?.sendNewSettings(await this.getGameSettings());
+	}
+
 	// Private
 
 	private getClient(id: string)
@@ -153,7 +172,7 @@ class WebSocketClient
 	{
 		const fontsCount = getSettings().selectedFonts.get().length;
 		const font = fontsCount == 0 ? null : getSettings().selectedFonts.get()[0];
-		const fontInfo: FontInfo | null = font ? null : await invoke(GET_FONT_INFO, { fontName: font });
+		const fontInfo: FontInfo | null = font ? await invoke(GET_FONT_INFO, { fontName: font }) : null;
 
 		const data: GameSettingsData = {
 			minFrequency: getSettings().minFrequency.get(),
@@ -166,6 +185,18 @@ class WebSocketClient
 		};
 
 		return data;
+	}
+
+	private setGameSettings(gameSettings: GameSettingsData)
+	{
+		getSettings().minFrequency.set(gameSettings.minFrequency);
+		getSettings().maxFrequency.set(gameSettings.maxFrequency);
+		getSettings().roundDuration.set(gameSettings.roundDuration);
+		getSettings().roundsCount.set(gameSettings.roundsCount);
+		getSettings().wordPart.set(gameSettings.wordPart || ``);
+
+		this.onlineFirstFontName = gameSettings.firstFontName || ``;
+		this.onlineFontsCount = gameSettings.fontsCount;
 	}
 
 	// Handlers
@@ -214,8 +245,6 @@ class WebSocketClient
 	private async handleNotifGameStarted(event: Event)
 	{
 		const customEvent: CustomEvent<OutNotifGameStartedPayload> = <CustomEvent<OutNotifGameStartedPayload>>event;
-		this.roundDuration = customEvent.detail.gameSettings.roundDuration;
-		this.roundsCount = customEvent.detail.gameSettings.roundsCount;
 		this.currentRound = 0;
 		this.gameHistory.length = 0;
 
@@ -297,7 +326,7 @@ class WebSocketClient
 		});
 		this.gameStatus = `AnswerQuestion`;
 
-		this.timerValue = this.roundDuration;
+		this.timerValue = getSettings().roundDuration.get();
 		clearInterval(this.timerIntervalId);
 		this.timerIntervalId = setInterval(() =>
 		{
@@ -355,6 +384,12 @@ class WebSocketClient
 		this.gameStatus = `Lobby`;
 
 		clearInterval(this.timerIntervalId);
+	}
+
+	private handleNotifGameSettingsChanged(event: Event)
+	{
+		const customEvent: CustomEvent<OutNotifGameSettingsChangedPayload> = <CustomEvent<OutNotifGameSettingsChangedPayload>>event;
+		this.setGameSettings(customEvent.detail.gameSettings);
 	}
 }
 

@@ -252,6 +252,7 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
 
         let response_payload = OutRespClientRegisteredPayload {
             id: client_id.to_string(),
+			game_settings: get_game_settings(),
         };
         let response = BaseMessage::new(
             response_payload,
@@ -368,6 +369,7 @@ async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
         let event = BaseMessage::new(event_payload, None);
 
         send_all(event).await;
+		send_status(client_id, &incoming_message.correlation_id, "success").await;
     }
 }
 
@@ -478,8 +480,9 @@ async fn handle_send_game_settings(client_id: &str, incoming_message: BaseMessag
     )
     .await
     {
+		set_game_settings(payload.game_settings);
         let event_payload = OutNotifGameSettingsChangedPayload {
-            game_settings: payload.game_settings,
+            game_settings: get_game_settings(),
         };
         let event = BaseMessage::new(event_payload, None);
         send_all(event).await;

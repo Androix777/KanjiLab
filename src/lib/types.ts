@@ -92,6 +92,7 @@ export type MessageType =
 	| `IN_REQ_startGame`
 	| `IN_REQ_sendAnswer`
 	| `IN_REQ_stopGame`
+	| `IN_REQ_sendGameSettings`
 
 	| `OUT_RESP_clientList`
 	| `OUT_RESP_status`
@@ -109,7 +110,8 @@ export type MessageType =
 	| `OUT_NOTIF_question`
 	| `OUT_NOTIF_roundEnded`
 	| `OUT_NOTIF_clientAnswered`
-	| `OUT_NOTIF_gameStopped`;
+	| `OUT_NOTIF_gameStopped`
+	| `OUT_NOTIF_gameSettingsChanged`;
 
 export type BaseMessage<T extends object, M extends MessageType> = {
 	messageType: M;
@@ -150,6 +152,11 @@ export type InReqSendAnswerMessage = BaseMessage<InReqSendAnswerPayload, `IN_REQ
 export type InReqStopGamePayload = object;
 export type InReqStopGameMessage = BaseMessage<InReqStopGamePayload, `IN_REQ_stopGame`>;
 
+export type InReqSendGameSettingsPayload = {
+	gameSettings: GameSettingsData;
+};
+export type InReqSendGameSettingsMessage = BaseMessage<InReqSendGameSettingsPayload, `IN_REQ_sendGameSettings`>;
+
 // OUT RESP
 export type OutRespStatusPayload = {
 	status: string;
@@ -158,6 +165,7 @@ export type OutRespStatusMessage = BaseMessage<OutRespStatusPayload, `OUT_RESP_s
 
 export type OutRespClientRegisteredPayload = {
 	id: string;
+	gameSettings: GameSettingsData;
 };
 export type OutRespClientRegisteredMessage = BaseMessage<OutRespClientRegisteredPayload, `OUT_RESP_clientRegistered`>;
 
@@ -230,3 +238,8 @@ export type OutNotifClientAnsweredMessage = BaseMessage<OutNotifClientAnsweredPa
 
 export type OutNotifGameStoppedPayload = object;
 export type OutNotifGameStoppedMessage = BaseMessage<OutNotifGameStoppedPayload, `OUT_NOTIF_gameStopped`>;
+
+export type OutNotifGameSettingsChangedPayload = {
+	gameSettings: GameSettingsData;
+};
+export type OutNotifGameSettingsChangedMessage = BaseMessage<OutNotifGameSettingsChangedPayload, `OUT_NOTIF_gameSettingsChanged`>;

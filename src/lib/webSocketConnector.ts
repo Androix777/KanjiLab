@@ -32,6 +32,9 @@ import {
 	type OutNotifGameStartedPayload,
 	type GameSettingsData,
 	type InRespQuestionPayload,
+	type InReqSendGameSettingsMessage,
+	type OutNotifGameSettingsChangedMessage,
+	type OutNotifGameSettingsChangedPayload,
 } from "./types";
 
 export class ServerConnector extends EventTarget
@@ -141,7 +144,7 @@ export class ServerConnector extends EventTarget
 			case `OUT_RESP_clientRegistered`:
 			{
 				const clientRegisteredMessage = <OutRespClientRegisteredMessage>response;
-				return clientRegisteredMessage.payload.id;
+				return clientRegisteredMessage.payload;
 			}
 			case `OUT_RESP_status`:
 			{
@@ -149,7 +152,7 @@ export class ServerConnector extends EventTarget
 				throw new Error(statusMessage.payload.status);
 			}
 			default:
-				console.log(`Received unknown message type: ${message.messageType}`);
+				console.log(`Received unknown message type: ${response.messageType}`);
 				throw new Error(`unknownMessageType`);
 		}
 	}
@@ -177,7 +180,7 @@ export class ServerConnector extends EventTarget
 				throw new Error(statusMessage.payload.status);
 			}
 			default:
-				console.log(`Received unknown message type: ${message.messageType}`);
+				console.log(`Received unknown message type: ${response.messageType}`);
 				throw new Error(`unknownMessageType`);
 		}
 	}
@@ -211,12 +214,12 @@ export class ServerConnector extends EventTarget
 				}
 			}
 			default:
-				console.log(`Received unknown message type: ${message.messageType}`);
+				console.log(`Received unknown message type: ${response.messageType}`);
 				throw new Error(`unknownMessageType`);
 		}
 	}
 
-	public sendChatMessage(message: string)
+	public async sendChatMessage(message: string)
 	{
 		if (!this.webSocket) throw new Error(`missingWebsocket`);
 		const correlation_id = crypto.randomUUID();
@@ -226,7 +229,29 @@ export class ServerConnector extends EventTarget
 			payload: { message: message },
 		};
 
-		this.webSocket.send(JSON.stringify(sendChatMessage));
+		// this.webSocket.send(JSON.stringify(sendChatMessage));
+
+		const response = await this.sendWebSocketMessage(sendChatMessage);
+
+		switch (response.messageType)
+		{
+			case `OUT_RESP_status`:
+			{
+				const statusMessage = <OutRespStatusMessage>response;
+
+				if (statusMessage.payload.status == `success`)
+				{
+					return;
+				}
+				else
+				{
+					throw new Error(statusMessage.payload.status);
+				}
+			}
+			default:
+				console.log(`Received unknown message type: ${response.messageType}`);
+				throw new Error(`unknownMessageType`);
+		}
 	}
 
 	public async sendStartGame(gameSettings: GameSettingsData)
@@ -257,7 +282,7 @@ export class ServerConnector extends EventTarget
 				}
 			}
 			default:
-				console.log(`Received unknown message type: ${message.messageType}`);
+				console.log(`Received unknown message type: ${response.messageType}`);
 				throw new Error(`unknownMessageType`);
 		}
 	}
@@ -302,7 +327,7 @@ export class ServerConnector extends EventTarget
 				}
 			}
 			default:
-				console.log(`Received unknown message type: ${message.messageType}`);
+				console.log(`Received unknown message type: ${response.messageType}`);
 				throw new Error(`unknownMessageType`);
 		}
 	}
@@ -333,7 +358,38 @@ export class ServerConnector extends EventTarget
 				}
 			}
 			default:
-				console.log(`Received unknown message type: ${message.messageType}`);
+				console.log(`Received unknown message type: ${response.messageType}`);
+				throw new Error(`unknownMessageType`);
+		}
+	}
+
+	public async sendNewSettings(gameSettings: GameSettingsData)
+	{
+		const message: InReqSendGameSettingsMessage = {
+			messageType: `IN_REQ_sendGameSettings`,
+			correlationId: crypto.randomUUID(),
+			payload: { gameSettings: gameSettings },
+		};
+
+		const response = await this.sendWebSocketMessage(message);
+
+		switch (response.messageType)
+		{
+			case `OUT_RESP_status`:
+			{
+				const statusMessage = <OutRespStatusMessage>response;
+
+				if (statusMessage.payload.status == `success`)
+				{
+					return;
+				}
+				else
+				{
+					throw new Error(statusMessage.payload.status);
+				}
+			}
+			default:
+				console.log(`Received unknown message type: ${response.messageType}`);
 				throw new Error(`unknownMessageType`);
 		}
 	}
@@ -412,6 +468,13 @@ export class ServerConnector extends EventTarget
 			{
 				const concreteMessage = <OutNotifGameStoppedMessage>message;
 				const event = new CustomEvent<OutNotifGameStoppedPayload>(`OUT_NOTIF_gameStopped`, { detail: concreteMessage.payload });
+				this.dispatchEvent(event);
+				break;
+			}
+			case `OUT_NOTIF_gameSettingsChanged`:
+			{
+				const concreteMessage = <OutNotifGameSettingsChangedMessage>message;
+				const event = new CustomEvent<OutNotifGameSettingsChangedPayload>(`OUT_NOTIF_gameSettingsChanged`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
