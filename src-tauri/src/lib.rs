@@ -24,6 +24,7 @@ pub fn run() {
             db::add_answer_stats,
             db::add_game_stats,
             db::get_font_id,
+			db::get_answer_streaks,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -179,3 +179,26 @@ pub async fn add_game_stats(
 
     Ok(result.id)
 }
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnswerStreaks {
+    game_id: i64,
+    length: i64,
+}
+
+#[tauri::command]
+pub async fn get_answer_streaks(min_frequency: i64, max_frequency: i64, count: i64) -> Result<Vec<AnswerStreaks>, String> {
+    let data = sqlx::query_file_as!(
+			AnswerStreaks, 
+			"./src/queries/get_answer_streaks.sql",
+			min_frequency,
+			max_frequency,
+			count
+		)
+        .fetch_all(&*DB_POOL)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(data)
+}

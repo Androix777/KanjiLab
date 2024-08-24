@@ -11,6 +11,11 @@ export type StatsInfo = {
 	wrongCount: number;
 };
 
+export type AnswerStreaks = {
+	gameId: number;
+	length: number;
+};
+
 export type ClientInfo = {
 	id: string;
 	name: string;
