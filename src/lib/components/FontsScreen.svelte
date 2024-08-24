@@ -34,6 +34,10 @@
 		if (fontList.length == 0)
 		{
 			fontList = await invoke(GET_ALL_FONTS_INFO);
+			if (getSettings().fontsInfo.get().length == 0)
+			{
+				getSettings().fontsInfo.set(fontList);
+			}
 		}
 		maxPages = Math.ceil((showOnlySelected ? filteredFontList : fontList).length / pageSize);
 		if (currentPage > maxPages) currentPage = maxPages;

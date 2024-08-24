@@ -36,14 +36,19 @@
 	function countFonts()
 	{
 		let fontsCount = webSocketClient.isConnectedToSelf ? getSettings().selectedFonts.get().length : webSocketClient.onlineFontsCount;
-		let firstFontName = webSocketClient.isConnectedToSelf ? getSettings().selectedFonts.get().at(0) : webSocketClient.onlineFirstFontName;
+		let firstFontName = webSocketClient.isConnectedToSelf ?
+			getSettings().fontsInfo.get().filter((fontInfo) =>
+			{
+				return fontInfo.fontFile == getSettings().selectedFonts.get().at(0);
+			}).at(0)?.fullName :
+			webSocketClient.onlineFirstFontName;
 		if (fontsCount && fontsCount > 1)
 		{
-			return `${firstFontName} and ${fontsCount - 1} more fonts selected`;
+			return `"${firstFontName}" and ${fontsCount - 1} more fonts selected`;
 		}
 		else if (fontsCount == 1)
 		{
-			return `${firstFontName} selected`;
+			return `"${firstFontName}" selected`;
 		}
 		else
 		{

@@ -1,3 +1,5 @@
+import type { FontInfo } from "./types";
+
 type StateVar<T> = {
 	get: () => T;
 	set: (value: T) => void;
@@ -23,6 +25,7 @@ const settings = {
 	roundsCount: createStateVar(10),
 	wordPart: createStateVar(``),
 	selectedFonts: createStateVar(new Array<string>()),
+	fontsInfo: createStateVar(new Array<FontInfo>()),
 };
 
 export function getSettings()
