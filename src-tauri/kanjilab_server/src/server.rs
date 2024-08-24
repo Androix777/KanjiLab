@@ -228,7 +228,7 @@ async fn handle_game_state_update(game_state: GameState) {
 }
 // #endregion
 
-// #region Handles
+// #region Handlers
 
 async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) {
     if let Ok(payload) = validate_payload::<InReqRegisterClientPayload>(

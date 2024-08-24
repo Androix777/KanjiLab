@@ -31,6 +31,7 @@ import {
 	type OutNotifGameStartedMessage,
 	type OutNotifGameStartedPayload,
 	type GameSettingsData,
+	type InRespQuestionPayload,
 } from "./types";
 
 export class ServerConnector extends EventTarget
@@ -261,13 +262,13 @@ export class ServerConnector extends EventTarget
 		}
 	}
 
-	public sendQuestion(correlation_id: string, question: string, answers: string[], fontName: string, question_svg: string)
+	public sendQuestion(correlation_id: string, question: InRespQuestionPayload)
 	{
 		if (!this.webSocket) throw new Error(`missingWebsocket`);
 		const message: InRespQuestionMessage = {
 			messageType: `IN_RESP_question`,
 			correlationId: correlation_id,
-			payload: { question: { question: question, answers: answers, fontName: fontName }, questionSvg: question_svg },
+			payload: question,
 		};
 
 		this.webSocket.send(JSON.stringify(message));
@@ -379,9 +380,9 @@ export class ServerConnector extends EventTarget
 			case `OUT_REQ_question`:
 			{
 				const concreteMessage = <OutReqQuestionMessage>message;
-				const event = new CustomEvent<(question: string, answers: string[], fontName: string, questionSvg: string) => void>(`OUT_REQ_question`, { detail: (question: string, answers: string[], fontName: string, questionSvg: string) =>
+				const event = new CustomEvent<(question: InRespQuestionPayload) => void>(`OUT_REQ_question`, { detail: (question: InRespQuestionPayload) =>
 				{
-					this.sendQuestion(concreteMessage.correlationId, question, answers, fontName, questionSvg);
+					this.sendQuestion(concreteMessage.correlationId, question);
 				} });
 				this.dispatchEvent(event);
 				break;

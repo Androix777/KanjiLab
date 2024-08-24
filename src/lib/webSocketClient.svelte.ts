@@ -1,5 +1,5 @@
 import { ServerConnector } from "$lib/webSocketConnector";
-import type { AnswerRecord, ClientInfo, FontInfo, GameSettingsData, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory, ServerStatus } from "./types";
+import type { AnswerRecord, ClientInfo, FontInfo, GameSettingsData, InRespQuestionPayload, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory, GameStatus } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 import { SvelteMap } from "svelte/reactivity";
 import { invoke } from "@tauri-apps/api/core";
@@ -9,28 +9,23 @@ import { addAnswerStats, addGameStats, getRandomWords } from "./databaseTools";
 
 class WebSocketClient
 {
-	private static instance: WebSocketClient | null;
-	private serverConnector: ServerConnector | null = null;
+	public gameStatus: GameStatus = $state(`Off`);
+	public isConnectedToSelf: boolean = $state(false);
 	public clientList: Array<ClientInfo> = $state([]);
 	public chatList: Array<{ name: string; message: string }> = $state([]);
-
-	public connectionStatus: `Disconnected` | `Connecting` | `Connected` = $state(`Disconnected`);
-	public serverStatus: ServerStatus = $state(`Lobby`);
-	public isConnectedToSelf: boolean = $state(false);
 	public id: string = $state(``);
 	public isAdmin: boolean = $state(false);
-	public isGameStarted: boolean = $state(false);
-
-	public question: string = $state(``);
 	public gameHistory: Array<RoundHistory> = $state([]);
+	public timerValue: number = $state(0);
+	public currentRound: number = 0;
 
 	public roundDuration: number = 0;
-	public timerValue: number = $state(0);
-	public timerInterval: number = 0;
-
 	public roundsCount: number = 0;
-	public currentRound: number = 0;
-	public currentGameId: number = 0;
+
+	private static instance: WebSocketClient | null;
+	private serverConnector: ServerConnector | null = null;
+	private timerIntervalId: number = 0;
+	private currentGameId: number = 0;
 
 	public static getInstance()
 	{
@@ -41,107 +36,52 @@ class WebSocketClient
 
 	public async connectToServer(ipAddress: string)
 	{
-		this.connectionStatus = `Connecting`;
+		this.gameStatus = `Connecting`;
 		this.serverConnector = new ServerConnector();
 
 		this.serverConnector.addEventListener(`socketClosed`, () =>
 		{
-			this.disconnectFromServer();
+			this.handleSocketClosed();
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_clientRegistered`, (event) =>
 		{
-			const customEvent: CustomEvent<OutNotifClientRegisteredPayload> = <CustomEvent<OutNotifClientRegisteredPayload>>event;
-			this.clientList.push({ id: customEvent.detail.id, name: customEvent.detail.name, isAdmin: false });
+			this.handleNotifClientRegistered(event);
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_clientDisconnected`, (event) =>
 		{
-			const customEvent: CustomEvent<OutNotifClientDisconnectedPayload> = <CustomEvent<OutNotifClientDisconnectedPayload>>event;
-			this.clientList = this.clientList.filter(client => client.id != customEvent.detail.id);
+			this.handleNotifClientDisconnected(event);
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_chatSent`, (event) =>
 		{
-			const customEvent: CustomEvent<OutNotifChatSentPayload> = <CustomEvent<OutNotifChatSentPayload>>event;
-			this.chatList.push({ name: this.getClient(customEvent.detail.id).name, message: customEvent.detail.message });
+			this.handleNotifChatSent(event);
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_adminMade`, (event) =>
 		{
-			const customEvent: CustomEvent<OutNotifChatSentPayload> = <CustomEvent<OutNotifChatSentPayload>>event;
-			const client = this.clientList.find(client => client.id === customEvent.detail.id);
-			if (client)
-			{
-				client.isAdmin = true;
-				if (client.id == this.id)
-				{
-					this.isAdmin = true;
-				}
-			}
-			else
-			{
-				throw new Error(`noAdmin`);
-			}
+			this.handleNotifAdminMade(event);
 		});
-		this.serverConnector.addEventListener(`OUT_NOTIF_gameStarted`, async (event) =>
+		this.serverConnector.addEventListener(`OUT_NOTIF_gameStarted`, (event) =>
 		{
-			const customEvent: CustomEvent<OutNotifGameStartedPayload> = <CustomEvent<OutNotifGameStartedPayload>>event;
-			this.roundDuration = customEvent.detail.gameSettings.roundDuration;
-			this.roundsCount = customEvent.detail.gameSettings.roundsCount;
-			this.currentRound = 0;
-			this.gameHistory.length = 0;
-
-			this.currentGameId = await addGameStats(
-				customEvent.detail.gameSettings.roundsCount,
-				customEvent.detail.gameSettings.roundDuration,
-				getSettings().minFrequency.get(),
-				getSettings().maxFrequency.get(),
-				null,
-				1,
-			);
-
-			this.isGameStarted = true;
-			this.serverStatus = `WaitingQuestion`;
+			void this.handleNotifGameStarted(event);
 		});
 		this.serverConnector.addEventListener(`OUT_REQ_question`, (event) =>
 		{
-			const customEvent: CustomEvent<(question: string, answers: string[], fontName: string, questionSvg: string) => void> = <CustomEvent<(question: string, answers: string[], fontName: string, questionSvg: string) => void>>event;
-			void this.respondToQuestionRequest(customEvent);
+			void this.handleReqQuestion(event);
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_question`, (event) =>
 		{
-			const customEvent: CustomEvent<OutNotifQuestionPayload> = <CustomEvent<OutNotifQuestionPayload>>event;
-			this.showQuestion(customEvent.detail);
-			this.serverStatus = `AnswerQuestion`;
-
-			this.timerValue = this.roundDuration;
-			clearInterval(this.timerInterval);
-			this.timerInterval = setInterval(() =>
-			{
-				this.timerValue -= 0.01;
-			}, 10);
-			this.currentRound++;
+			this.handleNotifQuestion(event);
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_roundEnded`, (event) =>
 		{
-			const customEvent: CustomEvent<OutNotifRoundEndedPayload> = <CustomEvent<OutNotifRoundEndedPayload>>event;
-			void this.endRound(customEvent.detail);
-			this.serverStatus = `WaitingQuestion`;
-
-			clearInterval(this.timerInterval);
+			void this.handleNotifRoundEnded(event);
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_clientAnswered`, (event) =>
 		{
-			const customEvent: CustomEvent<OutNotifClientAnsweredPayload> = <CustomEvent<OutNotifClientAnsweredPayload>>event;
-			if (customEvent.detail.id != this.id)
-			{
-				this.addClientAnswer(customEvent.detail.id);
-			}
+			this.handleNotifClientAnswered(event);
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_gameStopped`, () =>
 		{
-			this.isGameStarted = false;
-			this.gameHistory = [];
-			this.serverStatus = `Lobby`;
-
-			clearInterval(this.timerInterval);
+			this.handleNotifGameStopped();
 		});
 
 		try
@@ -157,18 +97,17 @@ class WebSocketClient
 			return;
 		}
 
-		this.connectionStatus = `Connected`;
+		this.gameStatus = `Lobby`;
 	}
 
 	public disconnectFromServer()
 	{
 		this.serverConnector?.disconnect();
-		this.connectionStatus = `Disconnected`;
+		this.gameStatus = `Off`;
 		this.clientList = [];
 		this.chatList = [];
 		this.id = ``;
 		this.isAdmin = false;
-		this.isGameStarted = false;
 		this.gameHistory = [];
 	}
 
@@ -177,70 +116,40 @@ class WebSocketClient
 		this.serverConnector?.sendChatMessage(message);
 	}
 
-	public async respondToQuestionRequest(event: CustomEvent<(question: string, answers: string[], fontName: string, questionSvg: string) => void>)
-	{
-		const question: { question: string; answers: string[]; fontName: string; questionSvg: string } = await this.getQuestion();
-		event.detail(question.question, question.answers, question.fontName, question.questionSvg);
-	}
-
-	public async getQuestion(maxRetries: number = 3): Promise<{ question: string; answers: string[]; fontName: string; questionSvg: string }>
-	{
-		for (let attempt = 0; attempt < maxRetries; attempt++)
-		{
-			try
-			{
-				const words = await getRandomWords(1);
-				const lastWord = words[0];
-				const readings = lastWord.readings.map(reading => reading.reading);
-				let font: string;
-				if (getSettings().selectedFonts.get().length > 0)
-				{
-					font = getSettings().selectedFonts.get().at(Math.floor(Math.random() * getSettings().selectedFonts.get().length)) || ``;
-				}
-				else
-				{
-					font = await getRandomFont();
-				}
-				const fontInfo: FontInfo = await invoke(GET_FONT_INFO, { fontName: font });
-				const svg: string = await invoke(GET_SVG_TEXT, { text: lastWord.word, fontName: font });
-				const question: { question: string; answers: string[]; fontName: string; questionSvg: string } = {
-					question: lastWord.word,
-					answers: readings,
-					questionSvg: svg,
-					fontName: fontInfo.fullName,
-				};
-				return question;
-			}
-			catch (error)
-			{
-				console.error(`Attempt ${attempt + 1} failed:`, error);
-				if (attempt === maxRetries - 1)
-				{
-					throw new Error(`getQuestionFailed`);
-				}
-			}
-		}
-		throw new Error(`UnexpectedErrorInGetQuestion`);
-	}
-
 	public async makeAdmin()
 	{
 		await this.serverConnector?.sendMakeAdmin(getSettings().adminPassword.get(), this.id);
 		this.isAdmin = true;
 	}
 
-	public getClient(id: string)
+	public async startGame()
+	{
+		await this.serverConnector?.sendStartGame(await this.getGameSettings());
+	}
+
+	public async sendAnswer(answer: string)
+	{
+		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {
+			answer: answer,
+			answerStatus: `Unknown`,
+		});
+
+		await this.serverConnector?.sendAnswer(answer);
+	}
+
+	public async stopGame()
+	{
+		await this.serverConnector?.sendStopGame();
+	}
+
+	// Private
+
+	private getClient(id: string)
 	{
 		return this.clientList.filter(client => client.id == id)[0];
 	}
 
-	public async startGame()
-	{
-		await this.serverConnector?.sendStartGame(await this.getGameSettings());
-		this.isGameStarted = true;
-	}
-
-	async getGameSettings(): Promise<GameSettingsData>
+	private async getGameSettings(): Promise<GameSettingsData>
 	{
 		const fontsCount = getSettings().selectedFonts.get().length;
 		const font = fontsCount == 0 ? null : getSettings().selectedFonts.get()[0];
@@ -259,45 +168,149 @@ class WebSocketClient
 		return data;
 	}
 
-	public showQuestion(questionPayload: OutNotifQuestionPayload)
+	// Handlers
+
+	private handleSocketClosed()
 	{
+		this.disconnectFromServer();
+	}
+
+	private handleNotifClientRegistered(event: Event)
+	{
+		const customEvent: CustomEvent<OutNotifClientRegisteredPayload> = <CustomEvent<OutNotifClientRegisteredPayload>>event;
+		this.clientList.push({ id: customEvent.detail.id, name: customEvent.detail.name, isAdmin: false });
+	}
+
+	private handleNotifClientDisconnected(event: Event)
+	{
+		const customEvent: CustomEvent<OutNotifClientDisconnectedPayload> = <CustomEvent<OutNotifClientDisconnectedPayload>>event;
+		this.clientList = this.clientList.filter(client => client.id != customEvent.detail.id);
+	}
+
+	private handleNotifChatSent(event: Event)
+	{
+		const customEvent: CustomEvent<OutNotifChatSentPayload> = <CustomEvent<OutNotifChatSentPayload>>event;
+		this.chatList.push({ name: this.getClient(customEvent.detail.id).name, message: customEvent.detail.message });
+	}
+
+	private handleNotifAdminMade(event: Event)
+	{
+		const customEvent: CustomEvent<OutNotifChatSentPayload> = <CustomEvent<OutNotifChatSentPayload>>event;
+		const client = this.clientList.find(client => client.id === customEvent.detail.id);
+		if (client)
+		{
+			client.isAdmin = true;
+			if (client.id == this.id)
+			{
+				this.isAdmin = true;
+			}
+		}
+		else
+		{
+			throw new Error(`noAdmin`);
+		}
+	}
+
+	private async handleNotifGameStarted(event: Event)
+	{
+		const customEvent: CustomEvent<OutNotifGameStartedPayload> = <CustomEvent<OutNotifGameStartedPayload>>event;
+		this.roundDuration = customEvent.detail.gameSettings.roundDuration;
+		this.roundsCount = customEvent.detail.gameSettings.roundsCount;
+		this.currentRound = 0;
+		this.gameHistory.length = 0;
+
+		this.currentGameId = await addGameStats(
+			customEvent.detail.gameSettings.roundsCount,
+			customEvent.detail.gameSettings.roundDuration,
+			getSettings().minFrequency.get(),
+			getSettings().maxFrequency.get(),
+			null,
+			1,
+		);
+
+		this.gameStatus = `WaitingQuestion`;
+	}
+
+	private async handleReqQuestion(event: Event)
+	{
+		const customEvent: CustomEvent<(question: InRespQuestionPayload) => void> = <CustomEvent<(question: InRespQuestionPayload) => void>>event;
+
+		const maxRetries = 3;
+		for (let attempt = 0; attempt < maxRetries; attempt++)
+		{
+			try
+			{
+				const words = await getRandomWords(1);
+				const lastWord = words[0];
+				const readings = lastWord.readings.map(reading => reading.reading);
+				let font: string;
+				if (getSettings().selectedFonts.get().length > 0)
+				{
+					font = getSettings().selectedFonts.get().at(Math.floor(Math.random() * getSettings().selectedFonts.get().length)) || ``;
+				}
+				else
+				{
+					font = await getRandomFont();
+				}
+				const fontInfo: FontInfo = await invoke(GET_FONT_INFO, { fontName: font });
+				const svg: string = await invoke(GET_SVG_TEXT, { text: lastWord.word, fontName: font });
+				const question: InRespQuestionPayload =
+						{
+							question:
+							{
+								question: lastWord.word,
+								answers: readings,
+								fontName: fontInfo.fullName,
+							},
+							questionSvg: svg,
+						};
+				customEvent.detail(question);
+				return;
+			}
+			catch (error)
+			{
+				console.error(`Attempt ${attempt + 1} failed:`, error);
+				if (attempt === maxRetries - 1)
+				{
+					throw new Error(`getQuestionFailed`);
+				}
+			}
+		}
+		throw new Error(`UnexpectedErrorInGetQuestion`);
+	}
+
+	private handleNotifQuestion(event: Event)
+	{
+		const customEvent: CustomEvent<OutNotifQuestionPayload> = <CustomEvent<OutNotifQuestionPayload>>event;
 		this.gameHistory.push({
 			question: {
 				question: ``,
 				answers: [],
 				fontName: ``,
 			},
-			questionSvg: questionPayload.questionSvg,
+			questionSvg: customEvent.detail.questionSvg,
 			answers: new SvelteMap<string, AnswerRecord>(),
 		});
 		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {
 			answer: ``,
 			answerStatus: `Unknown`,
 		});
+		this.gameStatus = `AnswerQuestion`;
+
+		this.timerValue = this.roundDuration;
+		clearInterval(this.timerIntervalId);
+		this.timerIntervalId = setInterval(() =>
+		{
+			this.timerValue -= 0.01;
+		}, 10);
+		this.currentRound++;
 	}
 
-	public async sendAnswer(answer: string)
+	private async handleNotifRoundEnded(event: Event)
 	{
-		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {
-			answer: answer,
-			answerStatus: `Unknown`,
-		});
-
-		await this.serverConnector?.sendAnswer(answer);
-	}
-
-	public addClientAnswer(clientID: string)
-	{
-		this.gameHistory.at(-1)?.answers.set(clientID, {
-			answer: `?`,
-			answerStatus: `Unknown`,
-		});
-	}
-
-	public async endRound(roundResults: OutNotifRoundEndedPayload)
-	{
-		this.gameHistory[this.gameHistory.length - 1].question = roundResults.question;
-		roundResults.answers.forEach((answer) =>
+		const customEvent: CustomEvent<OutNotifRoundEndedPayload> = <CustomEvent<OutNotifRoundEndedPayload>>event;
+		this.gameHistory[this.gameHistory.length - 1].question = customEvent.detail.question;
+		customEvent.detail.answers.forEach((answer) =>
 		{
 			this.gameHistory[this.gameHistory.length - 1].answers.set(answer.id, {
 				answer: answer.answer,
@@ -316,14 +329,32 @@ class WebSocketClient
 
 		if (word)
 		{
-			const fontId: number = await invoke(GET_FONT_ID, { name: roundResults.question.fontName });
+			const fontId: number = await invoke(GET_FONT_ID, { name: customEvent.detail.question.fontName });
 			await addAnswerStats(this.currentGameId, word, answer, 0, this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`, fontId);
+		}
+		this.gameStatus = `WaitingQuestion`;
+
+		clearInterval(this.timerIntervalId);
+	}
+
+	private handleNotifClientAnswered(event: Event)
+	{
+		const customEvent: CustomEvent<OutNotifClientAnsweredPayload> = <CustomEvent<OutNotifClientAnsweredPayload>>event;
+		if (customEvent.detail.id != this.id)
+		{
+			this.gameHistory.at(-1)?.answers.set(customEvent.detail.id, {
+				answer: `?`,
+				answerStatus: `Unknown`,
+			});
 		}
 	}
 
-	public async stopGame()
+	private handleNotifGameStopped()
 	{
-		await this.serverConnector?.sendStopGame();
+		this.gameHistory = [];
+		this.gameStatus = `Lobby`;
+
+		clearInterval(this.timerIntervalId);
 	}
 }
 

@@ -77,23 +77,23 @@
 
 	<div class="card card-bordered bg-base-100 shadow-xl mb-4 p-4">
 		<div class="flex flex-none">
-			{#if webSocketClient?.isAdmin && webSocketClient.connectionStatus == `Connected`}
+			{#if webSocketClient?.isAdmin && webSocketClient.gameStatus != `Off` && webSocketClient.gameStatus != `Connecting`}
 				<button class="btn btn-primary mx-2"
 						onclick={() => { void stopGame(); }}
-						disabled={!webSocketClient.isGameStarted}>Stop Game</button>
+						disabled={webSocketClient.gameStatus != `WaitingQuestion` && webSocketClient.gameStatus != `AnswerQuestion`}>Stop Game</button>
 				{#if webSocketClient.isConnectedToSelf}
 				<button class="btn btn-outline btn-error"
 						onclick={() => { void stopServer(); }}>Stop Server</button>
 				{/if}
 			{:else}
-				{#if webSocketClient?.connectionStatus == `Disconnected`}
+				{#if webSocketClient?.gameStatus == `Off`}
 					<button class="btn btn-primary"
 							onclick={() => { void launchServer(); }}>Host Game</button>
 				{/if}
 				<div class="text-center join ml-auto mr-0">
 					<input class="input input-bordered text-center join-item w-40"
 							value={getSettings().ipAddress.get()}
-							disabled={ webSocketClient?.connectionStatus != `Disconnected` }
+							disabled={ webSocketClient?.gameStatus != `Off` }
 							oninput={(event) =>
 							{
 								if (event.target instanceof HTMLInputElement)
@@ -104,7 +104,7 @@
 							/>
 					<input class="input input-bordered text-center join-item w-20"
 							value={getSettings().joinPort.get()}
-							disabled={ webSocketClient?.connectionStatus != `Disconnected` }
+							disabled={ webSocketClient?.gameStatus != `Off` }
 							oninput={(event) =>
 							{
 								if (event.target instanceof HTMLInputElement)
@@ -113,13 +113,13 @@
 								}
 							}}
 							/>
-					{#if webSocketClient?.connectionStatus == `Connected`}
+					{#if webSocketClient?.gameStatus != `Off` && webSocketClient?.gameStatus != `Connecting`}
 						<button class="btn btn-outline btn-error join-item"
 								onclick={() => { leaveServer(); }}>Leave Server</button>
 					{:else}
 						<button class="btn btn-primary join-item"
 								onclick={() => { void joinServer(); }}
-								disabled={ webSocketClient?.connectionStatus == `Connecting` }>Join Game</button>
+								disabled={ webSocketClient?.gameStatus == `Connecting` }>Join Game</button>
 					{/if}
 				</div>
 			{/if}
@@ -128,7 +128,7 @@
 
 	<div class="flex-grow flex min-h-0 flex-row">
 		<div class="text-center flex flex-1 min-h-0 card card-bordered bg-base-100 shadow-xl p-4">
-			{#if webSocketClient?.isGameStarted}
+			{#if webSocketClient?.gameStatus == `WaitingQuestion` || webSocketClient?.gameStatus == `AnswerQuestion`}
 				<GameScreen
 					gameHistory = { webSocketClient.gameHistory }
 					clientID = { webSocketClient.id }
@@ -171,13 +171,13 @@
 				<div class="join">
 					<input
 						bind:value={chatMessage}
-						disabled={webSocketClient?.connectionStatus != `Connected`}
+						disabled={webSocketClient?.gameStatus == `Off` || webSocketClient?.gameStatus == `Connecting`}
 						onkeydown={chatOnKeyDown}
 						placeholder="{getSettings().userName.get()}:"
 						class="input input-bordered text-left w-full placeholder:text-base-content placeholder:text-opacity-30 join-item"/>
 					<button
 						class="btn btn-primary join-item"
-						disabled={webSocketClient?.connectionStatus != `Connected`}
+						disabled={webSocketClient?.gameStatus == `Off` || webSocketClient?.gameStatus == `Connecting`}
 						onclick={() => { sendChatMessage(); }}
 						>Send</button>
 				</div>

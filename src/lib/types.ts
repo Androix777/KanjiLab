@@ -82,7 +82,7 @@ export type GameSettingsData = {
 };
 
 export type AnswerStatus = `Correct` | `Incorrect` | `Unknown`;
-export type ServerStatus = `Lobby` | `WaitingQuestion` | `AnswerQuestion`;
+export type GameStatus = `Off` | `Connecting` | `Lobby` | `WaitingQuestion` | `AnswerQuestion`;
 
 export type MessageType =
 	| `IN_REQ_registerClient`
