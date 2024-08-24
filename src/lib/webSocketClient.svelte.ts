@@ -5,7 +5,7 @@ import { SvelteMap } from "svelte/reactivity";
 import { invoke } from "@tauri-apps/api/core";
 import { GET_FONT_ID, GET_SVG_TEXT } from "./tauriFunctions";
 import { getFontInfo, getRandomFont } from "./FontTools";
-import { addAnswerStats, addGameStats, getRandomWords } from "./databaseTools";
+import { addAnswerStats, addGameStats, getFontId, getRandomWords } from "./databaseTools";
 
 class WebSocketClient
 {
@@ -248,12 +248,28 @@ class WebSocketClient
 		this.currentRound = 0;
 		this.gameHistory.length = 0;
 
+		let fontID: number | null = null;
+		if (this.isConnectedToSelf)
+		{
+			const fontsCount = getSettings().selectedFonts.get().length;
+			if (fontsCount == 1)
+			{
+				const fontFile = getSettings().selectedFonts.get().at(0);
+				const fontInfo = fontFile ? getFontInfo(fontFile) : null;
+				fontID = fontInfo ? await getFontId(fontInfo.fullName) : null;
+			}
+		}
+		else
+		{
+			fontID = await getFontId(this.onlineFirstFontName);
+		}
+
 		this.currentGameId = await addGameStats(
 			customEvent.detail.gameSettings.roundsCount,
 			customEvent.detail.gameSettings.roundDuration,
 			getSettings().minFrequency.get(),
 			getSettings().maxFrequency.get(),
-			null,
+			fontID,
 			1,
 		);
 
