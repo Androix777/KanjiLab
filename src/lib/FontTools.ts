@@ -1,6 +1,8 @@
 import { readDir, type DirEntry } from '@tauri-apps/plugin-fs';
 import { invoke } from "@tauri-apps/api/core";
 import { GET_EXECUTABLE_FILE_PATH } from "$lib/tauriFunctions";
+import type { FontInfo } from './types';
+import { getSettings } from './globalSettings.svelte';
 
 let fontDirectory: string = ``;
 let fontNames: string[] | null = null;
@@ -51,6 +53,16 @@ export async function getRandomFont(): Promise<string>
 		return fontNames[randomIndex];
 	}
 	throw new Error(`No fonts available`);
+}
+
+export function getFontInfo(fontName: string): FontInfo | null
+{
+	const fontInfo = getSettings().fontsInfo.get().filter((fontInfo) =>
+	{
+		return fontInfo.fontFile == fontName;
+	}).at(0);
+
+	return fontInfo ?? null;
 }
 
 export async function getAllFonts(): Promise<string[]>

@@ -14,7 +14,6 @@
 	};
 
 	let fontRecords: Array<FontRecord> = $state([]);
-	let fontList: Array<FontInfo> = $state([]);
 	let filteredFontList: Array<FontInfo> = $state([]);
 	let controlsDisabled: boolean = $state(false);
 
@@ -31,19 +30,15 @@
 
 	async function updateFontsPage()
 	{
-		if (fontList.length == 0)
+		if (getSettings().fontsInfo.get().length == 0)
 		{
-			fontList = await invoke(GET_ALL_FONTS_INFO);
-			if (getSettings().fontsInfo.get().length == 0)
-			{
-				getSettings().fontsInfo.set(fontList);
-			}
+			getSettings().fontsInfo.set(await invoke(GET_ALL_FONTS_INFO));
 		}
-		maxPages = Math.ceil((showOnlySelected ? filteredFontList : fontList).length / pageSize);
+		maxPages = Math.ceil((showOnlySelected ? filteredFontList : getSettings().fontsInfo.get()).length / pageSize);
 		if (currentPage > maxPages) currentPage = maxPages;
 		if (currentPage < 1) currentPage = 1;
 		fontRecords = [];
-		let fontPage = (showOnlySelected ? filteredFontList : fontList).slice(pageSize * (currentPage - 1), pageSize * currentPage);
+		let fontPage = (showOnlySelected ? filteredFontList : getSettings().fontsInfo.get()).slice(pageSize * (currentPage - 1), pageSize * currentPage);
 		for (let i = 0; i < fontPage.length; i++)
 		{
 			fontRecords.push({ fontInfo: fontPage[i], fontSVG: `` });
@@ -68,7 +63,7 @@
 
 	function generateSelectedFonts()
 	{
-		filteredFontList = fontList.filter(fontInfo => getSettings().selectedFonts.get().includes(fontInfo.fontFile));
+		filteredFontList = getSettings().fontsInfo.get().filter(fontInfo => getSettings().selectedFonts.get().includes(fontInfo.fontFile));
 	}
 
 </script>
@@ -84,7 +79,7 @@
 						onclick={() =>
 						{
 							let selectedFonts: Array<string> = [];
-							fontList.forEach(fontInfo => selectedFonts.push(fontInfo.fontFile));
+							getSettings().fontsInfo.get().forEach(fontInfo => selectedFonts.push(fontInfo.fontFile));
 							getSettings().selectedFonts.set(selectedFonts);
 							void updateFontsPage();
 						}}>Select all</button>

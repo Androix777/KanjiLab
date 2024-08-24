@@ -3,8 +3,8 @@ import type { AnswerRecord, ClientInfo, FontInfo, GameSettingsData, InRespQuesti
 import { getSettings } from "$lib/globalSettings.svelte";
 import { SvelteMap } from "svelte/reactivity";
 import { invoke } from "@tauri-apps/api/core";
-import { GET_FONT_ID, GET_FONT_INFO, GET_SVG_TEXT } from "./tauriFunctions";
-import { getRandomFont } from "./FontTools";
+import { GET_FONT_ID, GET_SVG_TEXT } from "./tauriFunctions";
+import { getFontInfo, getRandomFont } from "./FontTools";
 import { addAnswerStats, addGameStats, getRandomWords } from "./databaseTools";
 
 class WebSocketClient
@@ -138,7 +138,7 @@ class WebSocketClient
 
 	public async startGame()
 	{
-		await this.serverConnector?.sendStartGame(await this.getGameSettings());
+		await this.serverConnector?.sendStartGame(this.getGameSettings());
 	}
 
 	public async sendAnswer(answer: string)
@@ -158,7 +158,7 @@ class WebSocketClient
 
 	public async sendNewSettings()
 	{
-		await this.serverConnector?.sendNewSettings(await this.getGameSettings());
+		await this.serverConnector?.sendNewSettings(this.getGameSettings());
 	}
 
 	// Private
@@ -168,11 +168,11 @@ class WebSocketClient
 		return this.clientList.filter(client => client.id == id)[0];
 	}
 
-	private async getGameSettings(): Promise<GameSettingsData>
+	private getGameSettings(): GameSettingsData
 	{
 		const fontsCount = getSettings().selectedFonts.get().length;
 		const font = fontsCount == 0 ? null : getSettings().selectedFonts.get()[0];
-		const fontInfo: FontInfo | null = font ? await invoke(GET_FONT_INFO, { fontName: font }) : null;
+		const fontInfo: FontInfo | null = font ? getFontInfo(font) : null;
 
 		const data: GameSettingsData = {
 			minFrequency: getSettings().minFrequency.get(),
@@ -281,7 +281,11 @@ class WebSocketClient
 				{
 					font = await getRandomFont();
 				}
-				const fontInfo: FontInfo = await invoke(GET_FONT_INFO, { fontName: font });
+				const fontInfo: FontInfo | null = getFontInfo(font);
+				if (fontInfo == null)
+				{
+					throw new Error(`getQuestionFailed`);
+				}
 				const svg: string = await invoke(GET_SVG_TEXT, { text: lastWord.word, fontName: font });
 				const question: InRespQuestionPayload =
 						{
