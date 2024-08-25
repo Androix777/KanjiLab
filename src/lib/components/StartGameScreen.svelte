@@ -149,8 +149,7 @@
 								<PlayerListCard
 									clientInfo={client}
 									isMe={client.id == webSocketClient.id}
-									gameHistory={webSocketClient.gameHistory}
-									score={webSocketClient.gameHistory.reduce((acc, round) => acc + (round.answers.get(client.id)?.answerStatus == `Correct` ? 1 : 0), 0) || 0} />
+									gameHistory={webSocketClient.gameHistory} />
 							</div>
 						{/each}
 					{/if}
