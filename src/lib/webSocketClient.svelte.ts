@@ -266,7 +266,7 @@ class WebSocketClient
 
 		this.currentGameId = await addGameStats(
 			customEvent.detail.gameSettings.roundsCount,
-			customEvent.detail.gameSettings.roundDuration,
+			customEvent.detail.gameSettings.roundDuration * 1000,
 			getSettings().minFrequency.get(),
 			getSettings().maxFrequency.get(),
 			fontID,
@@ -379,7 +379,7 @@ class WebSocketClient
 		if (word)
 		{
 			const fontId: number = await invoke(GET_FONT_ID, { name: customEvent.detail.question.fontName });
-			await addAnswerStats(this.currentGameId, word, answer, 0, this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`, fontId);
+			await addAnswerStats(this.currentGameId, word, answer, (Math.ceil((getSettings().roundDuration.get() - this.timerValue) * 1000)), this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`, fontId);
 		}
 		this.gameStatus = `WaitingQuestion`;
 
