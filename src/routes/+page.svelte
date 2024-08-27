@@ -9,6 +9,7 @@
     import FontsScreen from "$lib/components/FontsScreen.svelte";
     import { fly } from "svelte/transition";
     import { quintOut } from "svelte/easing";
+    import WebSocketClient from "$lib/webSocketClient.svelte";
 
 	type ScreenType = `StartGame` | `Stats` | `Dictionaries` | `Fonts` | `Settings`;
 	let currentScreenType: ScreenType = $state(`StartGame`);
@@ -35,14 +36,29 @@
 <div class="flex h-screen bg-base-300">
 	<div class="w-16 min-h-full text-center bg-base-100 z-10">
 		<ul class="">
-			<button class="btn btn-square bg-base-100 border-0 p-1 mt-2 mb-4 shadow-none hover:bg-transparent hover:scale-125" onclick={() => { setScreen(`StartGame`); }}>
-				<SvgIcon name="Quiz"/>
+			<button
+				class="btn btn-square bg-base-100 border-0 p-1 mt-2 mb-4 shadow-none hover:bg-transparent hover:scale-125 disabled:bg-transparent"
+				onclick={() => { setScreen(`StartGame`); }}
+				disabled={false}>
+				<SvgIcon
+					name="Quiz"
+					disabled={false}/>
 			</button>
-			<button class="btn btn-square bg-base-100 border-0 p-1 mb-4 shadow-none hover:bg-transparent hover:scale-125" onclick={() => { setScreen(`Stats`); }}>
-				<SvgIcon name="Bars"/>
+			<button
+				class="btn btn-square bg-base-100 border-0 p-1 mb-4 shadow-none hover:bg-transparent hover:scale-125 disabled:bg-transparent"
+				onclick={() => { setScreen(`Stats`); }}
+				disabled={WebSocketClient.getInstance().gameStatus != `Off`}>
+				<SvgIcon
+					name="Bars"
+					disabled={WebSocketClient.getInstance().gameStatus != `Off`}/>
 			</button>
-			<button class="btn btn-square bg-base-100 border-0 p-1 mb-4 shadow-none hover:bg-transparent hover:scale-125" onclick={() => { setScreen(`Settings`); }}>
-				<SvgIcon name="Gears"/>
+			<button
+				class="btn btn-square bg-base-100 border-0 p-1 mb-4 shadow-none hover:bg-transparent hover:scale-125 disabled:bg-transparent"
+				onclick={() => { setScreen(`Settings`); }}
+				disabled={WebSocketClient.getInstance().gameStatus != `Off`}>
+				<SvgIcon
+					name="Gears"
+					disabled={WebSocketClient.getInstance().gameStatus != `Off`}/>
 			</button>
 		</ul>
 	</div>
