@@ -1,13 +1,18 @@
-SELECT 
-    w.id AS "word_id!", 
-    w.word AS "word!", 
-    wr.id AS reading_id, 
-    wr.word_reading
+SELECT GROUP_CONCAT(wr.id) AS "reading_ids!: String",
+	GROUP_CONCAT(wr.word_reading) AS "word_readings!: String",
+	w.id AS "word_id!",
+	w.word AS "word!",
+	w.meanings AS "meanings"
 FROM (
-    SELECT id, word 
-    FROM word 
-    WHERE frequency > $2 AND frequency < $3
-    ORDER BY RANDOM() 
-    LIMIT $1
-) AS w
-JOIN word_reading AS wr ON w.id = wr.word_id
+		SELECT id,
+			word,
+			meanings
+		FROM word
+		WHERE frequency > $2
+			AND frequency < $3
+		ORDER BY RANDOM()
+		LIMIT $1
+	) AS w
+	JOIN word_reading AS wr ON w.id = wr.word_id
+GROUP BY w.id,
+	w.word

@@ -1,7 +1,7 @@
 use crate::get_executable_file_path;
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file_as, sqlite::SqlitePool};
-use std::{collections::HashMap, sync::LazyLock};
+use std::sync::LazyLock;
 
 static DB_POOL: LazyLock<SqlitePool> = LazyLock::new(|| {
     let path_str = get_executable_file_path()
@@ -25,6 +25,7 @@ pub struct Reading {
 pub struct WordWithReadings {
     id: i64,
     word: String,
+    meanings: Vec<Vec<Vec<String>>>,
     readings: Vec<Reading>,
 }
 
@@ -35,11 +36,17 @@ pub async fn get_words(
     max_frequency: u32,
     word_part: Option<&str>,
 ) -> Result<Vec<WordWithReadings>, String> {
+    const GLOSS_SEPARATOR: &str = "␞";
+    const SENSE_SEPARATOR: &str = "␝";
+    const KEB_SEPARATOR: &str = "␟";
+    const READINGS_SEPARATOR: &str = ",";
+
     struct RawData {
         word_id: i64,
         word: String,
-        reading_id: i64,
-        word_reading: String,
+        meanings: String,
+        reading_ids: String,
+        word_readings: String,
     }
 
     let raw_data = if let Some(part) = word_part {
@@ -67,24 +74,36 @@ pub async fn get_words(
         .map_err(|e| e.to_string())?
     };
 
-    let mut word_map: HashMap<i64, WordWithReadings> = HashMap::new();
+    let mut result = Vec::new();
 
     for raw_word in raw_data {
-        word_map
-            .entry(raw_word.word_id)
-            .or_insert_with(|| WordWithReadings {
-                id: raw_word.word_id,
-                word: raw_word.word.clone(),
-                readings: Vec::new(),
+        let readings: Vec<Reading> = raw_word
+            .reading_ids
+            .split(READINGS_SEPARATOR)
+            .zip(raw_word.word_readings.split(READINGS_SEPARATOR))
+            .map(|(id, reading)| Reading {
+                id: id.parse().unwrap_or(0),
+                reading: reading.to_string(),
             })
-            .readings
-            .push(Reading {
-                id: raw_word.reading_id,
-                reading: raw_word.word_reading,
-            });
-    }
+            .collect();
 
-    let result: Vec<WordWithReadings> = word_map.into_values().collect();
+        let meanings: Vec<Vec<Vec<String>>> = raw_word
+            .meanings
+            .split(KEB_SEPARATOR)
+            .map(|keb| {
+                keb.split(SENSE_SEPARATOR)
+                    .map(|sense| sense.split(GLOSS_SEPARATOR).map(String::from).collect())
+                    .collect()
+            })
+            .collect();
+
+        result.push(WordWithReadings {
+            id: raw_word.word_id,
+            word: raw_word.word,
+            meanings,
+            readings,
+        });
+    }
 
     Ok(result)
 }
@@ -129,10 +148,10 @@ pub async fn add_answer_stats(
     is_correct: bool,
     font_id: i64,
 ) -> Result<i64, String> {
-	struct RawData {
-		id: i64,
-	}
-	
+    struct RawData {
+        id: i64,
+    }
+
     let result = query_file_as!(
         RawData,
         "./src/queries/add_answer_stats.sql",
@@ -159,9 +178,9 @@ pub async fn add_game_stats(
     font_id: Option<i64>,
     dictionary_id: i64,
 ) -> Result<i64, String> {
-	struct RawData {
-		id: i64,
-	}
+    struct RawData {
+        id: i64,
+    }
 
     let result = sqlx::query_file_as!(
         RawData,
@@ -188,17 +207,21 @@ pub struct AnswerStreaks {
 }
 
 #[tauri::command]
-pub async fn get_answer_streaks(min_frequency: i64, max_frequency: i64, count: i64) -> Result<Vec<AnswerStreaks>, String> {
+pub async fn get_answer_streaks(
+    min_frequency: i64,
+    max_frequency: i64,
+    count: i64,
+) -> Result<Vec<AnswerStreaks>, String> {
     let data = sqlx::query_file_as!(
-			AnswerStreaks, 
-			"./src/queries/get_answer_streaks.sql",
-			min_frequency,
-			max_frequency,
-			count
-		)
-        .fetch_all(&*DB_POOL)
-        .await
-        .map_err(|e| e.to_string())?;
+        AnswerStreaks,
+        "./src/queries/get_answer_streaks.sql",
+        min_frequency,
+        max_frequency,
+        count
+    )
+    .fetch_all(&*DB_POOL)
+    .await
+    .map_err(|e| e.to_string())?;
 
     Ok(data)
 }

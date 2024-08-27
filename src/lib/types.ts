@@ -3,6 +3,7 @@ import type { SvelteMap } from "svelte/reactivity";
 export type WordInfo = {
 	id: number;
 	word: string;
+	meanings: string[][][];
 	readings: { id: number; reading: string }[];
 };
 

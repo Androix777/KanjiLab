@@ -39,6 +39,7 @@ def create_tables(conn):
             word TEXT UNIQUE NOT NULL,
             frequency INTEGER,
             dictionary_id INTEGER NOT NULL,
+            meanings TEXT NOT NULL,
             FOREIGN KEY(dictionary_id) REFERENCES dictionary(id)
         );
     ''')
@@ -122,18 +123,39 @@ def create_tables(conn):
 def insert_jmdict_data(conn, data, jmdict_id):
     cursor = conn.cursor()
 
-    for entry in tqdm(data.findall('entry'), desc="Inserting word data"):
-        for keb in entry.findall('k_ele/keb'):
-            if not KANJI_PATTERN.search(keb.text):
-                continue
+    GLOSS_SEPARATOR = "␞"
+    SENSE_SEPARATOR = "␝"
+    KEB_SEPARATOR = "␟"
 
-            cursor.execute('SELECT id FROM word WHERE word = ?', (keb.text,))
+    for entry in tqdm(data.findall('entry'), desc="Inserting word data"):
+        keb_meanings = {}
+        
+        for sense in entry.findall('sense'):
+            glosses = [gloss.text for gloss in sense.findall('gloss')]
+            sense_meaning = GLOSS_SEPARATOR.join(glosses)
+            
+            for keb in entry.findall('k_ele/keb'):
+                if not KANJI_PATTERN.search(keb.text):
+                    continue
+                
+                if keb.text not in keb_meanings:
+                    keb_meanings[keb.text] = []
+                keb_meanings[keb.text].append(sense_meaning)
+
+        for keb, meanings in keb_meanings.items():
+            meanings_string = SENSE_SEPARATOR.join(meanings)
+            
+            cursor.execute('SELECT id, meanings FROM word WHERE word = ?', (keb,))
             result = cursor.fetchone()
             
             if result:
-                word_id = result[0]
+                word_id, existing_meanings = result
+                if existing_meanings:
+                    meanings_string = existing_meanings + KEB_SEPARATOR + meanings_string
+                cursor.execute('UPDATE word SET meanings = ? WHERE id = ?', (meanings_string, word_id))
             else:
-                cursor.execute('INSERT INTO word (word, dictionary_id) VALUES (?, ?)', (keb.text, jmdict_id))
+                cursor.execute('INSERT INTO word (word, dictionary_id, meanings) VALUES (?, ?, ?)', 
+                               (keb, jmdict_id, meanings_string))
                 word_id = cursor.lastrowid
 
             for r_ele in entry.findall('r_ele'):
@@ -143,7 +165,7 @@ def insert_jmdict_data(conn, data, jmdict_id):
 
                 re_restr = r_ele.findall('re_restr')
                 if re_restr:
-                    if keb.text not in [restr.text for restr in re_restr]:
+                    if keb not in [restr.text for restr in re_restr]:
                         continue
                 try:
                     reading_hiragana = wanakana.to_hiragana(reb.text)
@@ -152,6 +174,7 @@ def insert_jmdict_data(conn, data, jmdict_id):
                     print(reb.text)
 
     conn.commit()
+
 
 
 def insert_furigana_data(conn, data):
