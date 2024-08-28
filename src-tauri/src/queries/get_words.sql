@@ -1,6 +1,4 @@
-SELECT GROUP_CONCAT(wr.id) AS "reading_ids!: String",
-	GROUP_CONCAT(wr.word_reading) AS "word_readings!: String",
-	w.id AS "word_id!",
+SELECT GROUP_CONCAT(wr.word_reading) AS "word_readings!: String",
 	w.word AS "word!",
 	w.meanings AS "meanings"
 FROM (

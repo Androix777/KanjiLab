@@ -287,7 +287,6 @@ class WebSocketClient
 			{
 				const words = await getRandomWords(1);
 				const lastWord = words[0];
-				const readings = lastWord.readings.map(reading => reading.reading);
 				let font: string;
 				if (getSettings().selectedFonts.get().length > 0)
 				{
@@ -308,7 +307,7 @@ class WebSocketClient
 							question:
 							{
 								question: lastWord.word,
-								answers: readings,
+								answers: lastWord.readings,
 								meanings: lastWord.meanings,
 								fontName: fontInfo.fullName,
 							},

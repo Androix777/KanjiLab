@@ -15,18 +15,10 @@ static DB_POOL: LazyLock<SqlitePool> = LazyLock::new(|| {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Reading {
-    id: i64,
-    reading: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct WordWithReadings {
-    id: i64,
     word: String,
     meanings: Vec<Vec<Vec<String>>>,
-    readings: Vec<Reading>,
+    readings: Vec<String>,
 }
 
 #[tauri::command]
@@ -42,10 +34,8 @@ pub async fn get_words(
     const READINGS_SEPARATOR: &str = ",";
 
     struct RawData {
-        word_id: i64,
         word: String,
         meanings: String,
-        reading_ids: String,
         word_readings: String,
     }
 
@@ -77,14 +67,10 @@ pub async fn get_words(
     let mut result = Vec::new();
 
     for raw_word in raw_data {
-        let readings: Vec<Reading> = raw_word
-            .reading_ids
+        let readings: Vec<String> = raw_word
+            .word_readings
             .split(READINGS_SEPARATOR)
-            .zip(raw_word.word_readings.split(READINGS_SEPARATOR))
-            .map(|(id, reading)| Reading {
-                id: id.parse().unwrap_or(0),
-                reading: reading.to_string(),
-            })
+            .map(String::from)
             .collect();
 
         let meanings: Vec<Vec<Vec<String>>> = raw_word
@@ -98,7 +84,6 @@ pub async fn get_words(
             .collect();
 
         result.push(WordWithReadings {
-            id: raw_word.word_id,
             word: raw_word.word,
             meanings,
             readings,
@@ -107,6 +92,7 @@ pub async fn get_words(
 
     Ok(result)
 }
+
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
