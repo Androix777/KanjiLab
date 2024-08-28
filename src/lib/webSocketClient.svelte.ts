@@ -309,6 +309,7 @@ class WebSocketClient
 							{
 								question: lastWord.word,
 								answers: readings,
+								meanings: lastWord.meanings,
 								fontName: fontInfo.fullName,
 							},
 							questionSvg: svg,
@@ -335,6 +336,7 @@ class WebSocketClient
 			question: {
 				question: ``,
 				answers: [],
+				meanings: [],
 				fontName: ``,
 			},
 			questionSvg: customEvent.detail.questionSvg,

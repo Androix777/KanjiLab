@@ -39,6 +39,7 @@ pub struct ClientInfo {
 pub struct QuestionInfo {
     pub question: String,
     pub answers: Vec<String>,
+    pub meanings: Vec<Vec<Vec<String>>>,
     pub font_name: String,
 }
 

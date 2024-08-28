@@ -107,6 +107,9 @@
 						<div class="">
 							{ previousQuestionInfo?.answers.join(` `) }
 						</div>
+						<div class="">
+							{ previousQuestionInfo?.meanings[0][0][0] }
+						</div>
 					</div>
 					<div class="flex-none flex justify-center min-h-0">
 						<div>{ previousQuestionInfo?.question ? `Word description` : `` }</div>
