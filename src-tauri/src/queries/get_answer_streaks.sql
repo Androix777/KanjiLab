@@ -12,8 +12,8 @@ WITH RankedAnswers AS (
 		) AS row_num_correct
 	FROM game_stats gs
 		JOIN answer_stats ans ON gs.id = ans.game_stats_id
-	WHERE gs.min_frequency >= $1
-		AND gs.max_frequency >= $2
+	WHERE gs.min_frequency = $1
+		AND gs.max_frequency = $2
 )
 SELECT game_id,
 	COUNT(*) AS length
