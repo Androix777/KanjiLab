@@ -108,7 +108,7 @@ def create_tables(conn):
             rounds_count INTEGER NOT NULL,
             round_duration INTEGER NOT NULL,
             min_frequency INTEGER NOT NULL,
-            max_frequency INTEGER NOT NULL,
+            max_frequency INTEGER,
             font_id INTEGER,
             dictionary_id INTEGER NOT NULL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,

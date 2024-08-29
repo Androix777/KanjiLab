@@ -3,7 +3,14 @@ WITH filtered_words AS (
 		word,
 		meanings
 	FROM word
-	WHERE frequency BETWEEN $2 AND $3
+	WHERE (
+			frequency IS NULL
+			OR frequency >= $2
+		)
+		AND (
+			$3 IS NULL
+			OR frequency <= $3
+		)
 ),
 filtered_word_parts AS (
 	SELECT id

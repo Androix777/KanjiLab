@@ -23,9 +23,9 @@ pub struct WordWithReadings {
 
 #[tauri::command]
 pub async fn get_words(
-    count: u32,
-    min_frequency: u32,
-    max_frequency: u32,
+    count: i64,
+    min_frequency: i64,
+    max_frequency: Option<i64>,
     word_part: Option<&str>,
 ) -> Result<Vec<WordWithReadings>, String> {
     const GLOSS_SEPARATOR: &str = "␞";
@@ -160,7 +160,7 @@ pub async fn add_game_stats(
     rounds_count: i64,
     round_duration: i64,
     min_frequency: i64,
-    max_frequency: i64,
+    max_frequency: Option<i64>,
     font_id: Option<i64>,
     dictionary_id: i64,
 ) -> Result<i64, String> {

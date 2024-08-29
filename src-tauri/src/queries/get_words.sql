@@ -6,8 +6,14 @@ FROM (
 			word,
 			meanings
 		FROM word
-		WHERE frequency > $2
-			AND frequency < $3
+		WHERE (
+				frequency IS NULL
+				OR frequency >= $2
+			)
+			AND (
+				$3 IS NULL
+				OR frequency <= $3
+			)
 		ORDER BY RANDOM()
 		LIMIT $1
 	) AS w
