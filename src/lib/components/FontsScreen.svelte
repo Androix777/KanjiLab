@@ -19,9 +19,10 @@
 
 	let pageSize: number = 4;
 	let currentPage: number = $state(1);
-	let savedPage: number = 1;
+	let savedPage: number = -1;
 	let showOnlySelected: boolean = $state(false);
 	let maxPages: number = $state(0);
+	let searchKeyword: string = $state(``);
 
 	onMount(() =>
 	{
@@ -38,7 +39,7 @@
 		if (currentPage > maxPages) currentPage = maxPages;
 		if (currentPage < 1) currentPage = 1;
 		fontRecords = [];
-		let fontPage = (showOnlySelected ? filteredFontList : getSettings().fontsInfo.get()).slice(pageSize * (currentPage - 1), pageSize * currentPage);
+		let fontPage = ((showOnlySelected || searchKeyword != ``) ? filteredFontList : getSettings().fontsInfo.get()).slice(pageSize * (currentPage - 1), pageSize * currentPage);
 		for (let i = 0; i < fontPage.length; i++)
 		{
 			fontRecords.push({ fontInfo: fontPage[i], fontSVG: `` });
@@ -63,7 +64,33 @@
 
 	function generateSelectedFonts()
 	{
-		filteredFontList = getSettings().fontsInfo.get().filter(fontInfo => getSettings().selectedFonts.get().includes(fontInfo.fontFile));
+		return getSettings().fontsInfo.get().filter(fontInfo => getSettings().selectedFonts.get().includes(fontInfo.fontFile));
+	}
+
+	function generateFilteredFonts(keyword: string)
+	{
+		return getSettings().fontsInfo.get().filter(fontInfo => fontInfo.fontFile.toLocaleLowerCase().includes(keyword.toLocaleLowerCase()));
+	}
+
+	function filterFonts(selected: boolean, keyword: string)
+	{
+		filteredFontList = getSettings().fontsInfo.get().filter(fontInfo => fontInfo.fontFile.toLocaleLowerCase().includes(keyword.toLocaleLowerCase()));
+		if (selected && keyword != ``)
+		{
+			filteredFontList = generateSelectedFonts().filter((font) => generateFilteredFonts(keyword).includes(font));
+		}
+		else if (selected)
+		{
+			filteredFontList = generateSelectedFonts();
+		}
+		else if (keyword != ``)
+		{
+			filteredFontList = generateFilteredFonts(keyword);
+		}
+		else
+		{
+			filteredFontList = getSettings().fontsInfo.get();
+		}
 	}
 
 </script>
@@ -90,6 +117,29 @@
 							getSettings().selectedFonts.set([]);
 							void updateFontsPage();
 						}}>Unselect all</button>
+					<input
+						class="input input-bordered"
+						type="text"
+						bind:value={searchKeyword}
+						oninput={async () => 
+						{
+							controlsDisabled = true;
+
+							if (searchKeyword != ``)
+							{
+								filterFonts(showOnlySelected, searchKeyword);
+								if (savedPage == -1) savedPage = currentPage;
+								currentPage = 1;
+							}
+							else if (savedPage != -1)
+							{
+								currentPage = savedPage;
+								savedPage = -1;
+							}
+
+							await updateFontsPage();
+							controlsDisabled = false;
+						} } />
 				</div>
 				<div class="flex-grow"></div>
 				<div class="flex flex-col justify-center flex-none">
@@ -101,15 +151,16 @@
 						onchange={async () =>
 						{
 							controlsDisabled = true;
-							generateSelectedFonts();
+							filterFonts(showOnlySelected, searchKeyword);
 							if (showOnlySelected)
 							{
-								savedPage = currentPage;
+								if (savedPage == -1) savedPage = currentPage;
 								currentPage = 1;
 							}
-							if (!showOnlySelected)
+							if (!showOnlySelected && savedPage != -1)
 							{
 								currentPage = savedPage;
+								savedPage = -1;
 							}
 							await updateFontsPage();
 							controlsDisabled = false;
