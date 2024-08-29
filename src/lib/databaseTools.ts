@@ -1,6 +1,6 @@
 import type { AnswerStreaks, WordInfo } from "$lib/types";
 import { invoke } from "@tauri-apps/api/core";
-import { ADD_ANSWER_STATS, ADD_GAME_STATS, GET_ANSWEER_STREAKS, GET_FONT_ID, GET_STATS, GET_WORDS } from "$lib/tauriFunctions";
+import { ADD_ANSWER_STATS, ADD_GAME_STATS, GET_ANSWER_STREAKS, GET_FONT_ID, GET_STATS, GET_WORDS } from "$lib/tauriFunctions";
 import type { StatsInfo } from "$lib/types";
 import { getSettings } from "$lib/globalSettings.svelte";
 
@@ -61,6 +61,6 @@ export async function getStats(): Promise<StatsInfo>
 
 export async function getAnswerStreaks(minFrequency: number, maxFrequency: number, count: number): Promise<AnswerStreaks[]>
 {
-	const data: AnswerStreaks[] = await invoke(GET_ANSWEER_STREAKS, { minFrequency: minFrequency, maxFrequency: maxFrequency, count: count });
+	const data: AnswerStreaks[] = await invoke(GET_ANSWER_STREAKS, { minFrequency: minFrequency, maxFrequency: maxFrequency, count: count });
 	return data;
 }

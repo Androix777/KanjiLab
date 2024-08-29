@@ -10,4 +10,4 @@ export const GET_STATS: string = `get_stats`;
 export const ADD_ANSWER_STATS: string = `add_answer_stats`;
 export const ADD_GAME_STATS: string = `add_game_stats`;
 export const GET_FONT_ID: string = `get_font_id`;
-export const GET_ANSWEER_STREAKS: string = `get_answer_streaks`;
+export const GET_ANSWER_STREAKS: string = `get_answer_streaks`;
