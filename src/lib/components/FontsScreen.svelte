@@ -35,7 +35,7 @@
 		{
 			getSettings().fontsInfo.set(await invoke(GET_ALL_FONTS_INFO));
 		}
-		maxPages = Math.ceil((showOnlySelected ? filteredFontList : getSettings().fontsInfo.get()).length / pageSize);
+		maxPages = Math.ceil(((showOnlySelected || searchKeyword != ``) ? filteredFontList : getSettings().fontsInfo.get()).length / pageSize);
 		if (currentPage > maxPages) currentPage = maxPages;
 		if (currentPage < 1) currentPage = 1;
 		fontRecords = [];
@@ -77,7 +77,7 @@
 		filteredFontList = getSettings().fontsInfo.get().filter(fontInfo => fontInfo.fontFile.toLocaleLowerCase().includes(keyword.toLocaleLowerCase()));
 		if (selected && keyword != ``)
 		{
-			filteredFontList = generateSelectedFonts().filter((font) => generateFilteredFonts(keyword).includes(font));
+			filteredFontList = generateSelectedFonts().filter(font => generateFilteredFonts(keyword).includes(font));
 		}
 		else if (selected)
 		{
@@ -121,7 +121,7 @@
 						class="input input-bordered"
 						type="text"
 						bind:value={searchKeyword}
-						oninput={async () => 
+						oninput={async () =>
 						{
 							controlsDisabled = true;
 
