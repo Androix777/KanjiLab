@@ -2,7 +2,6 @@
     import SettingsScreen from "$lib/components/SettingsScreen.svelte";
     import StatsScreen from "$lib/components/StatsScreen.svelte";
 	import StartGameScreen from "$lib/components/StartGameScreen.svelte";
-	// import { FontLoader } from '$lib/fontLoader';
 	import { themeChange } from 'theme-change';
     import SvgIcon from "$lib/components/SVGIcon.svelte";
     import DictionariesScreen from "$lib/components/DictionariesScreen.svelte";
@@ -13,23 +12,15 @@
 
 	type ScreenType = `StartGame` | `Stats` | `Dictionaries` | `Fonts` | `Settings`;
 	let currentScreenType: ScreenType = $state(`StartGame`);
-	// let fontLoader: FontLoader = new FontLoader();
 
 	function setScreen(screenType: ScreenType)
 	{
 		currentScreenType = screenType;
 	}
 
-	// async function loadFonts()
-	// {
-	// 	await fontLoader.initialize();
-	// 	await fontLoader.loadFonts();
-	// }
-
 	$effect(() =>
 	{
 		themeChange(false);
-		// void loadFonts();
 	});
 </script>
 

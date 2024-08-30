@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { invoke } from "@tauri-apps/api/core";
     import FontCard from "./FontCard.svelte";
-    import { GET_SVG_TEXT, GET_ALL_FONTS_INFO } from "$lib/tauriFunctions";
     import { getSettings } from "$lib/globalSettings.svelte";
     import type { FontInfo } from "$lib/types";
     import { onMount } from "svelte";
     import { fade } from "svelte/transition";
+    import { getAllFontsInfo, getSVGText } from "$lib/fontTools";
 
 	type FontRecord =
 	{
@@ -33,7 +32,7 @@
 	{
 		if (getSettings().fontsInfo.get().length == 0)
 		{
-			getSettings().fontsInfo.set(await invoke(GET_ALL_FONTS_INFO));
+			getSettings().fontsInfo.set(await getAllFontsInfo());
 		}
 		maxPages = Math.ceil(((showOnlySelected || searchKeyword != ``) ? filteredFontList : getSettings().fontsInfo.get()).length / pageSize);
 		if (currentPage > maxPages) currentPage = maxPages;
@@ -53,7 +52,7 @@
 		{
 			try
 			{
-				fontRecords[i].fontSVG = await invoke(GET_SVG_TEXT, { text: `文字`, fontName: fontRecords[i].fontInfo.fontFile });
+				fontRecords[i].fontSVG = await getSVGText(`文字`, fontRecords[i].fontInfo.fontFile);
 			}
 			catch
 			{

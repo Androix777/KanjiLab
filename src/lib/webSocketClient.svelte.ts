@@ -2,9 +2,7 @@ import { ServerConnector } from "$lib/webSocketConnector";
 import type { AnswerRecord, ClientInfo, FontInfo, GameSettingsData, InRespQuestionPayload, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory, GameStatus, OutNotifGameSettingsChangedPayload } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
 import { SvelteMap } from "svelte/reactivity";
-import { invoke } from "@tauri-apps/api/core";
-import { GET_FONT_ID, GET_SVG_TEXT } from "./tauriFunctions";
-import { getFontInfo, getRandomFont } from "./FontTools";
+import { getFontInfo, getRandomFont, getSVGText } from "./fontTools";
 import { addAnswerStats, addGameStats, getFontId, getRandomWords } from "./databaseTools";
 
 class WebSocketClient
@@ -301,7 +299,7 @@ class WebSocketClient
 				{
 					throw new Error(`getQuestionFailed`);
 				}
-				const svg: string = await invoke(GET_SVG_TEXT, { text: lastWord.word, fontName: font });
+				const svg: string = await getSVGText(lastWord.word, font);
 				const question: InRespQuestionPayload =
 						{
 							question:
@@ -379,7 +377,7 @@ class WebSocketClient
 
 		if (word)
 		{
-			const fontId: number = await invoke(GET_FONT_ID, { name: customEvent.detail.question.fontName });
+			const fontId: number = await getFontId(customEvent.detail.question.fontName);
 			await addAnswerStats(this.currentGameId, word, answer, (Math.ceil((getSettings().roundDuration.get() - this.timerValue) * 1000)), this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`, fontId);
 		}
 		this.gameStatus = `WaitingQuestion`;

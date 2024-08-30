@@ -1,6 +1,6 @@
 import { readDir, type DirEntry } from '@tauri-apps/plugin-fs';
 import { invoke } from "@tauri-apps/api/core";
-import { GET_EXECUTABLE_FILE_PATH } from "$lib/tauriFunctions";
+import { GET_ALL_FONTS_INFO, GET_EXECUTABLE_FILE_PATH, GET_SVG_TEXT } from "$lib/tauriFunctions";
 import type { FontInfo } from './types';
 import { getSettings } from './globalSettings.svelte';
 
@@ -69,4 +69,14 @@ export async function getAllFonts(): Promise<string[]>
 {
 	await loadFonts();
 	return fontNames || [];
+}
+
+export async function getAllFontsInfo(): Promise<FontInfo[]>
+{
+	return await invoke(GET_ALL_FONTS_INFO);
+}
+
+export async function getSVGText(text: string, fontFileName: string): Promise<string>
+{
+	return await invoke(GET_SVG_TEXT, { text: text, fontName: fontFileName });
 }
