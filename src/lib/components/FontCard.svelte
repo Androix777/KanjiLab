@@ -28,7 +28,7 @@
 </script>
 
 <div>
-	<div class="flex flex-row p-2 w-full text-center card card-bordered border-primary bg-base-200 mb-2">
+	<div class="flex flex-row p-2 w-full text-center card card-bordered border-primary bg-base-200 mb-2 h-24 overflow-hidden">
 		<div class="w-1/6 my-auto justify-center">
 			<input type="checkbox"
 				class="checkbox"
@@ -41,18 +41,18 @@
 				}}
 				checked={fontSelected} />
 		</div>
-		<div class="w-1/2 my-auto justify-center">
-			<div>File: {fontInfo.fontFile}</div>
-			<div>Full name: {fontInfo.fullName}</div>
-			<div>Number of glyphs: {fontInfo.numGlyphs}</div>
+		<div class="w-1/2 my-auto justify-center overflow-hidden">
+			<div class="text-ellipsis inline-block overflow-hidden whitespace-nowrap -mb-1" style="width: calc(100%);">File: {fontInfo.fontFile + "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}</div>
+			<div class="text-ellipsis inline-block overflow-hidden whitespace-nowrap -mb-1" style="width: calc(100%);">Full name: {fontInfo.fullName}</div>
+			<div class="text-ellipsis inline-block overflow-hidden whitespace-nowrap -mb-1" style="width: calc(100%);">Number of glyphs: {fontInfo.numGlyphs}</div>
 		</div>
 		{#if fontSVG != ``}
-		<div class="w-1/3 m-auto flex justify-center" transition:fade>
-			<div class="w-1/2">
-				<div class="bg-base-content max-h-full max-w-full" style="
+		<div class="m-auto flex-none justify-center" transition:fade>
+			<div class="h-24">
+				<div class="bg-base-content max-h-full" style="
 					mask-image: url({fontSvgUrl});
 					mask-size: 100% 100%;">
-					<img src={fontSvgUrl} alt="" class="w-full h-full opacity-0">
+					<img src={fontSvgUrl} alt="" class="opacity-0 object-contain h-20">
 				</div>
 			</div>
 		</div>

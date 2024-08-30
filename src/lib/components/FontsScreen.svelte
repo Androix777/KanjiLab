@@ -97,7 +97,7 @@
 
 <div class="p-4">
 	<div class="flex flex-column justify-center items-center">
-		<div class="card card-bordered bg-base-100 shadow-xl mb-4 p-4 flex-1" style="min-width: 50vw; max-width: 90vw;">
+		<div class="card card-bordered bg-base-100 shadow-xl mb-4 p-4 flex-1" style="width: 50vw;">
 			<div class="card-title mb-4">Fonts</div>
 			<div class="flex flex-row mb-4">
 				<div class="join flex-none">
