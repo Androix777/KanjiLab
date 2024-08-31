@@ -353,71 +353,74 @@ async fn handle_verify_signature(client_id: &str, incoming_message: BaseMessage)
 }
 
 async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) {
-    if let Ok(payload) = validate_payload::<InReqRegisterClientPayload>(
+    let payload = match validate_payload::<InReqRegisterClientPayload>(
         client_id,
         &incoming_message.correlation_id,
         incoming_message.payload,
     )
     .await
     {
-        let clients_data = CLIENTS_DATA.lock().await;
-        let client_data = match clients_data.get(client_id) {
-            Some(data) => data,
-            None => {
-                drop(clients_data);
-                return;
-            }
-        };
+        Ok(payload) => payload,
+        Err(_) => return,
+    };
 
-        let is_validated = *client_data.is_validated.lock().await;
-        if !is_validated {
+    let clients_data = CLIENTS_DATA.lock().await;
+    let client_data = match clients_data.get(client_id) {
+        Some(data) => data,
+        None => {
             drop(clients_data);
-            send_status(
-                client_id,
-                &incoming_message.correlation_id,
-                "notValidatedError",
-            )
-            .await;
             return;
         }
+    };
+
+    let is_validated = *client_data.is_validated.lock().await;
+    if !is_validated {
         drop(clients_data);
-        let is_added = add_client(client_id, &payload.name);
+        send_status(
+            client_id,
+            &incoming_message.correlation_id,
+            "notValidatedError",
+        )
+        .await;
+        return;
+    }
+    drop(clients_data);
+    let is_added = add_client(client_id, &payload.name);
 
-        if !is_added {
-            send_status(
-                client_id,
-                &incoming_message.correlation_id,
-                "alreadyRegisteredError",
-            )
-            .await;
+    if !is_added {
+        send_status(
+            client_id,
+            &incoming_message.correlation_id,
+            "alreadyRegisteredError",
+        )
+        .await;
 
-            return;
-        }
+        return;
+    }
 
-        let response_payload = OutRespClientRegisteredPayload {
-            id: client_id.to_string(),
-            game_settings: get_game_settings(),
+    let response_payload = OutRespClientRegisteredPayload {
+        id: client_id.to_string(),
+        game_settings: get_game_settings(),
+    };
+    let response = BaseMessage::new(
+        response_payload,
+        Some(incoming_message.correlation_id.clone()),
+    );
+    send(client_id, response).await;
+
+    let event_payload = OutNotifClientRegisteredPayload {
+        id: client_id.to_string(),
+        name: payload.name.clone(),
+    };
+    let event = BaseMessage::new(event_payload, None);
+    send_all(event).await;
+
+    if *IS_AUTO_SERVER.lock().await && get_admin_id().is_none() {
+        let payload = InReqMakeAdminPayload {
+            admin_password: get_admin_password(),
+            client_id: client_id.to_string(),
         };
-        let response = BaseMessage::new(
-            response_payload,
-            Some(incoming_message.correlation_id.clone()),
-        );
-        send(client_id, response).await;
-
-        let event_payload = OutNotifClientRegisteredPayload {
-            id: client_id.to_string(),
-            name: payload.name.clone(),
-        };
-        let event = BaseMessage::new(event_payload, None);
-        send_all(event).await;
-
-        if *IS_AUTO_SERVER.lock().await && get_admin_id().is_none() {
-            let payload = InReqMakeAdminPayload {
-                admin_password: get_admin_password(),
-                client_id: client_id.to_string(),
-            };
-            handle_make_admin(&client_id, BaseMessage::new(payload, None)).await;
-        }
+        handle_make_admin(&client_id, BaseMessage::new(payload, None)).await;
     }
 }
 
@@ -426,45 +429,48 @@ async fn handle_make_admin(client_id: &str, incoming_message: BaseMessage) {
         return;
     }
 
-    if let Ok(payload) = validate_payload::<InReqMakeAdminPayload>(
+    let payload = match validate_payload::<InReqMakeAdminPayload>(
         client_id,
         &incoming_message.correlation_id,
         incoming_message.payload,
     )
     .await
     {
-        if payload.admin_password != get_admin_password() {
-            send_status(
-                client_id,
-                &incoming_message.correlation_id,
-                "wrongPasswordError",
-            )
-            .await;
-            return;
-        }
+        Ok(payload) => payload,
+        Err(_) => return,
+    };
 
-        let is_made_admin = make_admin(&payload.client_id);
-
-        if !is_made_admin {
-            send_status(
-                client_id,
-                &incoming_message.correlation_id,
-                "missingClientError",
-            )
-            .await;
-            return;
-        }
-
-        send_status(client_id, &incoming_message.correlation_id, "success").await;
-
-        let event_payload = OutNotifAdminMadePayload {
-            id: client_id.to_string(),
-        };
-
-        let event = BaseMessage::new(event_payload, None);
-
-        send_all(event).await;
+    if payload.admin_password != get_admin_password() {
+        send_status(
+            client_id,
+            &incoming_message.correlation_id,
+            "wrongPasswordError",
+        )
+        .await;
+        return;
     }
+
+    let is_made_admin = make_admin(&payload.client_id);
+
+    if !is_made_admin {
+        send_status(
+            client_id,
+            &incoming_message.correlation_id,
+            "missingClientError",
+        )
+        .await;
+        return;
+    }
+
+    send_status(client_id, &incoming_message.correlation_id, "success").await;
+
+    let event_payload = OutNotifAdminMadePayload {
+        id: client_id.to_string(),
+    };
+
+    let event = BaseMessage::new(event_payload, None);
+
+    send_all(event).await;
 }
 
 async fn handle_get_client_list(client_id: &str, incoming_message: BaseMessage) {
@@ -498,23 +504,26 @@ async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
         return;
     }
 
-    if let Ok(payload) = validate_payload::<InReqSendChatPayload>(
+    let payload = match validate_payload::<InReqSendChatPayload>(
         client_id,
         &incoming_message.correlation_id,
         incoming_message.payload,
     )
     .await
     {
-        let event_payload = OutNotifChatSentPayload {
-            id: client_id.to_string(),
-            message: payload.message.clone(),
-        };
+        Ok(payload) => payload,
+        Err(_) => return,
+    };
 
-        let event = BaseMessage::new(event_payload, None);
+    let event_payload = OutNotifChatSentPayload {
+        id: client_id.to_string(),
+        message: payload.message.clone(),
+    };
 
-        send_all(event).await;
-        send_status(client_id, &incoming_message.correlation_id, "success").await;
-    }
+    let event = BaseMessage::new(event_payload, None);
+
+    send_all(event).await;
+    send_status(client_id, &incoming_message.correlation_id, "success").await;
 }
 
 async fn handle_start_game(client_id: &str, incoming_message: BaseMessage) {
@@ -526,26 +535,29 @@ async fn handle_start_game(client_id: &str, incoming_message: BaseMessage) {
         return;
     }
 
-    if let Ok(payload) = validate_payload::<InReqStartGamePayload>(
+    let payload = match validate_payload::<InReqStartGamePayload>(
         client_id,
         &incoming_message.correlation_id,
         incoming_message.payload,
     )
     .await
     {
-        if get_game_state() != GameState::Lobby {
-            send_status(
-                client_id,
-                &incoming_message.correlation_id,
-                "alreadyStarted",
-            )
-            .await;
-            return;
-        }
+        Ok(payload) => payload,
+        Err(_) => return,
+    };
 
-        start_game(payload.game_settings);
-        send_status(client_id, &incoming_message.correlation_id, "success").await;
+    if get_game_state() != GameState::Lobby {
+        send_status(
+            client_id,
+            &incoming_message.correlation_id,
+            "alreadyStarted",
+        )
+        .await;
+        return;
     }
+
+    start_game(payload.game_settings);
+    send_status(client_id, &incoming_message.correlation_id, "success").await;
 }
 
 async fn handle_stop_game(client_id: &str, incoming_message: BaseMessage) {
@@ -576,38 +588,41 @@ async fn handle_send_answer(client_id: &str, incoming_message: BaseMessage) {
         return;
     }
 
-    if let Ok(payload) = validate_payload::<InReqSendAnswerPayload>(
+    let payload = match validate_payload::<InReqSendAnswerPayload>(
         client_id,
         &incoming_message.correlation_id,
         incoming_message.payload,
     )
     .await
     {
-        match record_answer(client_id, &payload.answer) {
-            Ok(_is_correct) => {
-                send_status(client_id, &incoming_message.correlation_id, "success").await;
+        Ok(payload) => payload,
+        Err(_) => return,
+    };
 
-                let event_payload = OutNotifClientAnsweredPayload {
-                    id: client_id.to_string(),
-                };
-                let event = BaseMessage::new(event_payload, None);
-                send_all(event).await;
+    match record_answer(client_id, &payload.answer) {
+        Ok(_is_correct) => {
+            send_status(client_id, &incoming_message.correlation_id, "success").await;
 
-                if all_clients_answered() {
-                    end_round_early();
-                }
+            let event_payload = OutNotifClientAnsweredPayload {
+                id: client_id.to_string(),
+            };
+            let event = BaseMessage::new(event_payload, None);
+            send_all(event).await;
+
+            if all_clients_answered() {
+                end_round_early();
             }
-            Err(AnswerError::NoCurrentQuestion) => {
-                send_status(client_id, &incoming_message.correlation_id, "noQuestion").await
-            }
-            Err(AnswerError::AlreadyAnswered) => {
-                send_status(
-                    client_id,
-                    &incoming_message.correlation_id,
-                    "alreadyAnswered",
-                )
-                .await
-            }
+        }
+        Err(AnswerError::NoCurrentQuestion) => {
+            send_status(client_id, &incoming_message.correlation_id, "noQuestion").await
+        }
+        Err(AnswerError::AlreadyAnswered) => {
+            send_status(
+                client_id,
+                &incoming_message.correlation_id,
+                "alreadyAnswered",
+            )
+            .await
         }
     }
 }
@@ -617,22 +632,25 @@ async fn handle_send_game_settings(client_id: &str, incoming_message: BaseMessag
         return;
     }
 
-    if let Ok(payload) = validate_payload::<InReqSendGameSettingsPayload>(
+    let payload = match validate_payload::<InReqSendGameSettingsPayload>(
         client_id,
         &incoming_message.correlation_id,
         incoming_message.payload,
     )
     .await
     {
-        set_game_settings(payload.game_settings);
-        let event_payload = OutNotifGameSettingsChangedPayload {
-            game_settings: get_game_settings(),
-        };
-        let event = BaseMessage::new(event_payload, None);
-        send_all(event).await;
+        Ok(payload) => payload,
+        Err(_) => return,
+    };
 
-        send_status(client_id, &incoming_message.correlation_id, "success").await;
-    }
+    set_game_settings(payload.game_settings);
+    let event_payload = OutNotifGameSettingsChangedPayload {
+        game_settings: get_game_settings(),
+    };
+    let event = BaseMessage::new(event_payload, None);
+    send_all(event).await;
+
+    send_status(client_id, &incoming_message.correlation_id, "success").await;
 }
 
 async fn handle_question(client_id: &str, incoming_message: BaseMessage) {
@@ -640,25 +658,28 @@ async fn handle_question(client_id: &str, incoming_message: BaseMessage) {
         return;
     }
 
-    if let Ok(payload) = validate_payload::<InRespQuestionPayload>(
+    let payload = match validate_payload::<InRespQuestionPayload>(
         client_id,
         &incoming_message.correlation_id,
         incoming_message.payload,
     )
     .await
     {
-        if let Some(_) = get_question_for_round(get_current_round()) {
-            send_status(client_id, &incoming_message.correlation_id, "alreadyExist").await;
-            return;
-        } else {
-            set_current_question(payload.question.clone());
+        Ok(payload) => payload,
+        Err(_) => return,
+    };
 
-            let event_payload = OutNotifQuestionPayload {
-                question_svg: payload.question_svg,
-            };
-            let event = BaseMessage::new(event_payload, None);
-            send_all(event).await;
-        }
+    if let Some(_) = get_question_for_round(get_current_round()) {
+        send_status(client_id, &incoming_message.correlation_id, "alreadyExist").await;
+        return;
+    } else {
+        set_current_question(payload.question.clone());
+
+        let event_payload = OutNotifQuestionPayload {
+            question_svg: payload.question_svg,
+        };
+        let event = BaseMessage::new(event_payload, None);
+        send_all(event).await;
     }
 }
 
