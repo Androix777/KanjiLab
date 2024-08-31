@@ -17,12 +17,14 @@ use uuid::Uuid;
 pub static SERVER_HANDLE: LazyLock<Arc<Mutex<Option<oneshot::Sender<()>>>>> =
     LazyLock::new(|| Arc::new(Mutex::new(None)));
 
-pub type ClientWrite = Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, Message>>>;
-pub type ClientsConnections = Arc<Mutex<HashMap<String, ClientWrite>>>;
-pub type ClientsResponses = Arc<Mutex<HashMap<String, Arc<Mutex<PendingResponses>>>>>;
+pub struct ClientData {
+    write: Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, Message>>>,
+    responses: Arc<Mutex<PendingResponses>>,
+}
 
-pub static CLIENTS_CONNECTIONS: LazyLock<ClientsConnections> = LazyLock::new(|| Default::default());
-pub static CLIENTS_RESPONSES: LazyLock<ClientsResponses> = LazyLock::new(|| Default::default());
+pub type ClientsData = Arc<Mutex<HashMap<String, ClientData>>>;
+
+pub static CLIENTS_DATA: LazyLock<ClientsData> = LazyLock::new(|| Default::default());
 pub static IS_AUTO_SERVER: LazyLock<Arc<Mutex<bool>>> = LazyLock::new(|| Default::default());
 
 pub struct PendingResponses {
@@ -78,10 +80,10 @@ pub async fn call_stop_server() {
 }
 
 async fn disconnect_all_clients() {
-    let mut connections_lock = CLIENTS_CONNECTIONS.lock().await;
+    let mut clients_data = CLIENTS_DATA.lock().await;
 
-    for (client_id, client_write) in connections_lock.drain() {
-        let mut write = client_write.lock().await;
+    for (client_id, client_data) in clients_data.drain() {
+        let mut write = client_data.write.lock().await;
         if let Err(e) = write.send(Message::Close(None)).await {
             eprintln!("Error sending close message to {}: {}", client_id, e);
         }
@@ -122,17 +124,19 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
 
     let (write, mut read) = ws_stream.split();
     let client_id = Uuid::new_v4().to_string();
-    log("???", "connected", &client_id, true);
-    CLIENTS_CONNECTIONS
-        .lock()
-        .await
-        .insert(client_id.clone(), Arc::new(Mutex::new(write)));
-
     let pending_responses = Arc::new(Mutex::new(PendingResponses::new()));
-    CLIENTS_RESPONSES
+
+    log("???", "connected", &client_id, true);
+
+    let client_data = ClientData {
+        write: Arc::new(Mutex::new(write)),
+        responses: Arc::clone(&pending_responses),
+    };
+
+    CLIENTS_DATA
         .lock()
         .await
-        .insert(client_id.clone(), Arc::clone(&pending_responses));
+        .insert(client_id.clone(), client_data);
 
     while let Some(message) = read.next().await {
         let message = match message {
@@ -204,7 +208,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
     }
 
     remove_client(&client_id);
-    CLIENTS_CONNECTIONS.lock().await.remove(&client_id);
+    CLIENTS_DATA.lock().await.remove(&client_id);
 
     if let Some(client) = deleted_client {
         let event_payload = OutNotifClientDisconnectedPayload {
@@ -252,7 +256,7 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
 
         let response_payload = OutRespClientRegisteredPayload {
             id: client_id.to_string(),
-			game_settings: get_game_settings(),
+            game_settings: get_game_settings(),
         };
         let response = BaseMessage::new(
             response_payload,
@@ -369,7 +373,7 @@ async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
         let event = BaseMessage::new(event_payload, None);
 
         send_all(event).await;
-		send_status(client_id, &incoming_message.correlation_id, "success").await;
+        send_status(client_id, &incoming_message.correlation_id, "success").await;
     }
 }
 
@@ -480,7 +484,7 @@ async fn handle_send_game_settings(client_id: &str, incoming_message: BaseMessag
     )
     .await
     {
-		set_game_settings(payload.game_settings);
+        set_game_settings(payload.game_settings);
         let event_payload = OutNotifGameSettingsChangedPayload {
             game_settings: get_game_settings(),
         };
@@ -562,12 +566,15 @@ async fn handle_state_lobby() {
 // ##region Helpers
 
 async fn request_question() {
-    let clients_responses = CLIENTS_RESPONSES.lock().await;
     let admin_id = get_admin_id().unwrap();
-    let pending_responses = clients_responses.get(&admin_id).unwrap();
+    let pending_responses = {
+        let clients_data = CLIENTS_DATA.lock().await;
+        Arc::clone(&clients_data.get(&admin_id).unwrap().responses)
+    };
 
     let message_payload = OutReqQuestionPayload {};
     let message = BaseMessage::new(message_payload, None);
+
     send_and_response(
         &admin_id,
         message,
@@ -650,10 +657,10 @@ async fn send_status(client_id: &str, correlation_id: &str, status: &str) {
 
 async fn send(client_id: &str, message: BaseMessage) {
     let response_json = serde_json::to_string(&message).unwrap();
-    let connections_lock = CLIENTS_CONNECTIONS.lock().await;
+    let clients_data_lock = CLIENTS_DATA.lock().await;
 
-    if let Some(client_write) = connections_lock.get(client_id) {
-        let mut write = client_write.lock().await;
+    if let Some(client_data) = clients_data_lock.get(client_id) {
+        let mut write = client_data.write.lock().await;
         log(
             &get_client(client_id).map_or("???".to_string(), |client| client.name.clone()),
             &message.message_type,
