@@ -23,6 +23,7 @@
 	{
 		getSettings().minFrequency.get();
 		getSettings().maxFrequency.get();
+		getSettings().usingMaxFrequency.get();
 		getSettings().wordPart.get();
 		getSettings().roundDuration.get();
 		getSettings().roundsCount.get();
@@ -83,10 +84,23 @@
 			/>
 		</div>
 
-		<div class="flex flex-row mt-4">
+		<div class="flex flex-row mt-4 items-center">
 			<div class="flex-1 text-left my-auto">
 				Max frequency
 			</div>
+			<input
+				type="checkbox"
+				class="checkbox checkbox-primary flex-none m-2"
+				checked={getSettings().usingMaxFrequency.get()}
+				disabled={isSettingsLocked}
+				onchange={(event) =>
+				{
+					if (event.target instanceof HTMLInputElement)
+					{
+						getSettings().usingMaxFrequency.set(event.target.checked);
+					}
+				}}
+			/>
 			<input
 				type="number"
 				step="1"

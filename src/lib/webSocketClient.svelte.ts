@@ -175,6 +175,7 @@ class WebSocketClient
 		const data: GameSettingsData = {
 			minFrequency: getSettings().minFrequency.get(),
 			maxFrequency: getSettings().maxFrequency.get(),
+			usingMaxFrequency: getSettings().usingMaxFrequency.get(),
 			roundDuration: getSettings().roundDuration.get(),
 			roundsCount: getSettings().roundsCount.get(),
 			wordPart: getSettings().wordPart.get() == `` ? null : getSettings().wordPart.get(),
@@ -182,6 +183,7 @@ class WebSocketClient
 			firstFontName: fontInfo?.fullName ?? null,
 		};
 
+		console.log(`MaxFreqUsed: ${getSettings().usingMaxFrequency.get()}`);
 		return data;
 	}
 
@@ -189,6 +191,7 @@ class WebSocketClient
 	{
 		getSettings().minFrequency.set(gameSettings.minFrequency);
 		getSettings().maxFrequency.set(gameSettings.maxFrequency);
+		getSettings().usingMaxFrequency.set(gameSettings.usingMaxFrequency);
 		getSettings().roundDuration.set(gameSettings.roundDuration);
 		getSettings().roundsCount.set(gameSettings.roundsCount);
 		getSettings().wordPart.set(gameSettings.wordPart || ``);
@@ -381,8 +384,6 @@ class WebSocketClient
 			await addAnswerStats(this.currentGameId, word, answer, (Math.ceil((getSettings().roundDuration.get() - this.timerValue) * 1000)), this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`, fontId);
 		}
 		this.gameStatus = `WaitingQuestion`;
-
-		clearInterval(this.timerIntervalId);
 	}
 
 	private handleNotifClientAnswered(event: Event)

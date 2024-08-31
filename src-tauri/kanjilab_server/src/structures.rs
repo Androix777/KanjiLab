@@ -56,6 +56,7 @@ pub struct AnswerInfo {
 pub struct GameSettings {
     pub min_frequency: u64,
     pub max_frequency: u64,
+    pub using_max_frequency: bool,
     pub round_duration: u64,
     pub rounds_count: u64,
     pub word_part: Option<String>,

@@ -80,6 +80,7 @@ export type RoundHistory = {
 export type GameSettingsData = {
 	minFrequency: number;
 	maxFrequency: number;
+	usingMaxFrequency: boolean;
 	roundDuration: number;
 	roundsCount: number;
 	wordPart: string | null;
