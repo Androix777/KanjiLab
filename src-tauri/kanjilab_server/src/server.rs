@@ -1,5 +1,6 @@
 use crate::server_logic::*;
 use crate::structures::*;
+use crate::tools::verify_signature;
 use futures_util::stream::SplitSink;
 use futures_util::{SinkExt, StreamExt};
 use serde::de::DeserializeOwned;
@@ -20,11 +21,13 @@ pub static SERVER_HANDLE: LazyLock<Arc<Mutex<Option<oneshot::Sender<()>>>>> =
 pub struct ClientData {
     write: Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, Message>>>,
     responses: Arc<Mutex<PendingResponses>>,
+    key: Arc<Mutex<Option<String>>>,
+    sign_message: Arc<Mutex<String>>,
+    is_validated: Arc<Mutex<bool>>,
 }
-
 pub type ClientsData = Arc<Mutex<HashMap<String, ClientData>>>;
-
 pub static CLIENTS_DATA: LazyLock<ClientsData> = LazyLock::new(|| Default::default());
+
 pub static IS_AUTO_SERVER: LazyLock<Arc<Mutex<bool>>> = LazyLock::new(|| Default::default());
 
 pub struct PendingResponses {
@@ -131,6 +134,9 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
     let client_data = ClientData {
         write: Arc::new(Mutex::new(write)),
         responses: Arc::clone(&pending_responses),
+        key: Arc::new(Mutex::new(None)),
+        is_validated: Arc::new(Mutex::new(false)),
+        sign_message: Arc::new(Mutex::new(Uuid::new_v4().to_string())),
     };
 
     CLIENTS_DATA
@@ -142,6 +148,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
         let message = match message {
             Ok(msg) => msg,
             Err(_) => {
+                eprintln!("receivingMessageError");
                 send_status(&client_id, &String::new(), "receivingMessageError").await;
                 continue;
             }
@@ -150,6 +157,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
         let message_str = match message.to_text() {
             Ok(text) => text,
             Err(_) => {
+                eprintln!("invalidTextError");
                 send_status(&client_id, &String::new(), "invalidTextError").await;
                 continue;
             }
@@ -158,6 +166,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
         let incoming_message = match serde_json::from_str::<BaseMessage>(message_str) {
             Ok(msg) => msg,
             Err(_) => {
+                eprintln!("invalidJSONError");
                 send_status(&client_id, &String::new(), "invalidJSONError").await;
                 continue;
             }
@@ -184,6 +193,8 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
         }
 
         match incoming_message.message_type.as_str() {
+            "IN_REQ_sendPublicKey" => handle_send_public_key(&client_id, incoming_message).await,
+            "IN_REQ_verifysignature" => handle_verify_signature(&client_id, incoming_message).await,
             "IN_REQ_registerClient" => handle_register_client(&client_id, incoming_message).await,
             "IN_REQ_clientList" => handle_get_client_list(&client_id, incoming_message).await,
             "IN_REQ_sendChat" => handle_send_chat(&client_id, incoming_message).await,
@@ -234,6 +245,113 @@ async fn handle_game_state_update(game_state: GameState) {
 
 // #region Handlers
 
+async fn handle_send_public_key(client_id: &str, incoming_message: BaseMessage) {
+    let payload = match validate_payload::<InReqSendPublicKey>(
+        client_id,
+        &incoming_message.correlation_id,
+        incoming_message.payload,
+    )
+    .await
+    {
+        Ok(payload) => payload,
+        Err(_) => return,
+    };
+
+    let mut clients_data = CLIENTS_DATA.lock().await;
+    let client_data = match clients_data.get_mut(client_id) {
+        Some(data) => data,
+        None => {
+            drop(clients_data);
+            return;
+        }
+    };
+
+    let is_validated = *client_data.is_validated.lock().await;
+    if is_validated {
+        drop(clients_data);
+        send_status(
+            client_id,
+            &incoming_message.correlation_id,
+            "alreadyValidatedError",
+        )
+        .await;
+        return;
+    }
+
+    *client_data.key.lock().await = Some(payload.key);
+
+    let message = client_data.sign_message.lock().await.clone();
+
+    drop(clients_data);
+
+    let response_payload = OutRespSignMessagePayload { message };
+    let response = BaseMessage::new(
+        response_payload,
+        Some(incoming_message.correlation_id.clone()),
+    );
+    send(client_id, response).await;
+}
+
+async fn handle_verify_signature(client_id: &str, incoming_message: BaseMessage) {
+    let payload = match validate_payload::<InReqVerifySignature>(
+        client_id,
+        &incoming_message.correlation_id,
+        incoming_message.payload,
+    )
+    .await
+    {
+        Ok(payload) => payload,
+        Err(_) => return,
+    };
+
+    let clients_data = CLIENTS_DATA.lock().await;
+    let client_data = match clients_data.get(client_id) {
+        Some(data) => data,
+        None => {
+            drop(clients_data);
+            return;
+        }
+    };
+
+    let is_validated = *client_data.is_validated.lock().await;
+    if is_validated {
+        drop(clients_data);
+        send_status(
+            client_id,
+            &incoming_message.correlation_id,
+            "alreadyValidatedError",
+        )
+        .await;
+        return;
+    }
+
+    let message = client_data.sign_message.lock().await.clone();
+    let key = client_data.key.lock().await.clone();
+
+    let is_validated = client_data.is_validated.clone();
+
+    drop(clients_data);
+
+    match key {
+        Some(key) => {
+            if verify_signature(&message, &payload.signature, &key).unwrap_or(false) {
+                *is_validated.lock().await = true;
+                send_status(client_id, &incoming_message.correlation_id, "success").await;
+            } else {
+                send_status(
+                    client_id,
+                    &incoming_message.correlation_id,
+                    "wrongSignatureError",
+                )
+                .await;
+            }
+        }
+        None => {
+            send_status(client_id, &incoming_message.correlation_id, "noKeyError").await;
+        }
+    }
+}
+
 async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) {
     if let Ok(payload) = validate_payload::<InReqRegisterClientPayload>(
         client_id,
@@ -242,6 +360,27 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
     )
     .await
     {
+        let clients_data = CLIENTS_DATA.lock().await;
+        let client_data = match clients_data.get(client_id) {
+            Some(data) => data,
+            None => {
+                drop(clients_data);
+                return;
+            }
+        };
+
+        let is_validated = *client_data.is_validated.lock().await;
+        if !is_validated {
+            drop(clients_data);
+            send_status(
+                client_id,
+                &incoming_message.correlation_id,
+                "notValidatedError",
+            )
+            .await;
+            return;
+        }
+        drop(clients_data);
         let is_added = add_client(client_id, &payload.name);
 
         if !is_added {
@@ -251,6 +390,7 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
                 "alreadyRegisteredError",
             )
             .await;
+
             return;
         }
 

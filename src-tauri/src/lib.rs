@@ -1,3 +1,4 @@
+pub mod crypto;
 pub mod db;
 use std::{
     fs::{self, File},
@@ -24,7 +25,10 @@ pub fn run() {
             db::add_answer_stats,
             db::add_game_stats,
             db::get_font_id,
-			db::get_answer_streaks,
+            db::get_answer_streaks,
+            crypto::get_public_key,
+            crypto::sign_message,
+            crypto::verify_signature,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

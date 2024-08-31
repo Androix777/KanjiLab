@@ -35,6 +35,9 @@ import {
 	type InReqSendGameSettingsMessage,
 	type OutNotifGameSettingsChangedMessage,
 	type OutNotifGameSettingsChangedPayload,
+	type InReqSendPublicKeyMessage,
+	type OutRespSignMessageMessage,
+	type InReqVerifySignatureMessage,
 } from "./types";
 
 export class ServerConnector extends EventTarget
@@ -125,6 +128,69 @@ export class ServerConnector extends EventTarget
 			if (!this.webSocket) throw new Error(`missingWebsocket`);
 			this.webSocket.send(JSON.stringify(message));
 		});
+	}
+
+	public async sendPublicKeyMessage(key: string)
+	{
+		const message: InReqSendPublicKeyMessage = {
+			messageType: `IN_REQ_sendPublicKey`,
+			correlationId: crypto.randomUUID(),
+			payload: {
+				key: key,
+			},
+		};
+
+		const response = await this.sendWebSocketMessage(message);
+
+		switch (response.messageType)
+		{
+			case `OUT_RESP_signMessage`:
+			{
+				const message = <OutRespSignMessageMessage>response;
+				return message.payload.message;
+			}
+			case `OUT_RESP_status`:
+			{
+				const message = <OutRespStatusMessage>response;
+				throw new Error(message.payload.status);
+			}
+			default:
+				console.log(`Received unknown message type: ${response.messageType}`);
+				throw new Error(`unknownMessageType`);
+		}
+	}
+
+	public async sendVerifySignatureMessage(signature: string)
+	{
+		const message: InReqVerifySignatureMessage = {
+			messageType: `IN_REQ_verifysignature`,
+			correlationId: crypto.randomUUID(),
+			payload: {
+				signature: signature,
+			},
+		};
+
+		const response = await this.sendWebSocketMessage(message);
+
+		switch (response.messageType)
+		{
+			case `OUT_RESP_status`:
+			{
+				const statusMessage = <OutRespStatusMessage>response;
+
+				if (statusMessage.payload.status == `success`)
+				{
+					return;
+				}
+				else
+				{
+					throw new Error(statusMessage.payload.status);
+				}
+			}
+			default:
+				console.log(`Received unknown message type: ${response.messageType}`);
+				throw new Error(`unknownMessageType`);
+		}
 	}
 
 	public async sendRegisterClientMessage()

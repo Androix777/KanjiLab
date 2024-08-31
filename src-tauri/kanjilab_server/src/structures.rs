@@ -68,6 +68,20 @@ pub struct GameSettings {
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[serde(rename_all = "camelCase")]
+#[message_type("IN_REQ_sendPublicKey")]
+pub struct InReqSendPublicKey {
+    pub key: String,
+}
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
+#[message_type("IN_REQ_verifysignature")]
+pub struct InReqVerifySignature {
+    pub signature: String,
+}
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
 #[message_type("IN_REQ_registerClient")]
 pub struct InReqRegisterClientPayload {
     pub name: String,
@@ -142,6 +156,13 @@ pub struct OutRespStatusPayload {
 #[message_type("OUT_RESP_clientList")]
 pub struct OutRespClientListPayload {
     pub clients: Vec<ClientInfo>,
+}
+
+#[derive(Serialize, Deserialize, MessageType)]
+#[serde(rename_all = "camelCase")]
+#[message_type("OUT_RESP_signMessage")]
+pub struct OutRespSignMessagePayload {
+    pub message: String,
 }
 // #endregion
 

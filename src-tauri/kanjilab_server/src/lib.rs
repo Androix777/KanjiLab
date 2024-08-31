@@ -1,6 +1,7 @@
 pub mod server;
-pub mod structures;
 pub mod server_logic;
+pub mod structures;
+pub mod tools;
 
 pub async fn call_launch_server() {
     server::call_launch_server().await;

@@ -92,6 +92,8 @@ export type AnswerStatus = `Correct` | `Incorrect` | `Unknown`;
 export type GameStatus = `Off` | `Connecting` | `Lobby` | `WaitingQuestion` | `AnswerQuestion`;
 
 export type MessageType =
+	| `IN_REQ_sendPublicKey`
+	| `IN_REQ_verifysignature`
 	| `IN_REQ_registerClient`
 	| `IN_REQ_clientList`
 	| `IN_REQ_sendChat`
@@ -104,6 +106,7 @@ export type MessageType =
 	| `OUT_RESP_clientList`
 	| `OUT_RESP_status`
 	| `OUT_RESP_clientRegistered`
+	| `OUT_RESP_signMessage`
 
 	| `OUT_REQ_question`
 
@@ -127,6 +130,16 @@ export type BaseMessage<T extends object, M extends MessageType> = {
 };
 
 // IN REQ
+export type InReqSendPublicKeyPayload = {
+	key: string;
+};
+export type InReqSendPublicKeyMessage = BaseMessage<InReqSendPublicKeyPayload, `IN_REQ_sendPublicKey`>;
+
+export type InReqVerifySignaturePayload = {
+	signature: string;
+};
+export type InReqVerifySignatureMessage = BaseMessage<InReqVerifySignaturePayload, `IN_REQ_verifysignature`>;
+
 export type InReqRegisterClientPayload = {
 	name: string;
 };
@@ -169,6 +182,11 @@ export type OutRespStatusPayload = {
 	status: string;
 };
 export type OutRespStatusMessage = BaseMessage<OutRespStatusPayload, `OUT_RESP_status`>;
+
+export type OutRespSignMessagePayload = {
+	message: string;
+};
+export type OutRespSignMessageMessage = BaseMessage<OutRespSignMessagePayload, `OUT_RESP_signMessage`>;
 
 export type OutRespClientRegisteredPayload = {
 	id: string;

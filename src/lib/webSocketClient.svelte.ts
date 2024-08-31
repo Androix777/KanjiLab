@@ -4,6 +4,7 @@ import { getSettings } from "$lib/globalSettings.svelte";
 import { SvelteMap } from "svelte/reactivity";
 import { getFontInfo, getRandomFont, getSVGText } from "./fontTools";
 import { addAnswerStats, addGameStats, getFontId, getRandomWords } from "./databaseTools";
+import { getPublicKey, signMessage, verifySignature } from "./cryptoTools";
 
 class WebSocketClient
 {
@@ -21,7 +22,7 @@ class WebSocketClient
 	public onlineFontsCount: number = $state(0);
 
 	private static instance: WebSocketClient | null;
-	private serverConnector: ServerConnector | null = null;
+	private serverConnector: ServerConnector = new ServerConnector();
 	private timerIntervalId: number = 0;
 	private currentGameId: number = 0;
 
@@ -35,7 +36,6 @@ class WebSocketClient
 	public async connectToServer(ipAddress: string)
 	{
 		this.gameStatus = `Connecting`;
-		this.serverConnector = new ServerConnector();
 
 		this.serverConnector.addEventListener(`socketClosed`, () =>
 		{
@@ -89,6 +89,13 @@ class WebSocketClient
 		try
 		{
 			await this.serverConnector.connect(ipAddress);
+
+			const message = await this.sendPublicKeyMessage();
+			const key = await getPublicKey();
+			const sign = await signMessage(message);
+			console.log(await verifySignature(message, sign, key));
+			await this.sendVerifySignatureMessage(sign);
+
 			const payload = await this.serverConnector.sendRegisterClientMessage();
 			this.id = payload.id;
 			if (!this.isConnectedToSelf)
@@ -113,7 +120,7 @@ class WebSocketClient
 
 	public disconnectFromServer()
 	{
-		this.serverConnector?.disconnect();
+		this.serverConnector.disconnect();
 		this.gameStatus = `Off`;
 		this.clientList = [];
 		this.chatList = [];
@@ -123,20 +130,30 @@ class WebSocketClient
 		this.isConnectedToSelf = true;
 	}
 
+	public async sendPublicKeyMessage()
+	{
+		return await this.serverConnector.sendPublicKeyMessage(await getPublicKey());
+	}
+
+	public async sendVerifySignatureMessage(signature: string)
+	{
+		await this.serverConnector.sendVerifySignatureMessage(signature);
+	}
+
 	public async sendChatMessage(message: string)
 	{
-		await this.serverConnector?.sendChatMessage(message);
+		await this.serverConnector.sendChatMessage(message);
 	}
 
 	public async makeAdmin()
 	{
-		await this.serverConnector?.sendMakeAdmin(getSettings().adminPassword.get(), this.id);
+		await this.serverConnector.sendMakeAdmin(getSettings().adminPassword.get(), this.id);
 		this.isAdmin = true;
 	}
 
 	public async startGame()
 	{
-		await this.serverConnector?.sendStartGame(this.getGameSettings());
+		await this.serverConnector.sendStartGame(this.getGameSettings());
 	}
 
 	public async sendAnswer(answer: string)
@@ -146,17 +163,17 @@ class WebSocketClient
 			answerStatus: `Unknown`,
 		});
 
-		await this.serverConnector?.sendAnswer(answer);
+		await this.serverConnector.sendAnswer(answer);
 	}
 
 	public async stopGame()
 	{
-		await this.serverConnector?.sendStopGame();
+		await this.serverConnector.sendStopGame();
 	}
 
 	public async sendNewSettings()
 	{
-		await this.serverConnector?.sendNewSettings(this.getGameSettings());
+		await this.serverConnector.sendNewSettings(this.getGameSettings());
 	}
 
 	// Private

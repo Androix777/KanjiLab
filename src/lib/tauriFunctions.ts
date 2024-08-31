@@ -11,3 +11,7 @@ export const ADD_ANSWER_STATS: string = `add_answer_stats`;
 export const ADD_GAME_STATS: string = `add_game_stats`;
 export const GET_FONT_ID: string = `get_font_id`;
 export const GET_ANSWER_STREAKS: string = `get_answer_streaks`;
+export const GENERATE_KEYS: string = `generate_keys`;
+export const GET_PUBLIC_KEY: string = `get_public_key`;
+export const SIGN_MESSAGE: string = `sign_message`;
+export const VERIFY_SIGNaTURE: string = `verify_signature`;
