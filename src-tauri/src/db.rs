@@ -15,11 +15,35 @@ static DB_POOL: LazyLock<SqlitePool> = LazyLock::new(|| {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct WordPartExample {
+    word: String,
+    frequency: Option<i64>,
+    reading: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WordPartInfo {
+    word_part: String,
+    word_part_reading: String,
+    examples: Vec<WordPartExample>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReadingWithParts {
+    reading: String,
+    parts: Vec<WordPartInfo>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WordWithReadings {
     word: String,
     meanings: Vec<Vec<Vec<String>>>,
-    readings: Vec<String>,
+    readings: Vec<ReadingWithParts>,
 }
+
 
 #[tauri::command]
 pub async fn get_words(
@@ -27,6 +51,7 @@ pub async fn get_words(
     min_frequency: i64,
     max_frequency: Option<i64>,
     word_part: Option<&str>,
+    examples_count: i64,
 ) -> Result<Vec<WordWithReadings>, String> {
     const GLOSS_SEPARATOR: &str = "␞";
     const SENSE_SEPARATOR: &str = "␝";
@@ -34,9 +59,11 @@ pub async fn get_words(
     const READINGS_SEPARATOR: &str = ",";
 
     struct RawData {
+        id: i64,
         word: String,
         meanings: String,
         word_readings: String,
+        word_reading_ids: String,
     }
 
     let raw_data = if let Some(part) = word_part {
@@ -67,6 +94,12 @@ pub async fn get_words(
     let mut result = Vec::new();
 
     for raw_word in raw_data {
+        let reading_ids: Vec<i64> = raw_word
+            .word_reading_ids
+            .split(READINGS_SEPARATOR)
+            .filter_map(|id| id.parse().ok())
+            .collect();
+
         let readings: Vec<String> = raw_word
             .word_readings
             .split(READINGS_SEPARATOR)
@@ -83,14 +116,73 @@ pub async fn get_words(
             })
             .collect();
 
+        let mut readings_with_parts = Vec::new();
+        for (reading_id, reading) in reading_ids.into_iter().zip(readings.into_iter()) {
+            match get_reading_with_parts(reading_id, reading, examples_count).await {
+                Ok(reading_with_parts) => readings_with_parts.push(reading_with_parts),
+                Err(e) => eprintln!("Error getting reading with parts: {}", e),
+            }
+        }
+
         result.push(WordWithReadings {
             word: raw_word.word,
             meanings,
-            readings,
+            readings: readings_with_parts,
         });
     }
 
     Ok(result)
+}
+
+async fn get_reading_with_parts(reading_id: i64, reading: String, examples_count: i64) -> Result<ReadingWithParts, String> {
+    struct RawPartData {
+        part_id: i64,
+        word_part: String,
+        word_part_reading: String,
+        top_words: String,
+        top_words_frequencies: String,
+        top_words_readings: String,
+    }
+
+    let raw_part_data = query_file_as!(
+        RawPartData,
+        "./src/queries/get_word_parts_examples.sql",
+        reading_id,
+        examples_count
+    )
+    .fetch_all(&*DB_POOL)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    if raw_part_data.is_empty() {
+        return Err(format!("No data found for reading_id: {}", reading_id));
+    }
+
+    let mut parts = Vec::new();
+
+    for raw_part in raw_part_data {
+        let words: Vec<&str> = raw_part.top_words.split(',').collect();
+        let frequencies: Vec<&str> = raw_part.top_words_frequencies.split(',').collect();
+        let readings: Vec<&str> = raw_part.top_words_readings.split(',').collect();
+
+        let examples: Vec<WordPartExample> = words.into_iter()
+            .zip(frequencies.into_iter())
+            .zip(readings.into_iter())
+            .map(|((word, frequency), reading)| WordPartExample {
+                word: word.to_string(),
+                frequency: frequency.parse().ok(),
+                reading: reading.to_string(),
+            })
+            .collect();
+
+        parts.push(WordPartInfo {
+            word_part: raw_part.word_part,
+            word_part_reading: raw_part.word_part_reading,
+            examples,
+        });
+    }
+
+    Ok(ReadingWithParts { reading, parts })
 }
 
 

@@ -12,8 +12,10 @@ export async function getRandomWords(count: number): Promise<WordInfo[]>
 			minFrequency: getSettings().minFrequency.get(),
 			maxFrequency: getSettings().usingMaxFrequency.get() ? getSettings().maxFrequency.get() : null,
 			wordPart: getSettings().wordPart.get() == `` ? null : getSettings().wordPart.get(),
+			examplesCount: 5,
 		});
 
+	console.log(data);
 	return data;
 }
 

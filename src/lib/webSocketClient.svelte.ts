@@ -325,7 +325,7 @@ class WebSocketClient
 							question:
 							{
 								question: lastWord.word,
-								answers: lastWord.readings,
+								answers: lastWord.readings.map(r => r.reading),
 								meanings: lastWord.meanings,
 								fontName: fontInfo.fullName,
 							},

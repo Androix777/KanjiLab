@@ -1,9 +1,26 @@
 import type { SvelteMap } from "svelte/reactivity";
 
+export type WordPartExample = {
+	word: string;
+	frequency: number | null;
+	reading: string;
+};
+
+export type WordPartInfo = {
+	wordPart: string;
+	wordPartReading: string;
+	examples: WordPartExample[];
+};
+
+export type ReadingWithParts = {
+	reading: string;
+	parts: WordPartInfo[];
+};
+
 export type WordInfo = {
 	word: string;
 	meanings: string[][][];
-	readings: string[];
+	readings: ReadingWithParts[];
 };
 
 export type StatsInfo = {

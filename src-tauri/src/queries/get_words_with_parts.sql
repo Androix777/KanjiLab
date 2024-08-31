@@ -18,7 +18,8 @@ filtered_word_parts AS (
 	WHERE word_part = $4
 ),
 filtered_word_readings AS (
-	SELECT wr.word_id,
+	SELECT wr.id,
+		wr.word_id,
 		wr.word_reading
 	FROM word_reading wr
 		JOIN word_reading_word_part_reading wrwpr ON wr.id = wrwpr.word_reading_id
@@ -39,6 +40,8 @@ selected_words AS (
 	LIMIT $1
 )
 SELECT GROUP_CONCAT(fwr.word_reading) AS "word_readings!: String",
+	GROUP_CONCAT(fwr.id) AS "word_reading_ids!: String",
+	sw.id AS "id!",
 	sw.word AS "word!",
 	sw.meanings AS "meanings"
 FROM selected_words sw
