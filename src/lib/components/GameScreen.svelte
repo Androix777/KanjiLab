@@ -101,10 +101,10 @@
 				</div>
 				<div class="flex flex-col space-y-2 text-xl overflow-y-auto flex-grow">
 					<div class="justify-center">
-						<div class="">
+						<div class="text-4xl">
 							{ previousQuestionInfo?.question }
 						</div>
-						<div class="">
+						<div class="text-4xl">
 							{ previousQuestionInfo?.answers.join(` `) }
 						</div>
 					</div>
