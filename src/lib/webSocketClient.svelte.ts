@@ -4,7 +4,7 @@ import { getSettings } from "$lib/globalSettings.svelte";
 import { SvelteMap } from "svelte/reactivity";
 import { getFontInfo, getRandomFont, getSVGText } from "./fontTools";
 import { addAnswerStats, addGameStats, getFontId, getRandomWords } from "./databaseTools";
-import { getPublicKey, signMessage, verifySignature } from "./cryptoTools";
+import { getPublicKey, signMessage } from "./cryptoTools";
 
 class WebSocketClient
 {
@@ -36,6 +36,8 @@ class WebSocketClient
 	public async connectToServer(ipAddress: string)
 	{
 		this.gameStatus = `Connecting`;
+
+		this.serverConnector = new ServerConnector();
 
 		this.serverConnector.addEventListener(`socketClosed`, () =>
 		{
@@ -91,9 +93,7 @@ class WebSocketClient
 			await this.serverConnector.connect(ipAddress);
 
 			const message = await this.sendPublicKeyMessage();
-			const key = await getPublicKey();
 			const sign = await signMessage(message);
-			console.log(await verifySignature(message, sign, key));
 			await this.sendVerifySignatureMessage(sign);
 
 			const payload = await this.serverConnector.sendRegisterClientMessage();
@@ -200,7 +200,6 @@ class WebSocketClient
 			firstFontName: fontInfo?.fullName ?? null,
 		};
 
-		console.log(`MaxFreqUsed: ${getSettings().usingMaxFrequency.get()}`);
 		return data;
 	}
 

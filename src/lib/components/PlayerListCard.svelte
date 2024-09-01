@@ -53,7 +53,6 @@
 		{
 			paddedGameHistory.push({ question: { question: ``, answers: [], meanings: [], fontName: `` }, questionSvg: ``, answers: new SvelteMap() });
 		}
-		console.log(gameHistory);
 		return paddedGameHistory;
 	});
 </script>
