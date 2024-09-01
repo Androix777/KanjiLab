@@ -1,7 +1,10 @@
 WITH source_parts AS (
 	SELECT DISTINCT wpr.id AS part_id,
 		wpr.word_part,
-		wpr.word_part_reading
+		wpr.word_part_reading,
+		ROW_NUMBER() OVER (
+			ORDER BY wrwpr.rowid
+		) AS part_order
 	FROM word_reading wr
 		JOIN word_reading_word_part_reading wrwpr ON wr.id = wrwpr.word_reading_id
 		JOIN word_part_reading wpr ON wrwpr.word_part_reading_id = wpr.id
@@ -11,6 +14,7 @@ matching_words AS (
 	SELECT sp.part_id,
 		sp.word_part,
 		sp.word_part_reading,
+		sp.part_order,
 		w.word,
 		w.frequency,
 		wr.word_reading,
@@ -36,6 +40,7 @@ ranked_words AS (
 	SELECT part_id,
 		word_part,
 		word_part_reading,
+		part_order,
 		word,
 		frequency,
 		word_reading,
@@ -64,4 +69,6 @@ WHERE rank <= $2
 	)
 GROUP BY part_id,
 	word_part,
-	word_part_reading;
+	word_part_reading,
+	part_order
+ORDER BY part_order;

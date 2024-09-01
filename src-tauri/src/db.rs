@@ -154,10 +154,6 @@ async fn get_reading_with_parts(reading_id: i64, reading: String, examples_count
     .await
     .map_err(|e| e.to_string())?;
 
-    if raw_part_data.is_empty() {
-        return Err(format!("No data found for reading_id: {}", reading_id));
-    }
-
     let mut parts = Vec::new();
 
     for raw_part in raw_part_data {
