@@ -40,9 +40,7 @@ export type ClientInfo = {
 };
 
 export type QuestionInfo = {
-	question: string;
-	answers: string[];
-	meanings: string[][][];
+	wordInfo: WordInfo;
 	fontName: string;
 };
 

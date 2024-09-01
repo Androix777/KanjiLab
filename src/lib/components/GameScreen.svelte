@@ -69,7 +69,7 @@
 	<div class="flex-grow"></div>
 
     <div class="flex items-center justify-center flex-none my-4 h-24">
-		{#key currentQuestionInfo?.question}
+		{#key currentQuestionInfo?.wordInfo.word}
 			<div class="bg-base-content absolute" style="
 				mask-image: url({currentSvgUrl});
 				mask-size: 100% 100%;"
@@ -94,7 +94,7 @@
 	<div class="flex-grow"></div>
 
 	<div class="h-1/2 w-full flex justify-center flex-none">
-		{#key [previousQuestionInfo?.question, previousAnswerRecord?.answer]}
+		{#key [previousQuestionInfo?.wordInfo.word, previousAnswerRecord?.answer]}
 		<div class="absolute w-full flex-grow border border-base-100" transition:fade={{ duration: 400 }}>
 				<div class="flex-none divider mx-2 {previousAnswerRecord?.answerStatus == `Correct` ? `divider-success text-success` : previousAnswerRecord?.answerStatus == `Incorrect` ? `divider-error text-error` : `divider-neutral text-neutral-content`}">
 					{ previousAnswerRecord?.answer }
@@ -102,14 +102,14 @@
 				<div class="flex flex-col space-y-2 text-xl overflow-y-auto flex-grow">
 					<div class="justify-center">
 						<div class="text-4xl">
-							{ previousQuestionInfo?.question }
+							{ previousQuestionInfo?.wordInfo.word }
 						</div>
 						<div class="text-4xl">
-							{ previousQuestionInfo?.answers.join(` `) }
+							{ previousQuestionInfo?.wordInfo.readings.map(r => r.reading).join(` `) }
 						</div>
 					</div>
 					<div class="flex-none flex justify-center min-h-0">
-						<div>{ previousQuestionInfo?.question ? previousQuestionInfo.meanings[0][0].join(`; `) : `` }</div>
+						<div>{ previousQuestionInfo?.wordInfo.word ? previousQuestionInfo.wordInfo.meanings[0][0].join(`; `) : `` }</div>
 					</div>
 				</div>
 		</div>

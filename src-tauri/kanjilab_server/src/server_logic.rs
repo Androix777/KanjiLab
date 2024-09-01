@@ -212,9 +212,10 @@ pub fn record_answer(client_id: &str, answer: &str) -> Result<bool, AnswerError>
     }
 
     let is_correct = question
-        .answers
+        .word_info
+        .readings
         .iter()
-        .any(|correct_answer| correct_answer.to_lowercase() == answer.to_lowercase());
+        .any(|reading| reading.reading == answer);
 
     let answer_info = AnswerInfo {
         id: client_id.to_string(),

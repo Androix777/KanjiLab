@@ -37,10 +37,39 @@ pub struct ClientInfo {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct QuestionInfo {
-    pub question: String,
-    pub answers: Vec<String>,
-    pub meanings: Vec<Vec<Vec<String>>>,
+    pub word_info: WordInfo,
     pub font_name: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct WordPartExample {
+    pub word: String,
+    pub frequency: Option<f64>,
+    pub reading: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct WordPartInfo {
+    pub word_part: String,
+    pub word_part_reading: String,
+    pub examples: Vec<WordPartExample>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ReadingWithParts {
+    pub reading: String,
+    pub parts: Vec<WordPartInfo>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct WordInfo {
+    pub word: String,
+    pub meanings: Vec<Vec<Vec<String>>>,
+    pub readings: Vec<ReadingWithParts>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -141,7 +170,7 @@ pub struct InReqSendGameSettingsPayload {
 #[message_type("OUT_RESP_clientRegistered")]
 pub struct OutRespClientRegisteredPayload {
     pub id: String,
-	pub game_settings: GameSettings,
+    pub game_settings: GameSettings,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]

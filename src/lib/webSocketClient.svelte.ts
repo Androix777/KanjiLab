@@ -323,9 +323,7 @@ class WebSocketClient
 						{
 							question:
 							{
-								question: lastWord.word,
-								answers: lastWord.readings.map(r => r.reading),
-								meanings: lastWord.meanings,
+								wordInfo: lastWord,
 								fontName: fontInfo.fullName,
 							},
 							questionSvg: svg,
@@ -350,9 +348,7 @@ class WebSocketClient
 		const customEvent: CustomEvent<OutNotifQuestionPayload> = <CustomEvent<OutNotifQuestionPayload>>event;
 		this.gameHistory.push({
 			question: {
-				question: ``,
-				answers: [],
-				meanings: [],
+				wordInfo: { word: ``, meanings: [], readings: [] },
 				fontName: ``,
 			},
 			questionSvg: customEvent.detail.questionSvg,
@@ -391,7 +387,7 @@ class WebSocketClient
 			return (e1Score < e2Score) ? 1 : (e1Score > e2Score) ? -1 : 0;
 		});
 
-		const word = this.gameHistory.at(-1)?.question.question;
+		const word = this.gameHistory.at(-1)?.question.wordInfo.word;
 		const answer = this.gameHistory.at(-1)?.answers.get(this.id)?.answer || ``;
 
 		if (word)
