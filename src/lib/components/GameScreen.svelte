@@ -93,24 +93,43 @@
 
 	<div class="flex-grow"></div>
 
-	<div class="h-1/2 w-full flex justify-center flex-none">
+	<div class="h-1/2 w-full flex justify-center flex-none relative">
 		{#key [previousQuestionInfo?.wordInfo.word, previousAnswerRecord?.answer]}
-		<div class="absolute w-full flex-grow border border-base-100" transition:fade={{ duration: 400 }}>
-				<div class="flex-none divider mx-2 {previousAnswerRecord?.answerStatus == `Correct` ? `divider-success text-success` : previousAnswerRecord?.answerStatus == `Incorrect` ? `divider-error text-error` : `divider-neutral text-neutral-content`}">
+		<div class="absolute right-0 left-0 top-0 bottom-0 border border-base-100" transition:fade={{ duration: 400 }}>
+				<div class="flex-none divider mb-0 mx-2 {previousAnswerRecord?.answerStatus == `Correct` ? `divider-success text-success` : previousAnswerRecord?.answerStatus == `Incorrect` ? `divider-error text-error` : `divider-neutral text-neutral-content`}">
 					{ previousAnswerRecord?.answer }
 				</div>
-				<div class="flex flex-col space-y-2 text-xl overflow-y-auto flex-grow">
+				<div class="flex flex-col space-y-2 text-xl overflow-y-auto" style="height: 90%;">
 					<div class="justify-center">
-						<div class="text-4xl">
-							{ previousQuestionInfo?.wordInfo.word }
-						</div>
-						<div class="text-4xl">
-							{ previousQuestionInfo?.wordInfo.readings.map(r => r.reading).join(` `) }
-						</div>
+						{#if previousQuestionInfo != null}
+							<div class="flex flex-row items-center">
+								{#each previousQuestionInfo.wordInfo.readings as reading}
+									<div class="flex-grow text-4xl"><ruby>{previousQuestionInfo.wordInfo.word}<rt class="text-2xl mb-1">{reading.reading}</rt></ruby></div>
+								{/each}
+							</div>
+						{/if}
 					</div>
 					<div class="flex-none flex justify-center min-h-0">
 						<div>{ previousQuestionInfo?.wordInfo.word ? previousQuestionInfo.wordInfo.meanings[0][0].join(`; `) : `` }</div>
 					</div>
+					{#if previousQuestionInfo != null}
+						{#each previousQuestionInfo.wordInfo.readings as reading}
+							{#if reading.parts.length >= 1}
+								<div class="divider py-6">{reading.reading}</div>
+								{#each reading.parts as part}
+									<div class="flex flex-row items-center">
+										<div class="flex-none w-1/6">{`${part.wordPart}（${part.wordPartReading}）\u3000\u3000`}</div>
+										<div class="divider divider-horizontal"></div>
+										<div class="flex-grow">
+										{#each part.examples as example}
+											<div class="float-left"><ruby>{example.word}<rt class="text-sm mb-1">{example.reading}</rt></ruby>{`\u3000\u3000`}</div>
+										{/each}
+										</div>
+									</div>
+								{/each}
+							{/if}
+						{/each}
+					{/if}
 				</div>
 		</div>
 		{/key}
