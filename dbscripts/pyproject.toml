@@ -1,0 +1,20 @@
+[project]
+name = "kanji_lab_loader"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+	"regex",
+	"tqdm",
+	"wanakana-python",
+	"ruff",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "UP",
+    "B",
+    "SIM",
+    "I",
+]

@@ -15,20 +15,20 @@ use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{accept_async, WebSocketStream};
 use uuid::Uuid;
 
-pub static SERVER_HANDLE: LazyLock<Arc<Mutex<Option<oneshot::Sender<()>>>>> =
+static SERVER_HANDLE: LazyLock<Arc<Mutex<Option<oneshot::Sender<()>>>>> =
     LazyLock::new(|| Arc::new(Mutex::new(None)));
 
-pub struct ClientData {
+struct ClientData {
     write: Arc<Mutex<SplitSink<WebSocketStream<TcpStream>, Message>>>,
     responses: Arc<Mutex<PendingResponses>>,
     key: Arc<Mutex<Option<String>>>,
     sign_message: Arc<Mutex<String>>,
     is_validated: Arc<Mutex<bool>>,
 }
-pub type ClientsData = Arc<Mutex<HashMap<String, ClientData>>>;
-pub static CLIENTS_DATA: LazyLock<ClientsData> = LazyLock::new(|| Default::default());
+type ClientsData = Arc<Mutex<HashMap<String, ClientData>>>;
+static CLIENTS_DATA: LazyLock<ClientsData> = LazyLock::new(|| Default::default());
 
-pub static IS_AUTO_SERVER: LazyLock<Arc<Mutex<bool>>> = LazyLock::new(|| Default::default());
+static IS_AUTO_SERVER: LazyLock<Arc<Mutex<bool>>> = LazyLock::new(|| Default::default());
 
 pub struct PendingResponses {
     callbacks: HashMap<String, oneshot::Sender<BaseMessage>>,
