@@ -16,18 +16,24 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "regex" },
-    { name = "ruff" },
     { name = "tqdm" },
     { name = "wanakana-python" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "ruff" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "regex" },
-    { name = "ruff" },
     { name = "tqdm" },
     { name = "wanakana-python" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "ruff" }]
 
 [[package]]
 name = "regex"
