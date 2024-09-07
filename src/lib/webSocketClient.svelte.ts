@@ -226,7 +226,7 @@ class WebSocketClient
 	private handleNotifClientRegistered(event: Event)
 	{
 		const customEvent: CustomEvent<OutNotifClientRegisteredPayload> = <CustomEvent<OutNotifClientRegisteredPayload>>event;
-		this.clientList.push({ id: customEvent.detail.id, name: customEvent.detail.name, isAdmin: false });
+		this.clientList.push(customEvent.detail.client);
 	}
 
 	private handleNotifClientDisconnected(event: Event)

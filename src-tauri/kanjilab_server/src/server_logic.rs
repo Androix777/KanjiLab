@@ -5,15 +5,9 @@ use tokio::sync::{broadcast, oneshot};
 use tokio::time::sleep;
 use uuid::Uuid;
 
-use crate::structures::{AnswerInfo, GameSettings, QuestionInfo};
+use crate::structures::{AnswerInfo, ClientInfo, GameSettings, QuestionInfo};
 
 // #region StructuresEnumerations
-#[derive(Clone)]
-pub struct Client {
-    pub id: String,
-    pub name: String,
-    pub is_admin: bool,
-}
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum GameState {
@@ -26,7 +20,7 @@ pub enum GameState {
 // #endregion
 
 // #region Static
-static CLIENT_LIST: LazyLock<RwLock<HashMap<String, Client>>> = LazyLock::new(Default::default);
+static CLIENT_LIST: LazyLock<RwLock<HashMap<String, ClientInfo>>> = LazyLock::new(Default::default);
 static ADMIN_PASSWORD: LazyLock<RwLock<String>> =
     LazyLock::new(|| RwLock::new(Uuid::new_v4().to_string()));
 static GAME_STATE: LazyLock<RwLock<GameState>> = LazyLock::new(|| RwLock::new(GameState::Lobby));
@@ -67,12 +61,13 @@ pub fn get_game_state() -> GameState {
 
 // #region ClientsManagement
 
-pub fn add_client(id: &str, name: &str) -> bool {
-    match CLIENT_LIST.write().unwrap().entry(id.to_string()) {
+pub fn add_client(id: &str, name: &str, key: &str) -> bool {
+    match CLIENT_LIST.write().unwrap().entry(id.to_owned()) {
         Entry::Vacant(entry) => {
-            entry.insert(Client {
-                id: id.to_string(),
-                name: name.to_string(),
+            entry.insert(ClientInfo {
+                id: id.to_owned(),
+                key: key.to_owned(),
+                name: name.to_owned(),
                 is_admin: false,
             });
             true
@@ -97,11 +92,11 @@ pub fn remove_client(client_id: &str) {
     CLIENT_LIST.write().unwrap().remove(client_id);
 }
 
-pub fn get_client_list() -> Vec<Client> {
+pub fn get_client_list() -> Vec<ClientInfo> {
     CLIENT_LIST.read().unwrap().values().cloned().collect()
 }
 
-pub fn get_client(client_id: &str) -> Option<Client> {
+pub fn get_client(client_id: &str) -> Option<ClientInfo> {
     CLIENT_LIST.read().unwrap().get(client_id).cloned()
 }
 
@@ -218,12 +213,12 @@ pub fn record_answer(client_id: &str, answer: &str) -> Result<bool, AnswerError>
         .any(|reading| reading.reading == answer);
 
     let answer_info = AnswerInfo {
-        id: client_id.to_string(),
-        answer: answer.to_string(),
+        id: client_id.to_owned(),
+        answer: answer.to_owned(),
         is_correct,
     };
 
-    answers.insert(client_id.to_string(), answer_info.clone());
+    answers.insert(client_id.to_owned(), answer_info.clone());
 
     Ok(is_correct)
 }

@@ -209,7 +209,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
         };
     }
 
-    let deleted_client: Option<Client>;
+    let deleted_client: Option<ClientInfo>;
     if let Some(client) = get_client(&client_id) {
         log(&client.name, "disconnected", &client_id, true);
         deleted_client = Some(client);
@@ -221,10 +221,9 @@ async fn handle_connection(stream: tokio::net::TcpStream) {
     remove_client(&client_id);
     CLIENTS_DATA.lock().await.remove(&client_id);
 
-    if let Some(client) = deleted_client {
+    if let Some(_client) = deleted_client {
         let event_payload = OutNotifClientDisconnectedPayload {
-            id: client_id.to_string(),
-            name: client.name.clone(),
+            id: client_id.to_owned(),
         };
 
         let event = BaseMessage::new(event_payload, None);
@@ -384,8 +383,10 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
         .await;
         return;
     }
+    let key = &client_data.key.lock().await.clone().unwrap();
     drop(clients_data);
-    let is_added = add_client(client_id, &payload.name);
+
+    let is_added = add_client(client_id, &payload.name, key);
 
     if !is_added {
         send_status(
@@ -399,7 +400,7 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
     }
 
     let response_payload = OutRespClientRegisteredPayload {
-        id: client_id.to_string(),
+        id: client_id.to_owned(),
         game_settings: get_game_settings(),
     };
     let response = BaseMessage::new(
@@ -409,8 +410,7 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
     send(client_id, response).await;
 
     let event_payload = OutNotifClientRegisteredPayload {
-        id: client_id.to_string(),
-        name: payload.name.clone(),
+        client: get_client(client_id).unwrap(),
     };
     let event = BaseMessage::new(event_payload, None);
     send_all(event).await;
@@ -418,7 +418,7 @@ async fn handle_register_client(client_id: &str, incoming_message: BaseMessage) 
     if *IS_AUTO_SERVER.lock().await && get_admin_id().is_none() {
         let payload = InReqMakeAdminPayload {
             admin_password: get_admin_password(),
-            client_id: client_id.to_string(),
+            client_id: client_id.to_owned(),
         };
         handle_make_admin(&client_id, BaseMessage::new(payload, None)).await;
     }
@@ -465,7 +465,7 @@ async fn handle_make_admin(client_id: &str, incoming_message: BaseMessage) {
     send_status(client_id, &incoming_message.correlation_id, "success").await;
 
     let event_payload = OutNotifAdminMadePayload {
-        id: client_id.to_string(),
+        id: client_id.to_owned(),
     };
 
     let event = BaseMessage::new(event_payload, None);
@@ -481,7 +481,8 @@ async fn handle_get_client_list(client_id: &str, incoming_message: BaseMessage) 
     let client_list = get_client_list()
         .into_iter()
         .map(|client| ClientInfo {
-            id: client.id.to_string(),
+            id: client.id.to_owned(),
+            key: client.key.to_owned(),
             name: client.name.clone(),
             is_admin: client.is_admin,
         })
@@ -516,7 +517,7 @@ async fn handle_send_chat(client_id: &str, incoming_message: BaseMessage) {
     };
 
     let event_payload = OutNotifChatSentPayload {
-        id: client_id.to_string(),
+        id: client_id.to_owned(),
         message: payload.message.clone(),
     };
 
@@ -604,7 +605,7 @@ async fn handle_send_answer(client_id: &str, incoming_message: BaseMessage) {
             send_status(client_id, &incoming_message.correlation_id, "success").await;
 
             let event_payload = OutNotifClientAnsweredPayload {
-                id: client_id.to_string(),
+                id: client_id.to_owned(),
             };
             let event = BaseMessage::new(event_payload, None);
             send_all(event).await;
@@ -808,10 +809,10 @@ fn log(client_name: &str, action: &str, id: &str, to_server: bool) {
 
 async fn send_status(client_id: &str, correlation_id: &str, status: &str) {
     let response_payload = OutRespStatusPayload {
-        status: status.to_string(),
+        status: status.to_owned(),
     };
 
-    let message = BaseMessage::new(response_payload, Some(correlation_id.to_string()));
+    let message = BaseMessage::new(response_payload, Some(correlation_id.to_owned()));
 
     send(&client_id, message).await;
 }
@@ -823,7 +824,7 @@ async fn send(client_id: &str, message: BaseMessage) {
     if let Some(client_data) = clients_data_lock.get(client_id) {
         let mut write = client_data.write.lock().await;
         log(
-            &get_client(client_id).map_or("???".to_string(), |client| client.name.clone()),
+            &get_client(client_id).map_or("???".to_owned(), |client| client.name.clone()),
             &message.message_type,
             client_id,
             false,
@@ -858,7 +859,7 @@ async fn send_and_response<F, Fut>(
 
     send(client_id, message).await;
 
-    let client_id_owned = client_id.to_string();
+    let client_id_owned = client_id.to_owned();
     let pending_responses_cloned = Arc::clone(&pending_responses);
 
     tokio::spawn(async move {

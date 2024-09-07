@@ -20,7 +20,7 @@ impl BaseMessage {
         let payload_type = T::MESSAGE_TYPE;
         BaseMessage {
             correlation_id,
-            message_type: payload_type.to_string(),
+            message_type: payload_type.to_owned(),
             payload: Some(serde_json::to_value(&payload).unwrap()),
         }
     }
@@ -30,6 +30,7 @@ impl BaseMessage {
 #[serde(rename_all = "camelCase")]
 pub struct ClientInfo {
     pub id: String,
+    pub key: String,
     pub name: String,
     pub is_admin: bool,
 }
@@ -220,8 +221,7 @@ pub struct InRespQuestionPayload {
 #[serde(rename_all = "camelCase")]
 #[message_type("OUT_NOTIF_clientRegistered")]
 pub struct OutNotifClientRegisteredPayload {
-    pub id: String,
-    pub name: String,
+    pub client: ClientInfo,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]
@@ -229,7 +229,6 @@ pub struct OutNotifClientRegisteredPayload {
 #[message_type("OUT_NOTIF_clientDisconnected")]
 pub struct OutNotifClientDisconnectedPayload {
     pub id: String,
-    pub name: String,
 }
 
 #[derive(Serialize, Deserialize, MessageType)]

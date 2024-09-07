@@ -35,6 +35,7 @@ export type AnswerStreaks = {
 
 export type ClientInfo = {
 	id: string;
+	key: string;
 	name: string;
 	isAdmin: boolean;
 };
@@ -210,12 +211,7 @@ export type OutRespClientRegisteredPayload = {
 export type OutRespClientRegisteredMessage = BaseMessage<OutRespClientRegisteredPayload, `OUT_RESP_clientRegistered`>;
 
 export type OutRespClientListPayload = {
-	clients:
-	{
-		id: string;
-		name: string;
-		isAdmin: boolean;
-	}[];
+	clients: ClientInfo[];
 };
 export type OutRespClientListMessage = BaseMessage<OutRespClientListPayload, `OUT_RESP_clientList`>;
 // OUT REQ
@@ -233,14 +229,12 @@ export type InRespQuestionMessage = BaseMessage<InRespQuestionPayload, `IN_RESP_
 
 // OUT NOTIF
 export type OutNotifClientRegisteredPayload = {
-	id: string;
-	name: string;
+	client: ClientInfo;
 };
 export type OutNotifClientRegisteredMessage = BaseMessage<OutNotifClientRegisteredPayload, `OUT_NOTIF_clientRegistered`>;
 
 export type OutNotifClientDisconnectedPayload = {
 	id: string;
-	name: string;
 };
 export type OutNotifClientDisconnectedMessage = BaseMessage<OutNotifClientDisconnectedPayload, `OUT_NOTIF_clientDisconnected`>;
 
