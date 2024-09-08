@@ -69,7 +69,7 @@ pub async fn get_words(
     let raw_data = if let Some(part) = word_part {
         query_file_as!(
             RawData,
-            "./src/queries/get_words_with_parts.sql",
+            "./queries/get_words_with_parts.sql",
             count,
             min_frequency,
             max_frequency,
@@ -81,7 +81,7 @@ pub async fn get_words(
     } else {
         query_file_as!(
             RawData,
-            "./src/queries/get_words.sql",
+            "./queries/get_words.sql",
             count,
             min_frequency,
             max_frequency
@@ -146,7 +146,7 @@ async fn get_reading_with_parts(reading_id: i64, reading: String, examples_count
 
     let raw_part_data = query_file_as!(
         RawPartData,
-        "./src/queries/get_word_parts_examples.sql",
+        "./queries/get_word_parts_examples.sql",
         reading_id,
         examples_count
     )
@@ -191,7 +191,7 @@ pub struct StatsInfo {
 
 #[tauri::command]
 pub async fn get_stats() -> Result<StatsInfo, String> {
-    let data = query_file_as!(StatsInfo, "./src/queries/get_stats.sql")
+    let data = query_file_as!(StatsInfo, "./queries/get_stats.sql")
         .fetch_one(&*DB_POOL)
         .await
         .map_err(|e| e.to_string())?;
@@ -205,7 +205,7 @@ pub async fn get_font_id(name: String) -> Result<i64, String> {
         id: i64,
     }
 
-    let font_id = sqlx::query_file_as!(RawData, "./src/queries/get_or_create_font.sql", name, name)
+    let font_id = sqlx::query_file_as!(RawData, "./queries/get_or_create_font.sql", name, name)
         .fetch_one(&*DB_POOL)
         .await
         .map_err(|e| e.to_string())?;
@@ -228,7 +228,7 @@ pub async fn add_answer_stats(
 
     let result = query_file_as!(
         RawData,
-        "./src/queries/add_answer_stats.sql",
+        "./queries/add_answer_stats.sql",
         game_stats_id,
         word,
         word_reading,
@@ -258,7 +258,7 @@ pub async fn add_game_stats(
 
     let result = sqlx::query_file_as!(
         RawData,
-        "./src/queries/add_game_stats.sql",
+        "./queries/add_game_stats.sql",
         rounds_count,
         round_duration,
         min_frequency,
@@ -288,7 +288,7 @@ pub async fn get_answer_streaks(
 ) -> Result<Vec<AnswerStreaks>, String> {
     let data = sqlx::query_file_as!(
         AnswerStreaks,
-        "./src/queries/get_answer_streaks.sql",
+        "./queries/get_answer_streaks.sql",
         min_frequency,
         max_frequency,
         count

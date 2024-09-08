@@ -68,7 +68,7 @@
 				{correctCount} ({currentCombo})
 			</div>
 			<div class="flex-grow font-semibold text-base text-primary}">
-				<span class="text-primary">{clientInfo.isAdmin ? `♔ ` : ``}</span>{clientInfo.name} ({clientInfo.key})
+				<span class="text-primary">{clientInfo.isAdmin ? `♔ ` : ``}</span>{clientInfo.name}
 			</div>
 		</div>
 		<div class="flex flex-row justify-center items-center overflow-x-hidden min-w-0" style="border-bottom-right-radius: var(--rounded-box, 1rem); border-bottom-left-radius: var(--rounded-box, 1rem);">
