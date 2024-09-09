@@ -390,10 +390,15 @@ class WebSocketClient
 		const word = this.gameHistory.at(-1)?.question.wordInfo.word;
 		const answer = this.gameHistory.at(-1)?.answers.get(this.id)?.answer || ``;
 
-		if (word)
+		const client = this.clientList.find(client => client.id === this.id);
+		if (word && client)
 		{
-			const fontId: number = await getFontId(customEvent.detail.question.fontName);
-			await addAnswerStats(this.currentGameId, word, answer, (Math.ceil((getSettings().roundDuration.get() - this.timerValue) * 1000)), this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`, fontId);
+			const fontId = await getFontId(customEvent.detail.question.fontName);
+			const userKey = client.key;
+			const duration = Math.ceil((getSettings().roundDuration.get() - this.timerValue) * 1000);
+			const isCorrect = this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`;
+
+			await addAnswerStats(this.currentGameId, userKey, word, answer, duration, isCorrect, fontId);
 		}
 		this.gameStatus = `WaitingQuestion`;
 	}

@@ -93,9 +93,17 @@ def create_tables(conn):
     """)
 
     cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user (
+            id INTEGER PRIMARY KEY NOT NULL,
+            key TEXT UNIQUE NOT NULL
+        );
+    """)
+
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS answer_stats (
             id INTEGER PRIMARY KEY NOT NULL,
             game_stats_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
             word TEXT NOT NULL,
             word_reading TEXT NOT NULL,
             duration INTEGER NOT NULL,
@@ -103,7 +111,8 @@ def create_tables(conn):
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
             font_id INTEGER NOT NULL,
             FOREIGN KEY(game_stats_id) REFERENCES game_stats(id),
-            FOREIGN KEY(font_id) REFERENCES font(id)
+            FOREIGN KEY(font_id) REFERENCES font(id),
+			FOREIGN KEY(user_id) REFERENCES user(id)
         );
     """)
 

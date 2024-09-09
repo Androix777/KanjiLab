@@ -27,11 +27,12 @@ export async function getFontId(name: string): Promise<number>
 		});
 }
 
-export async function addAnswerStats(gameStatsId: number, word: string, wordReading: string, duration: number, isCorrect: boolean, fontId: number): Promise<void>
+export async function addAnswerStats(gameStatsId: number, userKey: string, word: string, wordReading: string, duration: number, isCorrect: boolean, fontId: number): Promise<void>
 {
 	await invoke(ADD_ANSWER_STATS,
 		{
 			gameStatsId: gameStatsId,
+			userKey: userKey,
 			word: word,
 			wordReading: wordReading,
 			duration: duration,

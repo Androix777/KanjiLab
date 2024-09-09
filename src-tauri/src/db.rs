@@ -200,7 +200,7 @@ pub async fn get_stats() -> Result<StatsInfo, String> {
 }
 
 #[tauri::command]
-pub async fn get_font_id(name: String) -> Result<i64, String> {
+pub async fn get_font_id(name: &str) -> Result<i64, String> {
     struct RawData {
         id: i64,
     }
@@ -214,8 +214,23 @@ pub async fn get_font_id(name: String) -> Result<i64, String> {
 }
 
 #[tauri::command]
+pub async fn get_user_id(key: &str) -> Result<i64, String> {
+    struct RawData {
+        id: i64,
+    }
+
+    let user_id = sqlx::query_file_as!(RawData, "./queries/get_or_create_user.sql", key, key)
+        .fetch_one(&*DB_POOL)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(user_id.id)
+}
+
+#[tauri::command]
 pub async fn add_answer_stats(
     game_stats_id: i64,
+    user_key: &str,
     word: &str,
     word_reading: &str,
     duration: i64,
@@ -226,10 +241,13 @@ pub async fn add_answer_stats(
         id: i64,
     }
 
+	let user_id = get_user_id(user_key).await.map_err(|e| e.to_string())?;
+
     let result = query_file_as!(
         RawData,
         "./queries/add_answer_stats.sql",
         game_stats_id,
+		user_id,
         word,
         word_reading,
         duration,
