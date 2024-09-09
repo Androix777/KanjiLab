@@ -68,7 +68,10 @@
 
 	function generateFilteredFonts(keyword: string)
 	{
-		return getSettings().fontsInfo.get().filter(fontInfo => fontInfo.fontFile.toLocaleLowerCase().includes(keyword.toLocaleLowerCase()));
+		return getSettings().fontsInfo.get().filter((fontInfo) =>
+		{
+			return (fontInfo.fontFile.toLocaleLowerCase().includes(keyword.toLocaleLowerCase())) || fontInfo.fullName.toLocaleLowerCase().includes(keyword.toLocaleLowerCase());
+		});
 	}
 
 	function filterFonts(selected: boolean, keyword: string)
