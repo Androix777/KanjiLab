@@ -25,6 +25,7 @@ class WebSocketClient
 	private serverConnector: ServerConnector = new ServerConnector();
 	private timerIntervalId: number = 0;
 	private currentGameId: number = 0;
+	private lastAnswerTime: number = 0;
 
 	public static getInstance()
 	{
@@ -162,6 +163,8 @@ class WebSocketClient
 			answer: answer,
 			answerStatus: `Unknown`,
 		});
+
+		this.lastAnswerTime = this.timerValue;
 
 		await this.serverConnector.sendAnswer(answer);
 	}
@@ -395,7 +398,7 @@ class WebSocketClient
 		{
 			const fontId = await getFontId(customEvent.detail.question.fontName);
 			const userKey = client.key;
-			const duration = Math.ceil((getSettings().roundDuration.get() - this.timerValue) * 1000);
+			const duration = Math.ceil(this.lastAnswerTime * 1000);
 			const isCorrect = this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`;
 
 			await addAnswerStats(this.currentGameId, userKey, word, answer, duration, isCorrect, fontId);
