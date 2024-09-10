@@ -1,44 +1,44 @@
 {
-  "productName": "kanjilab",
-  "version": "0.1.0",
-  "identifier": "com.kanjilab.dev",
-  "build": {
-    "frontendDist": "../build",
-    "devUrl": "http://localhost:5173",
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build"
-  },
-  "app": {
-    "windows": [
-      {
-        "title": "Kanji Lab",
-        "width": 1280,
-        "height": 720,
-        "resizable": true,
-        "fullscreen": false
-      }
-    ],
-    "security": {
-      "csp": null,
-	  "assetProtocol": {
-		"enable": true,
-		"scope": ["$RESOURCE/**"]
-	  }
-    }
-  },
-  "bundle": {
-    "active": true,
-    "targets": "all",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
-	"resources": [
-		"icons"
-	]
-  },
-  "$schema": "../node_modules/@tauri-apps/cli/schema.json"
+	"productName": "kanjilab",
+	"version": "0.1.0",
+	"identifier": "com.kanjilab.dev",
+	"build": {
+		"frontendDist": "../build",
+		"devUrl": "http://localhost:5173",
+		"beforeDevCommand": "npm run dev",
+		"beforeBuildCommand": "npm run build"
+	},
+	"app": {
+		"windows": [
+			{
+				"title": "Kanji Lab",
+				"width": 1280,
+				"height": 720,
+				"resizable": true,
+				"fullscreen": false
+			}
+		],
+		"security": {
+			"csp": null,
+			"assetProtocol": {
+				"enable": true,
+				"scope": ["$RESOURCE/**"]
+			}
+		}
+	},
+	"bundle": {
+		"active": true,
+		"targets": "all",
+		"icon": [
+			"icons/32x32.png",
+			"icons/128x128.png",
+			"icons/128x128@2x.png",
+			"icons/icon.icns",
+			"icons/icon.ico"
+		],
+		"resources": [
+			"icons"
+		]
+	},
+	"$schema": "../node_modules/@tauri-apps/cli/schema.json"
 }
