@@ -2,10 +2,10 @@
 mod test_utils {
     use crate::server_logic::get_admin_password;
     use crate::structures::{
-        BaseMessage, InReqClientListPayload, InReqMakeAdminPayload, InReqRegisterClientPayload,
-        MessageType, OutNotifAdminMadePayload, OutNotifClientDisconnectedPayload,
-        OutNotifClientRegisteredPayload, OutRespClientListPayload, OutRespClientRegisteredPayload,
-        OutRespStatusPayload, ClientInfo,
+        BaseMessage, ClientInfo, InReqClientListPayload, InReqMakeAdminPayload,
+        InReqRegisterClientPayload, MessageType, OutNotifAdminMadePayload,
+        OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload,
+        OutRespClientListPayload, OutRespClientRegisteredPayload, OutRespStatusPayload,
     };
     use futures_util::{SinkExt, StreamExt};
     use serde::Serialize;
@@ -382,41 +382,41 @@ mod test_utils {
 
         // Client 0 check clients list
 
-        send_message(&mut clients, &[0,1,2], InReqClientListPayload {}).await;
+        send_message(&mut clients, &[0, 1, 2], InReqClientListPayload {}).await;
 
-        check_received_message::<OutRespClientListPayload>(&mut clients, &[0,1,2])
+        check_received_message::<OutRespClientListPayload>(&mut clients, &[0, 1, 2])
             .await
             .unwrap()
-            .validate(&mut clients, |_index, response, clients: &mut Vec<TestClient>| {
-                if response.clients.len() != 3 {
-                    return false;
-                }
+            .validate(
+                &mut clients,
+                |_index, response, clients: &mut Vec<TestClient>| {
+                    if response.clients.len() != 3 {
+                        return false;
+                    }
 
+                    let expected_clients = vec![
+                        ClientInfo {
+                            id: clients[0].client_id.as_ref().unwrap().clone(),
+                            name: clients[0].client_name.as_ref().unwrap().clone(),
+                            is_admin: true,
+                        },
+                        ClientInfo {
+                            id: clients[1].client_id.as_ref().unwrap().clone(),
+                            name: clients[1].client_name.as_ref().unwrap().clone(),
+                            is_admin: false,
+                        },
+                        ClientInfo {
+                            id: clients[2].client_id.as_ref().unwrap().clone(),
+                            name: clients[2].client_name.as_ref().unwrap().clone(),
+                            is_admin: false,
+                        },
+                    ];
 
-                let expected_clients = vec![
-                    ClientInfo {
-                        id: clients[0].client_id.as_ref().unwrap().clone(),
-                        name: clients[0].client_name.as_ref().unwrap().clone(),
-                        is_admin: true,
-                    },
-                    ClientInfo {
-                        id: clients[1].client_id.as_ref().unwrap().clone(),
-                        name: clients[1].client_name.as_ref().unwrap().clone(),
-                        is_admin: false,
-                    },
-                    ClientInfo {
-                        id: clients[2].client_id.as_ref().unwrap().clone(),
-                        name: clients[2].client_name.as_ref().unwrap().clone(),
-                        is_admin: false,
-                    },
-                ];
-
-				expected_clients.iter().all(|expected| 
-					response.clients.iter().any(|client| 
-						client == expected
-					)
-				)
-            })
+                    expected_clients
+                        .iter()
+                        .all(|expected| response.clients.iter().any(|client| client == expected))
+                },
+            )
             .unwrap();
 
         crate::server::call_stop_server().await;

@@ -44,7 +44,6 @@ pub struct WordWithReadings {
     readings: Vec<ReadingWithParts>,
 }
 
-
 #[tauri::command]
 pub async fn get_words(
     count: i64,
@@ -134,7 +133,11 @@ pub async fn get_words(
     Ok(result)
 }
 
-async fn get_reading_with_parts(reading_id: i64, reading: String, examples_count: i64) -> Result<ReadingWithParts, String> {
+async fn get_reading_with_parts(
+    reading_id: i64,
+    reading: String,
+    examples_count: i64,
+) -> Result<ReadingWithParts, String> {
     struct RawPartData {
         part_id: i64,
         word_part: String,
@@ -161,7 +164,8 @@ async fn get_reading_with_parts(reading_id: i64, reading: String, examples_count
         let frequencies: Vec<&str> = raw_part.top_words_frequencies.split(',').collect();
         let readings: Vec<&str> = raw_part.top_words_readings.split(',').collect();
 
-        let examples: Vec<WordPartExample> = words.into_iter()
+        let examples: Vec<WordPartExample> = words
+            .into_iter()
             .zip(frequencies.into_iter())
             .zip(readings.into_iter())
             .map(|((word, frequency), reading)| WordPartExample {
@@ -180,7 +184,6 @@ async fn get_reading_with_parts(reading_id: i64, reading: String, examples_count
 
     Ok(ReadingWithParts { reading, parts })
 }
-
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -241,13 +244,13 @@ pub async fn add_answer_stats(
         id: i64,
     }
 
-	let user_id = get_user_id(user_key).await.map_err(|e| e.to_string())?;
+    let user_id = get_user_id(user_key).await.map_err(|e| e.to_string())?;
 
     let result = query_file_as!(
         RawData,
         "./queries/add_answer_stats.sql",
         game_stats_id,
-		user_id,
+        user_id,
         word,
         word_reading,
         duration,
