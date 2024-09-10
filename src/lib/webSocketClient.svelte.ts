@@ -1,10 +1,26 @@
-import { ServerConnector } from "$lib/webSocketConnector";
-import type { AnswerRecord, ClientInfo, FontInfo, GameSettingsData, InRespQuestionPayload, OutNotifChatSentPayload, OutNotifClientAnsweredPayload, OutNotifClientDisconnectedPayload, OutNotifClientRegisteredPayload, OutNotifGameStartedPayload, OutNotifQuestionPayload, OutNotifRoundEndedPayload, RoundHistory, GameStatus, OutNotifGameSettingsChangedPayload } from "./types";
 import { getSettings } from "$lib/globalSettings.svelte";
+import { ServerConnector } from "$lib/webSocketConnector";
 import { SvelteMap } from "svelte/reactivity";
-import { getFontInfo, getRandomFont, getSVGText } from "./fontTools";
-import { addAnswerStats, addGameStats, getFontId, getRandomWords } from "./databaseTools";
 import { getPublicKey, signMessage } from "./cryptoTools";
+import { addAnswerStats, addGameStats, getFontId, getRandomWords } from "./databaseTools";
+import { getFontInfo, getRandomFont, getSVGText } from "./fontTools";
+import type {
+	AnswerRecord,
+	ClientInfo,
+	FontInfo,
+	GameSettingsData,
+	GameStatus,
+	InRespQuestionPayload,
+	OutNotifChatSentPayload,
+	OutNotifClientAnsweredPayload,
+	OutNotifClientDisconnectedPayload,
+	OutNotifClientRegisteredPayload,
+	OutNotifGameSettingsChangedPayload,
+	OutNotifGameStartedPayload,
+	OutNotifQuestionPayload,
+	OutNotifRoundEndedPayload,
+	RoundHistory,
+} from "./types";
 
 class WebSocketClient
 {
@@ -228,25 +244,25 @@ class WebSocketClient
 
 	private handleNotifClientRegistered(event: Event)
 	{
-		const customEvent: CustomEvent<OutNotifClientRegisteredPayload> = <CustomEvent<OutNotifClientRegisteredPayload>>event;
+		const customEvent: CustomEvent<OutNotifClientRegisteredPayload> = <CustomEvent<OutNotifClientRegisteredPayload>> event;
 		this.clientList.push(customEvent.detail.client);
 	}
 
 	private handleNotifClientDisconnected(event: Event)
 	{
-		const customEvent: CustomEvent<OutNotifClientDisconnectedPayload> = <CustomEvent<OutNotifClientDisconnectedPayload>>event;
+		const customEvent: CustomEvent<OutNotifClientDisconnectedPayload> = <CustomEvent<OutNotifClientDisconnectedPayload>> event;
 		this.clientList = this.clientList.filter(client => client.id != customEvent.detail.id);
 	}
 
 	private handleNotifChatSent(event: Event)
 	{
-		const customEvent: CustomEvent<OutNotifChatSentPayload> = <CustomEvent<OutNotifChatSentPayload>>event;
+		const customEvent: CustomEvent<OutNotifChatSentPayload> = <CustomEvent<OutNotifChatSentPayload>> event;
 		this.chatList.push({ name: this.getClient(customEvent.detail.id).name, message: customEvent.detail.message });
 	}
 
 	private handleNotifAdminMade(event: Event)
 	{
-		const customEvent: CustomEvent<OutNotifChatSentPayload> = <CustomEvent<OutNotifChatSentPayload>>event;
+		const customEvent: CustomEvent<OutNotifChatSentPayload> = <CustomEvent<OutNotifChatSentPayload>> event;
 		const client = this.clientList.find(client => client.id === customEvent.detail.id);
 		if (client)
 		{
@@ -264,7 +280,7 @@ class WebSocketClient
 
 	private async handleNotifGameStarted(event: Event)
 	{
-		const customEvent: CustomEvent<OutNotifGameStartedPayload> = <CustomEvent<OutNotifGameStartedPayload>>event;
+		const customEvent: CustomEvent<OutNotifGameStartedPayload> = <CustomEvent<OutNotifGameStartedPayload>> event;
 		this.currentRound = 0;
 		this.gameHistory.length = 0;
 
@@ -298,7 +314,7 @@ class WebSocketClient
 
 	private async handleReqQuestion(event: Event)
 	{
-		const customEvent: CustomEvent<(question: InRespQuestionPayload) => void> = <CustomEvent<(question: InRespQuestionPayload) => void>>event;
+		const customEvent: CustomEvent<(question: InRespQuestionPayload) => void> = <CustomEvent<(question: InRespQuestionPayload) => void>> event;
 
 		const maxRetries = 3;
 		for (let attempt = 0; attempt < maxRetries; attempt++)
@@ -322,15 +338,13 @@ class WebSocketClient
 					throw new Error(`getQuestionFailed`);
 				}
 				const svg: string = await getSVGText(lastWord.word, font);
-				const question: InRespQuestionPayload =
-						{
-							question:
-							{
-								wordInfo: lastWord,
-								fontName: fontInfo.fullName,
-							},
-							questionSvg: svg,
-						};
+				const question: InRespQuestionPayload = {
+					question: {
+						wordInfo: lastWord,
+						fontName: fontInfo.fullName,
+					},
+					questionSvg: svg,
+				};
 				customEvent.detail(question);
 				return;
 			}
@@ -348,7 +362,7 @@ class WebSocketClient
 
 	private handleNotifQuestion(event: Event)
 	{
-		const customEvent: CustomEvent<OutNotifQuestionPayload> = <CustomEvent<OutNotifQuestionPayload>>event;
+		const customEvent: CustomEvent<OutNotifQuestionPayload> = <CustomEvent<OutNotifQuestionPayload>> event;
 		this.gameHistory.push({
 			question: {
 				wordInfo: { word: ``, meanings: [], readings: [] },
@@ -374,7 +388,7 @@ class WebSocketClient
 
 	private async handleNotifRoundEnded(event: Event)
 	{
-		const customEvent: CustomEvent<OutNotifRoundEndedPayload> = <CustomEvent<OutNotifRoundEndedPayload>>event;
+		const customEvent: CustomEvent<OutNotifRoundEndedPayload> = <CustomEvent<OutNotifRoundEndedPayload>> event;
 		this.gameHistory[this.gameHistory.length - 1].question = customEvent.detail.question;
 		customEvent.detail.answers.forEach((answer) =>
 		{
@@ -408,7 +422,7 @@ class WebSocketClient
 
 	private handleNotifClientAnswered(event: Event)
 	{
-		const customEvent: CustomEvent<OutNotifClientAnsweredPayload> = <CustomEvent<OutNotifClientAnsweredPayload>>event;
+		const customEvent: CustomEvent<OutNotifClientAnsweredPayload> = <CustomEvent<OutNotifClientAnsweredPayload>> event;
 		if (customEvent.detail.id != this.id)
 		{
 			this.gameHistory.at(-1)?.answers.set(customEvent.detail.id, {
@@ -428,7 +442,7 @@ class WebSocketClient
 
 	private handleNotifGameSettingsChanged(event: Event)
 	{
-		const customEvent: CustomEvent<OutNotifGameSettingsChangedPayload> = <CustomEvent<OutNotifGameSettingsChangedPayload>>event;
+		const customEvent: CustomEvent<OutNotifGameSettingsChangedPayload> = <CustomEvent<OutNotifGameSettingsChangedPayload>> event;
 		this.setGameSettings(customEvent.detail.gameSettings);
 	}
 }

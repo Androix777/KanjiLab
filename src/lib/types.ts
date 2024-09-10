@@ -108,6 +108,7 @@ export type AnswerStatus = `Correct` | `Incorrect` | `Unknown`;
 export type GameStatus = `Off` | `Connecting` | `Lobby` | `WaitingQuestion` | `AnswerQuestion`;
 
 export type MessageType =
+	// IN_REQ
 	| `IN_REQ_sendPublicKey`
 	| `IN_REQ_verifysignature`
 	| `IN_REQ_registerClient`
@@ -118,16 +119,16 @@ export type MessageType =
 	| `IN_REQ_sendAnswer`
 	| `IN_REQ_stopGame`
 	| `IN_REQ_sendGameSettings`
-
+	// OUT_RESP
 	| `OUT_RESP_clientList`
 	| `OUT_RESP_status`
 	| `OUT_RESP_clientRegistered`
 	| `OUT_RESP_signMessage`
-
+	// OUT_REQ
 	| `OUT_REQ_question`
-
+	// IN_RESP
 	| `IN_RESP_question`
-
+	// OUT_NOTIF
 	| `OUT_NOTIF_clientRegistered`
 	| `OUT_NOTIF_clientDisconnected`
 	| `OUT_NOTIF_chatSent`

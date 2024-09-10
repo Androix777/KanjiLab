@@ -4,12 +4,11 @@
 		message: string;
 	};
 
-	const
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-		{
-			player = `NULL`,
-			message = `NULL`,
-		}: Props = $props();
+	const // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	{
+		player = `NULL`,
+		message = `NULL`,
+	}: Props = $props();
 </script>
 
 <div class="text-left px-2 pl-2 pr-5 -mr-4">

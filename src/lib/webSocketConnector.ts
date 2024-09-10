@@ -1,43 +1,43 @@
 import { getSettings } from "./globalSettings.svelte";
 import {
-	type OutNotifClientRegisteredPayload,
 	type BaseMessage,
-	type OutRespClientListMessage,
-	type OutNotifClientRegisteredMessage,
+	type GameSettingsData,
 	type InReqGetClientListMessage,
-	type InReqRegisterClientMessage,
-	type OutRespStatusMessage,
-	type InReqSendChatMessage,
-	type OutNotifChatSentMessage,
-	type OutNotifChatSentPayload,
-	type MessageType,
 	type InReqMakeAdminMessage,
-	type OutRespClientRegisteredMessage,
+	type InReqRegisterClientMessage,
+	type InReqSendAnswerMessage,
+	type InReqSendChatMessage,
+	type InReqSendGameSettingsMessage,
+	type InReqSendPublicKeyMessage,
+	type InReqStartGameMessage,
+	type InReqStopGameMessage,
+	type InReqVerifySignatureMessage,
+	type InRespQuestionMessage,
+	type InRespQuestionPayload,
+	type MessageType,
 	type OutNotifAdminMadeMessage,
 	type OutNotifAdminMadePayload,
-	type InReqStartGameMessage,
-	type OutReqQuestionMessage,
-	type InRespQuestionMessage,
-	type OutNotifQuestionMessage,
-	type OutNotifQuestionPayload,
-	type InReqSendAnswerMessage,
-	type OutNotifRoundEndedMessage,
-	type OutNotifRoundEndedPayload,
+	type OutNotifChatSentMessage,
+	type OutNotifChatSentPayload,
 	type OutNotifClientAnsweredMessage,
 	type OutNotifClientAnsweredPayload,
-	type InReqStopGameMessage,
-	type OutNotifGameStoppedMessage,
-	type OutNotifGameStoppedPayload,
-	type OutNotifGameStartedMessage,
-	type OutNotifGameStartedPayload,
-	type GameSettingsData,
-	type InRespQuestionPayload,
-	type InReqSendGameSettingsMessage,
+	type OutNotifClientRegisteredMessage,
+	type OutNotifClientRegisteredPayload,
 	type OutNotifGameSettingsChangedMessage,
 	type OutNotifGameSettingsChangedPayload,
-	type InReqSendPublicKeyMessage,
+	type OutNotifGameStartedMessage,
+	type OutNotifGameStartedPayload,
+	type OutNotifGameStoppedMessage,
+	type OutNotifGameStoppedPayload,
+	type OutNotifQuestionMessage,
+	type OutNotifQuestionPayload,
+	type OutNotifRoundEndedMessage,
+	type OutNotifRoundEndedPayload,
+	type OutReqQuestionMessage,
+	type OutRespClientListMessage,
+	type OutRespClientRegisteredMessage,
 	type OutRespSignMessageMessage,
-	type InReqVerifySignatureMessage,
+	type OutRespStatusMessage,
 } from "./types";
 
 export class ServerConnector extends EventTarget
@@ -58,7 +58,7 @@ export class ServerConnector extends EventTarget
 		{
 			if (typeof event.data == `string`)
 			{
-				const message: BaseMessage<object, MessageType> = <BaseMessage<object, MessageType>>JSON.parse(event.data);
+				const message: BaseMessage<object, MessageType> = <BaseMessage<object, MessageType>> JSON.parse(event.data);
 				console.log(`Received message: ` + event.data);
 				if (!message.correlationId) return;
 
@@ -146,12 +146,12 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_RESP_signMessage`:
 			{
-				const message = <OutRespSignMessageMessage>response;
+				const message = <OutRespSignMessageMessage> response;
 				return message.payload.message;
 			}
 			case `OUT_RESP_status`:
 			{
-				const message = <OutRespStatusMessage>response;
+				const message = <OutRespStatusMessage> response;
 				throw new Error(message.payload.status);
 			}
 			default:
@@ -176,7 +176,7 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_RESP_status`:
 			{
-				const statusMessage = <OutRespStatusMessage>response;
+				const statusMessage = <OutRespStatusMessage> response;
 
 				if (statusMessage.payload.status == `success`)
 				{
@@ -209,12 +209,12 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_RESP_clientRegistered`:
 			{
-				const clientRegisteredMessage = <OutRespClientRegisteredMessage>response;
+				const clientRegisteredMessage = <OutRespClientRegisteredMessage> response;
 				return clientRegisteredMessage.payload;
 			}
 			case `OUT_RESP_status`:
 			{
-				const statusMessage = <OutRespStatusMessage>response;
+				const statusMessage = <OutRespStatusMessage> response;
 				throw new Error(statusMessage.payload.status);
 			}
 			default:
@@ -237,12 +237,12 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_RESP_clientList`:
 			{
-				const clientListMessage = <OutRespClientListMessage>response;
+				const clientListMessage = <OutRespClientListMessage> response;
 				return clientListMessage.payload.clients;
 			}
 			case `OUT_RESP_status`:
 			{
-				const statusMessage = <OutRespStatusMessage>response;
+				const statusMessage = <OutRespStatusMessage> response;
 				throw new Error(statusMessage.payload.status);
 			}
 			default:
@@ -268,7 +268,7 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_RESP_status`:
 			{
-				const statusMessage = <OutRespStatusMessage>response;
+				const statusMessage = <OutRespStatusMessage> response;
 
 				if (statusMessage.payload.status == `success`)
 				{
@@ -303,7 +303,7 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_RESP_status`:
 			{
-				const statusMessage = <OutRespStatusMessage>response;
+				const statusMessage = <OutRespStatusMessage> response;
 
 				if (statusMessage.payload.status == `success`)
 				{
@@ -336,7 +336,7 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_RESP_status`:
 			{
-				const statusMessage = <OutRespStatusMessage>response;
+				const statusMessage = <OutRespStatusMessage> response;
 
 				if (statusMessage.payload.status == `success`)
 				{
@@ -381,7 +381,7 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_RESP_status`:
 			{
-				const statusMessage = <OutRespStatusMessage>response;
+				const statusMessage = <OutRespStatusMessage> response;
 
 				if (statusMessage.payload.status == `success`)
 				{
@@ -412,7 +412,7 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_RESP_status`:
 			{
-				const statusMessage = <OutRespStatusMessage>response;
+				const statusMessage = <OutRespStatusMessage> response;
 
 				if (statusMessage.payload.status == `success`)
 				{
@@ -443,7 +443,7 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_RESP_status`:
 			{
-				const statusMessage = <OutRespStatusMessage>response;
+				const statusMessage = <OutRespStatusMessage> response;
 
 				if (statusMessage.payload.status == `success`)
 				{
@@ -466,80 +466,82 @@ export class ServerConnector extends EventTarget
 		{
 			case `OUT_NOTIF_clientRegistered`:
 			{
-				const concreteMessage = <OutNotifClientRegisteredMessage>message;
+				const concreteMessage = <OutNotifClientRegisteredMessage> message;
 				const event = new CustomEvent<OutNotifClientRegisteredPayload>(`OUT_NOTIF_clientRegistered`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_NOTIF_clientDisconnected`:
 			{
-				const concreteMessage = <OutNotifClientRegisteredMessage>message;
+				const concreteMessage = <OutNotifClientRegisteredMessage> message;
 				const event = new CustomEvent<OutNotifClientRegisteredPayload>(`OUT_NOTIF_clientDisconnected`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_NOTIF_chatSent`:
 			{
-				const concreteMessage = <OutNotifChatSentMessage>message;
+				const concreteMessage = <OutNotifChatSentMessage> message;
 				const event = new CustomEvent<OutNotifChatSentPayload>(`OUT_NOTIF_chatSent`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_NOTIF_adminMade`:
 			{
-				const concreteMessage = <OutNotifAdminMadeMessage>message;
+				const concreteMessage = <OutNotifAdminMadeMessage> message;
 				const event = new CustomEvent<OutNotifAdminMadePayload>(`OUT_NOTIF_adminMade`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_NOTIF_gameStarted`:
 			{
-				const concreteMessage = <OutNotifGameStartedMessage>message;
+				const concreteMessage = <OutNotifGameStartedMessage> message;
 				const event = new CustomEvent<OutNotifGameStartedPayload>(`OUT_NOTIF_gameStarted`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_REQ_question`:
 			{
-				const concreteMessage = <OutReqQuestionMessage>message;
-				const event = new CustomEvent<(question: InRespQuestionPayload) => void>(`OUT_REQ_question`, { detail: (question: InRespQuestionPayload) =>
-				{
-					this.sendQuestion(concreteMessage.correlationId, question);
-				} });
+				const concreteMessage = <OutReqQuestionMessage> message;
+				const event = new CustomEvent<(question: InRespQuestionPayload) => void>(`OUT_REQ_question`, {
+					detail: (question: InRespQuestionPayload) =>
+					{
+						this.sendQuestion(concreteMessage.correlationId, question);
+					},
+				});
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_NOTIF_question`:
 			{
-				const concreteMessage = <OutNotifQuestionMessage>message;
+				const concreteMessage = <OutNotifQuestionMessage> message;
 				const event = new CustomEvent<OutNotifQuestionPayload>(`OUT_NOTIF_question`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_NOTIF_roundEnded`:
 			{
-				const concreteMessage = <OutNotifRoundEndedMessage>message;
+				const concreteMessage = <OutNotifRoundEndedMessage> message;
 				const event = new CustomEvent<OutNotifRoundEndedPayload>(`OUT_NOTIF_roundEnded`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_NOTIF_clientAnswered`:
 			{
-				const concreteMessage = <OutNotifClientAnsweredMessage>message;
+				const concreteMessage = <OutNotifClientAnsweredMessage> message;
 				const event = new CustomEvent<OutNotifClientAnsweredPayload>(`OUT_NOTIF_clientAnswered`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_NOTIF_gameStopped`:
 			{
-				const concreteMessage = <OutNotifGameStoppedMessage>message;
+				const concreteMessage = <OutNotifGameStoppedMessage> message;
 				const event = new CustomEvent<OutNotifGameStoppedPayload>(`OUT_NOTIF_gameStopped`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;
 			}
 			case `OUT_NOTIF_gameSettingsChanged`:
 			{
-				const concreteMessage = <OutNotifGameSettingsChangedMessage>message;
+				const concreteMessage = <OutNotifGameSettingsChangedMessage> message;
 				const event = new CustomEvent<OutNotifGameSettingsChangedPayload>(`OUT_NOTIF_gameSettingsChanged`, { detail: concreteMessage.payload });
 				this.dispatchEvent(event);
 				break;

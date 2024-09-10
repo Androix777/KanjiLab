@@ -1,8 +1,8 @@
-import { readDir, type DirEntry } from '@tauri-apps/plugin-fs';
-import { invoke } from "@tauri-apps/api/core";
 import { GET_ALL_FONTS_INFO, GET_EXECUTABLE_FILE_PATH, GET_SVG_TEXT } from "$lib/tauriFunctions";
-import type { FontInfo } from './types';
-import { getSettings } from './globalSettings.svelte';
+import { invoke } from "@tauri-apps/api/core";
+import { type DirEntry, readDir } from "@tauri-apps/plugin-fs";
+import { getSettings } from "./globalSettings.svelte";
+import type { FontInfo } from "./types";
 
 let fontDirectory: string = ``;
 let fontNames: string[] | null = null;

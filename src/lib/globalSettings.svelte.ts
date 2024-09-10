@@ -10,7 +10,10 @@ function createStateVar<T>(initial: T): StateVar<T>
 	let value = $state(initial);
 	return {
 		get: () => value,
-		set: (newValue: T) => { value = newValue; },
+		set: (newValue: T) =>
+		{
+			value = newValue;
+		},
 	};
 }
 

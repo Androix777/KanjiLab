@@ -1,17 +1,5 @@
 /** @type { import("eslint").Linter.Config } */
 
-const stylistic = require("@stylistic/eslint-plugin");
-
-const customized = stylistic.configs.customize({
-	indent: "tab",
-	quotes: "backtick",
-	semi: true,
-	jsx: false,
-	braceStyle: "allman",
-});
-
-customized.rules["@stylistic/operator-linebreak"] = ['error', 'after']
-
 module.exports = {
 	root: true,
 	extends: [
@@ -20,7 +8,7 @@ module.exports = {
 		"plugin:svelte/recommended",
 	],
 	parser: "@typescript-eslint/parser",
-	plugins: ["@typescript-eslint", "@stylistic"],
+	plugins: ["@typescript-eslint"],
 	parserOptions: {
 		sourceType: "module",
 		ecmaVersion: 2020,

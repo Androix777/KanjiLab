@@ -248,8 +248,7 @@ def insert_furigana_data(conn, data):
 
     word_reading_word_part_reading_data = [
         (reading_uuid, furiganas[(word_part, word_part_reading)])
-        for reading_uuid, word_part, word_part_reading 
-        in word_reading_word_part_readings
+        for reading_uuid, word_part, word_part_reading in word_reading_word_part_readings
         if (word_part, word_part_reading) in furiganas
     ]
 

@@ -1,9 +1,9 @@
 <script lang="ts">
+	import type { RoundHistory } from "$lib/types";
+	import { onMount } from "svelte";
+	import { fade } from "svelte/transition";
+	import { themeChange } from "theme-change";
 	import * as wanakana from "wanakana";
-	import { themeChange } from 'theme-change';
-    import type { RoundHistory } from "$lib/types";
-	import { fade } from 'svelte/transition';
-    import { onMount } from "svelte";
 
 	type Props = {
 		gameHistory: Array<RoundHistory>;
@@ -15,17 +15,16 @@
 		onAnswer: (answer: string) => void;
 	};
 
-	const
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-		{
-			gameHistory,
-			clientID,
-			roundDuration,
-			timerValue,
-			roundsCount,
-			currentRound,
-			onAnswer,
-		}: Props = $props();
+	const // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	{
+		gameHistory,
+		clientID,
+		roundDuration,
+		timerValue,
+		roundsCount,
+		currentRound,
+		onAnswer,
+	}: Props = $props();
 
 	let inputElement: HTMLInputElement;
 
@@ -68,16 +67,13 @@
 
 	<div class="flex-grow"></div>
 
-    <div class="flex items-center justify-center flex-none my-4 h-24">
+	<div class="flex items-center justify-center flex-none my-4 h-24">
 		{#key currentQuestionInfo?.wordInfo.word}
-			<div class="bg-base-content absolute" style="
-				mask-image: url({currentSvgUrl});
-				mask-size: 100% 100%;"
-				transition:fade={{ duration: 400 }}>
+			<div class="bg-base-content absolute" style="mask-image: url({currentSvgUrl}); mask-size: 100% 100%" transition:fade={{ duration: 400 }}>
 				<img src={currentSvgUrl} alt="" class="opacity-0">
 			</div>
 		{/key}
-    </div>
+	</div>
 
 	<div class="flex-grow"></div>
 
@@ -86,7 +82,7 @@
 			bind:value={readingInput}
 			onkeydown={checkWord}
 			bind:this={inputElement}
-			placeholder={ gameHistory.at(-1)?.answers.get(clientID)?.answer }
+			placeholder={gameHistory.at(-1)?.answers.get(clientID)?.answer}
 			class="input input-bordered input-lg text-center w-3/4 text-3xl placeholder:{ currentAnswerRecord?.answerStatus == `Correct` ? `text-success` : currentAnswerRecord?.answerStatus == `Incorrect` ? `text-error` : `text-warning`}"
 		/>
 	</div>
@@ -95,11 +91,12 @@
 
 	<div class="h-1/2 w-full flex justify-center flex-none relative">
 		{#key [previousQuestionInfo?.wordInfo.word, previousAnswerRecord?.answer]}
-		<div class="absolute right-0 left-0 top-0 bottom-0 border border-base-100" transition:fade={{ duration: 400 }}>
-				<div class="flex-none divider mb-0 mx-2 {previousAnswerRecord?.answerStatus == `Correct` ? `divider-success text-success` : previousAnswerRecord?.answerStatus == `Incorrect` ? `divider-error text-error` : `divider-neutral text-neutral-content`}">
-					{ previousAnswerRecord?.answer }
+			<div class="absolute right-0 left-0 top-0 bottom-0 border border-base-100" transition:fade={{ duration: 400 }}>
+				<div
+					class="flex-none divider mb-0 mx-2 {previousAnswerRecord?.answerStatus == `Correct` ? `divider-success text-success` : previousAnswerRecord?.answerStatus == `Incorrect` ? `divider-error text-error` : `divider-neutral text-neutral-content`}">
+					{previousAnswerRecord?.answer}
 				</div>
-				<div class="flex flex-col space-y-2 text-xl overflow-y-auto" style="height: 90%;">
+				<div class="flex flex-col space-y-2 text-xl overflow-y-auto" style="height: 90%">
 					<div class="justify-center">
 						{#if previousQuestionInfo != null}
 							<div class="flex flex-row items-center">
@@ -110,7 +107,7 @@
 						{/if}
 					</div>
 					<div class="flex-none flex justify-center min-h-0">
-						<div>{ previousQuestionInfo?.wordInfo.word ? previousQuestionInfo.wordInfo.meanings[0][0].join(`; `) : `` }</div>
+						<div>{previousQuestionInfo?.wordInfo.word ? previousQuestionInfo.wordInfo.meanings[0][0].join(`; `) : ``}</div>
 					</div>
 					{#if previousQuestionInfo != null}
 						{#each previousQuestionInfo.wordInfo.readings as reading}
@@ -121,9 +118,9 @@
 										<div class="flex-none w-1/6">{`${part.wordPart}（${part.wordPartReading}）\u3000\u3000`}</div>
 										<div class="divider divider-horizontal"></div>
 										<div class="flex-grow">
-										{#each part.examples as example}
-											<div class="float-left"><ruby>{example.word}<rt class="text-sm mb-1">{example.reading}</rt></ruby>{`\u3000\u3000`}</div>
-										{/each}
+											{#each part.examples as example}
+												<div class="float-left"><ruby>{example.word}<rt class="text-sm mb-1">{example.reading}</rt></ruby>{`\u3000\u3000`}</div>
+											{/each}
 										</div>
 									</div>
 								{/each}
@@ -131,8 +128,7 @@
 						{/each}
 					{/if}
 				</div>
-		</div>
+			</div>
 		{/key}
 	</div>
-
 </div>

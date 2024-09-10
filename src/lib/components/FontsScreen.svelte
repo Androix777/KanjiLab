@@ -1,13 +1,12 @@
 <script lang="ts">
-    import FontCard from "./FontCard.svelte";
-    import { getSettings } from "$lib/globalSettings.svelte";
-    import type { FontInfo } from "$lib/types";
-    import { onMount } from "svelte";
-    import { fade } from "svelte/transition";
-    import { getAllFontsInfo, getSVGText } from "$lib/fontTools";
+	import { getAllFontsInfo, getSVGText } from "$lib/fontTools";
+	import { getSettings } from "$lib/globalSettings.svelte";
+	import type { FontInfo } from "$lib/types";
+	import { onMount } from "svelte";
+	import { fade } from "svelte/transition";
+	import FontCard from "./FontCard.svelte";
 
-	type FontRecord =
-	{
+	type FontRecord = {
 		fontInfo: FontInfo;
 		fontSVG: string;
 	};
@@ -94,12 +93,11 @@
 			filteredFontList = getSettings().fontsInfo.get();
 		}
 	}
-
 </script>
 
 <div class="p-4">
 	<div class="flex flex-column justify-center items-center">
-		<div class="card card-bordered bg-base-100 shadow-xl mb-4 p-4 flex-1" style="width: 50vw;">
+		<div class="card card-bordered bg-base-100 shadow-xl mb-4 p-4 flex-1" style="width: 50vw">
 			<div class="card-title mb-4">Fonts</div>
 			<div class="flex flex-row mb-4">
 				<div class="join flex-none">
@@ -141,64 +139,73 @@
 
 							await updateFontsPage();
 							controlsDisabled = false;
-						} } />
+						}}
+					/>
 				</div>
 				<div class="flex-grow"></div>
 				<div class="flex flex-col justify-center flex-none">
-					<div class="{showOnlySelected ? `text-primary` : ``}">Only selected</div>
+					<div class={showOnlySelected ? `text-primary` : ``}>Only selected</div>
 					<div class="mx-auto">
-					<input
-						type="checkbox"
-						class="toggle toggle-primary"
-						onchange={async () =>
-						{
-							controlsDisabled = true;
-							filterFonts(showOnlySelected, searchKeyword);
-							if (showOnlySelected)
+						<input
+							type="checkbox"
+							class="toggle toggle-primary"
+							onchange={async () =>
 							{
-								if (savedPage == -1) savedPage = currentPage;
-								currentPage = 1;
-							}
-							if (!showOnlySelected && savedPage != -1)
-							{
-								currentPage = savedPage;
-								savedPage = -1;
-							}
-							await updateFontsPage();
-							controlsDisabled = false;
-						}}
-						bind:checked={showOnlySelected}
-						disabled={controlsDisabled} />
-				</div>
+								controlsDisabled = true;
+								filterFonts(showOnlySelected, searchKeyword);
+								if (showOnlySelected)
+								{
+									if (savedPage == -1) savedPage = currentPage;
+									currentPage = 1;
+								}
+								if (!showOnlySelected && savedPage != -1)
+								{
+									currentPage = savedPage;
+									savedPage = -1;
+								}
+								await updateFontsPage();
+								controlsDisabled = false;
+							}}
+							bind:checked={showOnlySelected}
+							disabled={controlsDisabled}
+						/>
+					</div>
 				</div>
 			</div>
 			<div class="join flex justify-center mb-4">
-				<button class="join-item btn" onclick={ () =>
-				{
-					if (currentPage <= 1) return;
-					currentPage--;
-					void updateFontsPage();
-				} }>🠈</button>
-				<input type="text" class="join-item input w-10 p-0 text-center"
-					style="background-color: oklch(var(--btn-color, var(--b2)) / var(--tw-bg-opacity)); line-height: 1em;"
+				<button
+					class="join-item btn"
+					onclick={() =>
+					{
+						if (currentPage <= 1) return;
+						currentPage--;
+						void updateFontsPage();
+					}}>🠈</button>
+				<input
+					type="text"
+					class="join-item input w-10 p-0 text-center"
+					style="background-color: oklch(var(--btn-color, var(--b2)) / var(--tw-bg-opacity)); line-height: 1em"
 					bind:value={currentPage}
-					onchange={updateFontsPage}/>
+					onchange={updateFontsPage}
+				/>
 				<button class="join-item btn">/</button>
 				<button class="join-item btn">{maxPages}</button>
-				<button class="join-item btn" onclick={ () =>
-				{
-					if (currentPage >= maxPages) return;
-					currentPage++;
-					void updateFontsPage();
-				} }>🠊</button>
+				<button
+					class="join-item btn"
+					onclick={() =>
+					{
+						if (currentPage >= maxPages) return;
+						currentPage++;
+						void updateFontsPage();
+					}}>🠊</button>
 			</div>
 			<div class="">
-				{#each fontRecords as fontRecord(fontRecord.fontInfo.fontFile)}
+				{#each fontRecords as fontRecord (fontRecord.fontInfo.fontFile)}
 					<div in:fade>
 						<FontCard
-							fontInfo = {fontRecord.fontInfo}
-							fontSVG = {fontRecord.fontSVG || ``}
-							onFontCheck = {(fontName: string, added: boolean) =>
+							fontInfo={fontRecord.fontInfo}
+							fontSVG={fontRecord.fontSVG || ``}
+							onFontCheck={(fontName: string, added: boolean) =>
 							{
 								if (added)
 								{
@@ -209,8 +216,8 @@
 									getSettings().selectedFonts.set(getSettings().selectedFonts.get().filter(e => e != fontName));
 								}
 							}}
-							/>
-						</div>
+						/>
+					</div>
 				{/each}
 			</div>
 		</div>

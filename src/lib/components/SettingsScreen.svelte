@@ -28,7 +28,7 @@
 					Visual theme
 				</div>
 				<div class="w-1/2">
-					<ThemeSelect/>
+					<ThemeSelect />
 				</div>
 			</div>
 		</div>

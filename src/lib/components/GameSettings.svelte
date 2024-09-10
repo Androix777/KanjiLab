@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getSettings } from "$lib/globalSettings.svelte";
-    import FontsScreen from "./FontsScreen.svelte";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
+	import FontsScreen from "./FontsScreen.svelte";
 
 	let webSocketClient: WebSocketClient = $state(WebSocketClient.getInstance());
 
@@ -10,12 +10,12 @@
 		isAdmin: boolean;
 	};
 
-	const
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-		{
-			startFunction = () => {},
-			isAdmin = false,
-		}: Props = $props();
+	const // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	{
+		startFunction = () =>
+		{},
+		isAdmin = false,
+	}: Props = $props();
 
 	let fontsModal: HTMLDialogElement;
 
@@ -80,7 +80,7 @@
 				value={getSettings().minFrequency.get()}
 				disabled={isSettingsLocked}
 				class="input input-bordered w-1/2 text-center input-sm"
-				style="-webkit-appearance: none;"
+				style="-webkit-appearance: none"
 			/>
 		</div>
 
@@ -159,20 +159,20 @@
 			<div class="flex-1 text-left my-auto">
 				Rounds count
 			</div>
-				<input
-					type="number"
-					step="1"
-					onchange={(event) =>
+			<input
+				type="number"
+				step="1"
+				onchange={(event) =>
+				{
+					if (event.target instanceof HTMLInputElement)
 					{
-						if (event.target instanceof HTMLInputElement)
-						{
-							getSettings().roundsCount.set(parseInt(event.target.value));
-						}
-					}}
-					value={getSettings().roundsCount.get()}
-					disabled={isSettingsLocked}
-					class="input input-bordered w-1/2 text-center input-sm"
-				/>
+						getSettings().roundsCount.set(parseInt(event.target.value));
+					}
+				}}
+				value={getSettings().roundsCount.get()}
+				disabled={isSettingsLocked}
+				class="input input-bordered w-1/2 text-center input-sm"
+			/>
 		</div>
 		<div class="flex flex-row mt-4">
 			<div class="flex-1 text-left my-auto">
@@ -185,19 +185,21 @@
 					value={countFonts()}>
 				<button
 					class="btn btn-primary btn-sm join-item"
-					onclick={() => { fontsModal.showModal(); }}
-					disabled={isSettingsLocked}
-					>Edit</button>
+					onclick={() =>
+					{
+						fontsModal.showModal();
+					}}
+					disabled={isSettingsLocked}>Edit</button>
 			</div>
 		</div>
 		<dialog
 			bind:this={fontsModal}
-			class="h-screen w-screen rounded-md bg-black bg-opacity-50" style="min-height: 200vh; min-width: 200vw; margin-left: -50vw;">
+			class="h-screen w-screen rounded-md bg-black bg-opacity-50"
+			style="min-height: 200vh; min-width: 200vw; margin-left: -50vw">
 			<form method="dialog">
 				<button
 					class="absolute top-0 left-0 hover:cursor-default"
-					style="min-height: 200vh; min-width: 200vw; margin-left: -50vw;"
-					>✕</button>
+					style="min-height: 200vh; min-width: 200vw; margin-left: -50vw">✕</button>
 			</form>
 			<div class="h-full w-full flex justify-center items-center">
 				<FontsScreen />
@@ -207,7 +209,8 @@
 
 	<div class="text-center flex-grow relative min-h-16">
 		<div class="absolute bottom-0 left-0 right-0">
-			<button class="btn btn-primary w-full"
+			<button
+				class="btn btn-primary w-full"
 				onclick={startFunction}
 				disabled={!isAdmin}>
 				Start

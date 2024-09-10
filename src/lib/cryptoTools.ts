@@ -15,11 +15,10 @@ export async function signMessage(message: string): Promise<string>
 
 export async function verifySignature(message: string, signature: string, key: string): Promise<boolean>
 {
-	const result: boolean = await invoke(VERIFY_SIGNaTURE,
-		{
-			message: message,
-			signature: signature,
-			key: key,
-		});
+	const result: boolean = await invoke(VERIFY_SIGNaTURE, {
+		message: message,
+		signature: signature,
+		key: key,
+	});
 	return result;
 }
