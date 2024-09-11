@@ -236,7 +236,7 @@ pub async fn add_answer_stats(
     user_key: &str,
     word: &str,
     word_reading: &str,
-    duration: i64,
+    duration: Option<i64>,
     is_correct: bool,
     font_id: i64,
 ) -> Result<i64, String> {

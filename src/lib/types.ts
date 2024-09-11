@@ -86,7 +86,7 @@ export type FontInfo = {
 export type AnswerRecord = {
 	answer: string;
 	answerStatus: AnswerStatus;
-	answerTime: number;
+	answerTime: number | null;
 };
 
 export type RoundHistory = {

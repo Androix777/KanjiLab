@@ -24,7 +24,15 @@ export async function getFontId(name: string): Promise<number>
 	});
 }
 
-export async function addAnswerStats(gameStatsId: number, userKey: string, word: string, wordReading: string, duration: number, isCorrect: boolean, fontId: number): Promise<void>
+export async function addAnswerStats(
+	gameStatsId: number,
+	userKey: string,
+	word: string,
+	wordReading: string,
+	duration: number | null,
+	isCorrect: boolean,
+	fontId: number,
+): Promise<void>
 {
 	await invoke(ADD_ANSWER_STATS, {
 		gameStatsId: gameStatsId,
@@ -64,8 +72,16 @@ export async function getStats(): Promise<StatsInfo>
 	return data;
 }
 
-export async function getAnswerStreaks(minFrequency: number, maxFrequency: number, count: number): Promise<AnswerStreaks[]>
+export async function getAnswerStreaks(
+	minFrequency: number,
+	maxFrequency: number,
+	count: number,
+): Promise<AnswerStreaks[]>
 {
-	const data: AnswerStreaks[] = await invoke(GET_ANSWER_STREAKS, { minFrequency: minFrequency, maxFrequency: maxFrequency, count: count });
+	const data: AnswerStreaks[] = await invoke(GET_ANSWER_STREAKS, {
+		minFrequency: minFrequency,
+		maxFrequency: maxFrequency,
+		count: count,
+	});
 	return data;
 }

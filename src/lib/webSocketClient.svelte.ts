@@ -177,7 +177,7 @@ class WebSocketClient
 		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {
 			answer: answer,
 			answerStatus: `Unknown`,
-			answerTime: 0,
+			answerTime: null,
 		});
 
 		await this.serverConnector.sendAnswer(answer);
@@ -372,7 +372,7 @@ class WebSocketClient
 		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {
 			answer: ``,
 			answerStatus: `Unknown`,
-			answerTime: 0,
+			answerTime: null,
 		});
 		this.gameStatus = `AnswerQuestion`;
 
@@ -428,7 +428,7 @@ class WebSocketClient
 			this.gameHistory.at(-1)?.answers.set(customEvent.detail.id, {
 				answer: `?`,
 				answerStatus: `Unknown`,
-				answerTime: 0,
+				answerTime: null,
 			});
 		}
 	}

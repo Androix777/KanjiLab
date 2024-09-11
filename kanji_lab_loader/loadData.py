@@ -106,7 +106,7 @@ def create_tables(conn):
 			user_id INTEGER NOT NULL,
             word TEXT NOT NULL,
             word_reading TEXT NOT NULL,
-            duration INTEGER NOT NULL,
+            duration INTEGER,
             is_correct INTEGER NOT NULL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
             font_id INTEGER NOT NULL,
