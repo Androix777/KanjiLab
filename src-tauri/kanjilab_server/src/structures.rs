@@ -79,6 +79,7 @@ pub struct AnswerInfo {
     pub id: String,
     pub answer: String,
     pub is_correct: bool,
+    pub answer_time: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default)]

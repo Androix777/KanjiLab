@@ -1,6 +1,6 @@
 use std::collections::{hash_map::Entry, HashMap};
 use std::sync::{LazyLock, RwLock};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::sync::{broadcast, oneshot};
 use tokio::time::sleep;
 use uuid::Uuid;
@@ -34,6 +34,7 @@ static END_GAME_MARKER: LazyLock<RwLock<bool>> = LazyLock::new(|| RwLock::new(fa
 static ANSWERS_BY_ROUND: LazyLock<
     RwLock<HashMap<u64, (QuestionInfo, HashMap<String, AnswerInfo>)>>,
 > = LazyLock::new(Default::default);
+static ROUND_START_TIME: LazyLock<RwLock<Option<Instant>>> = LazyLock::new(|| RwLock::new(None));
 static ROUND_TIMER_CANCEL: LazyLock<RwLock<Option<oneshot::Sender<()>>>> =
     LazyLock::new(|| RwLock::new(None));
 // #endregion
@@ -160,6 +161,7 @@ pub fn set_current_question(question: QuestionInfo) {
     let (cancel_sender, cancel_receiver) = oneshot::channel();
     *ROUND_TIMER_CANCEL.write().unwrap() = Some(cancel_sender);
     let duration = Duration::from_secs(GAME_SETTINGS.read().unwrap().round_duration);
+    *ROUND_START_TIME.write().unwrap() = Some(Instant::now());
 
     tokio::spawn(async move {
         tokio::select! {
@@ -212,10 +214,17 @@ pub fn record_answer(client_id: &str, answer: &str) -> Result<bool, AnswerError>
         .iter()
         .any(|reading| reading.reading == answer);
 
+    let answer_time = ROUND_START_TIME
+        .read()
+        .unwrap()
+        .map(|start_time| start_time.elapsed().as_millis() as u64)
+        .unwrap_or(0);
+
     let answer_info = AnswerInfo {
         id: client_id.to_owned(),
         answer: answer.to_owned(),
         is_correct,
+        answer_time,
     };
 
     answers.insert(client_id.to_owned(), answer_info.clone());

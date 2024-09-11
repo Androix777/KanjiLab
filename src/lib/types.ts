@@ -49,6 +49,7 @@ export type AnswerInfo = {
 	id: string;
 	answer: string;
 	isCorrect: boolean;
+	answerTime: number;
 };
 
 export type FontInfo = {
@@ -85,6 +86,7 @@ export type FontInfo = {
 export type AnswerRecord = {
 	answer: string;
 	answerStatus: AnswerStatus;
+	answerTime: number;
 };
 
 export type RoundHistory = {

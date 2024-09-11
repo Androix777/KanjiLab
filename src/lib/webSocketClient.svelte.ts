@@ -41,7 +41,6 @@ class WebSocketClient
 	private serverConnector: ServerConnector = new ServerConnector();
 	private timerIntervalId: number = 0;
 	private currentGameId: number = 0;
-	private lastAnswerTime: number = 0;
 
 	public static getInstance()
 	{
@@ -178,9 +177,8 @@ class WebSocketClient
 		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {
 			answer: answer,
 			answerStatus: `Unknown`,
+			answerTime: 0,
 		});
-
-		this.lastAnswerTime = this.timerValue;
 
 		await this.serverConnector.sendAnswer(answer);
 	}
@@ -374,6 +372,7 @@ class WebSocketClient
 		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {
 			answer: ``,
 			answerStatus: `Unknown`,
+			answerTime: 0,
 		});
 		this.gameStatus = `AnswerQuestion`;
 
@@ -395,6 +394,7 @@ class WebSocketClient
 			this.gameHistory[this.gameHistory.length - 1].answers.set(answer.id, {
 				answer: answer.answer,
 				answerStatus: answer.isCorrect ? `Correct` : `Incorrect`,
+				answerTime: answer.answerTime,
 			});
 		});
 		this.clientList.sort((e1, e2) =>
@@ -404,18 +404,18 @@ class WebSocketClient
 			return (e1Score < e2Score) ? 1 : (e1Score > e2Score) ? -1 : 0;
 		});
 
-		const word = this.gameHistory.at(-1)?.question.wordInfo.word;
-		const answer = this.gameHistory.at(-1)?.answers.get(this.id)?.answer || ``;
-
 		const client = this.clientList.find(client => client.id === this.id);
-		if (word && client)
+		const answerRecord = this.gameHistory.at(-1)?.answers.get(this.id);
+		const questionInfo = this.gameHistory.at(-1)?.question;
+
+		if (client && answerRecord && questionInfo)
 		{
 			const fontId = await getFontId(customEvent.detail.question.fontName);
 			const userKey = client.key;
-			const duration = Math.ceil(this.lastAnswerTime * 1000);
-			const isCorrect = this.gameHistory.at(-1)?.answers.get(this.id)?.answerStatus == `Correct`;
+			const duration = answerRecord.answerTime;
+			const isCorrect = answerRecord.answerStatus == `Correct`;
 
-			await addAnswerStats(this.currentGameId, userKey, word, answer, duration, isCorrect, fontId);
+			await addAnswerStats(this.currentGameId, userKey, questionInfo.wordInfo.word, answerRecord.answer, duration, isCorrect, fontId);
 		}
 		this.gameStatus = `WaitingQuestion`;
 	}
@@ -428,6 +428,7 @@ class WebSocketClient
 			this.gameHistory.at(-1)?.answers.set(customEvent.detail.id, {
 				answer: `?`,
 				answerStatus: `Unknown`,
+				answerTime: 0,
 			});
 		}
 	}
