@@ -404,19 +404,18 @@ class WebSocketClient
 			return (e1Score < e2Score) ? 1 : (e1Score > e2Score) ? -1 : 0;
 		});
 
-		const client = this.clientList.find(client => client.id === this.id);
-		const answerRecord = this.gameHistory.at(-1)?.answers.get(this.id);
 		const questionInfo = this.gameHistory.at(-1)?.question;
+		const fontId = await getFontId(customEvent.detail.question.fontName);
 
-		if (client && answerRecord && questionInfo)
+		this.clientList.forEach(async (client) =>
 		{
-			const fontId = await getFontId(customEvent.detail.question.fontName);
-			const userKey = client.key;
-			const duration = answerRecord.answerTime;
-			const isCorrect = answerRecord.answerStatus == `Correct`;
+			let answer = this.gameHistory.at(-1)?.answers.get(client.id);
+			if (answer && questionInfo)
+			{
+				await addAnswerStats(this.currentGameId, client.key, questionInfo.wordInfo.word, answer.answer, answer.answerTime, answer.answerStatus == `Correct`, fontId);
+			}
+		});
 
-			await addAnswerStats(this.currentGameId, userKey, questionInfo.wordInfo.word, answerRecord.answer, duration, isCorrect, fontId);
-		}
 		this.gameStatus = `WaitingQuestion`;
 	}
 
