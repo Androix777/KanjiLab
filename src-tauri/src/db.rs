@@ -13,6 +13,16 @@ static DB_POOL: LazyLock<SqlitePool> = LazyLock::new(|| {
     SqlitePool::connect_lazy(&path_str).unwrap()
 });
 
+pub async fn init_db() {
+    let pool = (*DB_POOL).to_owned();
+    sqlx::migrate!().run(&pool).await.unwrap();
+}
+
+pub async fn close_db() {
+    let pool = (*DB_POOL).to_owned();
+    pool.close().await;
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WordPartExample {

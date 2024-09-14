@@ -1,11 +1,13 @@
 pub mod crypto;
 pub mod db;
+use db::{close_db, init_db};
 use std::{
     fs::{self, File},
     io::Read,
     panic::{self, AssertUnwindSafe},
     path::PathBuf,
 };
+use tokio::runtime::Runtime;
 use ttf_parser::{name_id, Face};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -32,8 +34,29 @@ pub fn run() {
             crypto::remove_account,
             crypto::create_account,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while running tauri application")
+        .run(|_app_handle, event| match event {
+            tauri::RunEvent::Ready { .. } => {
+                on_ready();
+                println!("Ready");
+            }
+            tauri::RunEvent::Exit {} => {
+                on_exit();
+                println!("Exit");
+            }
+            _ => {}
+        });
+}
+
+fn on_ready() {
+    let rt = Runtime::new().unwrap();
+    rt.block_on(init_db());
+}
+
+fn on_exit() {
+    let rt = Runtime::new().unwrap();
+    rt.block_on(close_db());
 }
 
 #[tauri::command]
