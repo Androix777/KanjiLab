@@ -7,12 +7,21 @@ use std::fs::{read, File};
 use std::io::Write;
 use std::path::PathBuf;
 
+// Assuming you have this function defined elsewhere
 use crate::get_executable_file_path;
 
-#[derive(Serialize, Deserialize)]
-struct KeyPair {
-    signing_key: SigningKey,
-    verifying_key: VerifyingKey,
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AccountInfo {
+    name: String,
+    public_key: String,
+    private_key: String,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct Accounts {
+    accounts: Vec<AccountInfo>,
 }
 
 fn get_key_file_path() -> Result<PathBuf, String> {
@@ -21,72 +30,133 @@ fn get_key_file_path() -> Result<PathBuf, String> {
     Ok(file_path)
 }
 
-fn generate_keys() -> Result<(), String> {
+fn load_accounts() -> Result<Accounts, String> {
     let file_path = get_key_file_path()?;
-
-    if file_path.exists() {
-        return Ok(());
+    if !file_path.exists() {
+        return Ok(Accounts::default());
     }
+
+    let content = read(&file_path).map_err(|e| format!("Failed to read file: {}", e))?;
+    let accounts = serde_json::from_slice(&content)
+        .map_err(|e| format!("Failed to deserialize accounts: {}", e))?;
+    Ok(accounts)
+}
+
+fn save_accounts(accounts: &Accounts) -> Result<(), String> {
+    let file_path = get_key_file_path()?;
+    let serialized = serde_json::to_string_pretty(accounts)
+        .map_err(|e| format!("Failed to serialize accounts: {}", e))?;
+
+    let mut file = File::create(&file_path).map_err(|e| format!("Failed to create file: {}", e))?;
+    file.write_all(serialized.as_bytes())
+        .map_err(|e| format!("Failed to write to file: {}", e))?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn create_account(name: &str) -> Result<AccountInfo, String> {
+    let mut accounts = load_accounts()?;
 
     let mut csprng = OsRng;
     let signing_key = SigningKey::generate(&mut csprng);
     let verifying_key = signing_key.verifying_key();
 
-    let key_pair = KeyPair {
-        signing_key,
-        verifying_key,
+    let key_pair = AccountInfo {
+        name: name.to_string(),
+        public_key: BASE64_STANDARD.encode(verifying_key.to_bytes()),
+        private_key: BASE64_STANDARD.encode(signing_key.to_bytes()),
     };
 
-    let serialized = serde_json::to_string_pretty(&key_pair)
-        .map_err(|e| format!("Failed to serialize key pair: {}", e))?;
+    accounts.accounts.push(key_pair.clone());
+    save_accounts(&accounts)?;
 
-    let mut file = File::create(&file_path).map_err(|e| format!("Failed to create file: {}", e))?;
-
-    file.write_all(serialized.as_bytes())
-        .map_err(|e| format!("Failed to write to file: {}", e))?;
-
-    Ok(())
+    Ok(key_pair)
 }
 
 #[tauri::command]
-pub fn get_public_key() -> Result<String, String> {
-    generate_keys().unwrap();
+pub fn remove_account(public_key: &str) -> Result<(), String> {
+    let mut accounts = load_accounts()?;
 
-    let file_path = get_key_file_path()?;
-    let content = read(&file_path).map_err(|e| format!("Failed to read file: {}", e))?;
-
-    let key_pair: KeyPair = serde_json::from_slice(&content)
-        .map_err(|e| format!("Failed to deserialize key pair: {}", e))?;
-
-    Ok(BASE64_STANDARD.encode(key_pair.verifying_key.to_bytes()))
+    if let Some(pos) = accounts
+        .accounts
+        .iter()
+        .position(|acc| acc.public_key == public_key)
+    {
+        accounts.accounts.remove(pos);
+        save_accounts(&accounts)?;
+        Ok(())
+    } else {
+        Err("Public key not found".to_string())
+    }
 }
 
 #[tauri::command]
-pub fn sign_message(message: &str) -> Result<String, String> {
-    generate_keys().unwrap();
+pub fn rename_account(public_key: &str, new_name: &str) -> Result<(), String> {
+    let mut accounts = load_accounts()?;
 
-    let file_path = get_key_file_path()?;
-    let content = read(&file_path).map_err(|e| format!("Failed to read file: {}", e))?;
+    if let Some(account) = accounts
+        .accounts
+        .iter_mut()
+        .find(|acc| acc.public_key == public_key)
+    {
+        account.name = new_name.to_string();
+        save_accounts(&accounts)?;
+        Ok(())
+    } else {
+        Err("Account with the provided public key not found".to_string())
+    }
+}
 
-    let key_pair: KeyPair = serde_json::from_slice(&content)
-        .map_err(|e| format!("Failed to deserialize key pair: {}", e))?;
+#[tauri::command]
+pub fn get_accounts() -> Result<Vec<AccountInfo>, String> {
+    let accounts = load_accounts()?;
+    Ok(accounts.accounts)
+}
 
-    let signature = key_pair.signing_key.sign(message.as_bytes());
+#[tauri::command]
+pub fn sign_message(public_key: &str, message: &str) -> Result<String, String> {
+    let accounts = load_accounts()?;
+
+    let key_pair = accounts
+        .accounts
+        .iter()
+        .find(|acc| acc.public_key == public_key)
+        .ok_or("Account with the provided public key not found")?;
+
+    let signing_key_bytes = BASE64_STANDARD
+        .decode(&key_pair.private_key)
+        .map_err(|e| format!("Invalid signing key: {}", e))?;
+    let signing_key = SigningKey::from_bytes(
+        &signing_key_bytes
+            .try_into()
+            .map_err(|_| "Invalid signing key length")?,
+    );
+
+    let signature = signing_key.sign(message.as_bytes());
     Ok(BASE64_STANDARD.encode(signature.to_bytes()))
 }
 
 #[tauri::command]
-pub fn verify_signature(message: &str, signature: &str, key: &str) -> Result<bool, String> {
+pub fn verify_signature(public_key: &str, message: &str, signature: &str) -> Result<bool, String> {
     let public_key_bytes = BASE64_STANDARD
-        .decode(key)
+        .decode(public_key)
         .map_err(|e| format!("Invalid public key: {}", e))?;
-    let verifying_key = VerifyingKey::from_bytes(&public_key_bytes.try_into().unwrap())
-        .map_err(|e| format!("Invalid public key: {}", e))?;
+    let verifying_key = VerifyingKey::from_bytes(
+        &public_key_bytes
+            .try_into()
+            .map_err(|_| "Invalid public key length")?,
+    )
+    .map_err(|e| format!("Invalid public key: {}", e))?;
 
     let signature_bytes = BASE64_STANDARD
         .decode(signature)
         .map_err(|e| format!("Invalid signature: {}", e))?;
-    let signature = Signature::from_bytes(&signature_bytes.try_into().unwrap());
+
+    let signature = Signature::from_bytes(
+        &signature_bytes
+            .try_into()
+            .map_err(|_| "Invalid signature length")?,
+    );
 
     Ok(verifying_key.verify(message.as_bytes(), &signature).is_ok())
 }

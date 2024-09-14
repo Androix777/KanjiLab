@@ -26,9 +26,11 @@ pub fn run() {
             db::add_game_stats,
             db::get_font_id,
             db::get_answer_streaks,
-            crypto::get_public_key,
             crypto::sign_message,
             crypto::verify_signature,
+            crypto::get_accounts,
+            crypto::remove_account,
+            crypto::create_account,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

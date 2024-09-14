@@ -1,7 +1,7 @@
 import { getSettings } from "$lib/globalSettings.svelte";
 import { ServerConnector } from "$lib/webSocketConnector";
 import { SvelteMap } from "svelte/reactivity";
-import { getPublicKey, signMessage } from "./cryptoTools";
+import { createAccount, getAccounts, signMessage } from "./cryptoTools";
 import { addAnswerStats, addGameStats, getFontId, getRandomWords } from "./databaseTools";
 import { getFontInfo, getRandomFont, getSVGText } from "./fontTools";
 import type {
@@ -108,8 +108,14 @@ class WebSocketClient
 		{
 			await this.serverConnector.connect(ipAddress);
 
-			const message = await this.sendPublicKeyMessage();
-			const sign = await signMessage(message);
+			let accounts = await getAccounts();
+			if (accounts.length == 0)
+			{
+				await createAccount(getSettings().userName.get());
+			}
+			accounts = await getAccounts();
+			const message = await this.sendPublicKeyMessage(accounts[0].publicKey);
+			const sign = await signMessage(accounts[0].publicKey, message);
 			await this.sendVerifySignatureMessage(sign);
 
 			const payload = await this.serverConnector.sendRegisterClientMessage();
@@ -146,9 +152,9 @@ class WebSocketClient
 		this.isConnectedToSelf = true;
 	}
 
-	public async sendPublicKeyMessage()
+	public async sendPublicKeyMessage(key: string)
 	{
-		return await this.serverConnector.sendPublicKeyMessage(await getPublicKey());
+		return await this.serverConnector.sendPublicKeyMessage(key);
 	}
 
 	public async sendVerifySignatureMessage(signature: string)

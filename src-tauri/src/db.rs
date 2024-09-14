@@ -57,6 +57,7 @@ pub async fn get_words(
     const KEB_SEPARATOR: &str = "␟";
     const READINGS_SEPARATOR: &str = ",";
 
+    #[allow(dead_code)]
     struct RawData {
         id: i64,
         word: String,
@@ -138,6 +139,7 @@ async fn get_reading_with_parts(
     reading: String,
     examples_count: i64,
 ) -> Result<ReadingWithParts, String> {
+    #[allow(dead_code)]
     struct RawPartData {
         part_id: i64,
         word_part: String,
