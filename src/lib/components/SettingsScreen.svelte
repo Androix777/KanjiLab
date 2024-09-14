@@ -1,6 +1,12 @@
 <script lang="ts">
 	import ThemeSelect from "$lib/components/ThemeSelect.svelte";
 	import { getSettings } from "$lib/globalSettings.svelte";
+	import AutoComplete from "./AutoComplete.svelte";
+
+	let items: string[] = $state([
+		`example item 1`,
+		`example itme 2`,
+	]);
 </script>
 
 <div class="p-4">
@@ -22,6 +28,17 @@
 					value={getSettings().userName.get()}
 					class="flex-none input input-bordered text-center w-1/2"
 				/>
+			</div>
+			<div class="flex flex-row mt-4">
+				<div class="flex-1 text-left my-auto">
+					Account
+				</div>
+				<div class="flex-none text-center w-1/2">
+					<AutoComplete
+						items={items}
+						onSelect={(selectedItem: string) => console.log(selectedItem)}
+					/>
+				</div>
 			</div>
 			<div class="flex flex-row mt-4">
 				<div class="flex-1 text-left my-auto">
