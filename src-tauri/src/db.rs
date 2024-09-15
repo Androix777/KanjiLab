@@ -1,4 +1,5 @@
 use crate::get_executable_file_path;
+use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file_as, sqlite::SqlitePool};
 use std::sync::LazyLock;
@@ -331,4 +332,116 @@ pub async fn get_answer_streaks(
     .map_err(|e| e.to_string())?;
 
     Ok(data)
+}
+
+#[tauri::command]
+pub async fn get_word_parts() -> Result<Vec<String>, String> {
+    let data = sqlx::query_file!("./queries/get_word_parts.sql")
+        .map(|row| row.word_part)
+        .fetch_all(&*DB_POOL)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(data)
+}
+
+#[tauri::command]
+pub async fn get_word_part_readings(word_part: String) -> Result<Vec<String>, String> {
+    let data = sqlx::query_file!("./queries/get_word_part_readings.sql", word_part)
+        .map(|row| row.word_part_reading)
+        .fetch_all(&*DB_POOL)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(data)
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GameStats {
+    id: i64,
+    rounds_count: i64,
+    round_duration: i64,
+    min_frequency: i64,
+    max_frequency: Option<i64>,
+    font_id: Option<i64>,
+    dictionary_id: i64,
+    timestamp: NaiveDateTime,
+}
+
+#[tauri::command]
+pub async fn get_all_game_stats() -> Result<Vec<GameStats>, String> {
+    let data = sqlx::query_file_as!(GameStats, "./queries/get_all_game_stats.sql")
+        .fetch_all(&*DB_POOL)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(data)
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnswerStats {
+    id: i64,
+    game_stats_id: i64,
+    user_id: i64,
+    word: String,
+    word_reading: String,
+    duration: Option<i64>,
+    is_correct: bool,
+    timestamp: NaiveDateTime,
+    font_id: i64,
+}
+
+#[derive(sqlx::FromRow)]
+struct AnswerStatsDB {
+    id: i64,
+    game_stats_id: i64,
+    user_id: i64,
+    word: String,
+    word_reading: String,
+    duration: Option<i64>,
+    is_correct: i64,
+    timestamp: NaiveDateTime,
+    font_id: i64,
+}
+
+impl From<AnswerStatsDB> for AnswerStats {
+    fn from(db: AnswerStatsDB) -> Self {
+        AnswerStats {
+            id: db.id,
+            game_stats_id: db.game_stats_id,
+            user_id: db.user_id,
+            word: db.word,
+            word_reading: db.word_reading,
+            duration: db.duration,
+            is_correct: db.is_correct != 0,
+            timestamp: db.timestamp,
+            font_id: db.font_id,
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn get_answer_stats_by_game(game_stats_id: i64) -> Result<Vec<AnswerStats>, String> {
+    let data = sqlx::query_file_as!(
+        AnswerStatsDB,
+        "./queries/get_answer_stats_by_game.sql",
+        game_stats_id
+    )
+    .fetch_all(&*DB_POOL)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(data.into_iter().map(AnswerStats::from).collect())
+}
+
+#[tauri::command]
+pub async fn get_all_answer_stats() -> Result<Vec<AnswerStats>, String> {
+    let data = sqlx::query_file_as!(AnswerStatsDB, "./queries/get_all_answer_stats.sql")
+        .fetch_all(&*DB_POOL)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(data.into_iter().map(AnswerStats::from).collect())
 }

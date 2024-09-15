@@ -1,0 +1,2 @@
+SELECT DISTINCT word_part
+FROM word_part_reading;

@@ -1,5 +1,28 @@
 import type { SvelteMap } from "svelte/reactivity";
 
+export type GameStats = {
+	id: number;
+	roundsCount: number;
+	roundDuration: number;
+	minFrequency: number;
+	maxFrequency?: number | null;
+	fontId?: number | null;
+	dictionaryId: number;
+	timestamp: string;
+};
+
+export type AnswerStats = {
+	id: number;
+	gameStatsId: number;
+	userId: number;
+	word: string;
+	wordReading: string;
+	duration?: number | null;
+	isCorrect: boolean;
+	timestamp: string;
+	fontId: number;
+};
+
 export type WordPartExample = {
 	word: string;
 	frequency: number | null;

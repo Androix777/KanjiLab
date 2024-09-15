@@ -1,6 +1,18 @@
 import { getSettings } from "$lib/globalSettings.svelte";
-import { ADD_ANSWER_STATS, ADD_GAME_STATS, GET_ANSWER_STREAKS, GET_FONT_ID, GET_STATS, GET_WORDS } from "$lib/tauriFunctions";
-import type { AnswerStreaks, WordInfo } from "$lib/types";
+import {
+	ADD_ANSWER_STATS,
+	ADD_GAME_STATS,
+	GET_ALL_ANSWER_STATS,
+	GET_ALL_GAME_STATS,
+	GET_ANSWER_STATS_BY_GAME,
+	GET_ANSWER_STREAKS,
+	GET_FONT_ID,
+	GET_STATS,
+	GET_WORD_PART_READINGS,
+	GET_WORD_PARTS,
+	GET_WORDS,
+} from "$lib/tauriFunctions";
+import type { AnswerStats, AnswerStreaks, GameStats, WordInfo } from "$lib/types";
 import type { StatsInfo } from "$lib/types";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -83,5 +95,35 @@ export async function getAnswerStreaks(
 		maxFrequency: maxFrequency,
 		count: count,
 	});
+	return data;
+}
+
+export async function getWordParts(): Promise<string[]>
+{
+	const data: string[] = await invoke(GET_WORD_PARTS);
+	return data;
+}
+
+export async function getWordPartReadings(wordPart: string): Promise<string[]>
+{
+	const data: string[] = await invoke(GET_WORD_PART_READINGS, { wordPart });
+	return data;
+}
+
+export async function getAllGameStats(): Promise<GameStats[]>
+{
+	const data: GameStats[] = await invoke(GET_ALL_GAME_STATS);
+	return data;
+}
+
+export async function getAnswerStatsByGame(gameStatsId: number): Promise<AnswerStats[]>
+{
+	const data: AnswerStats[] = await invoke(GET_ANSWER_STATS_BY_GAME, { gameStatsId });
+	return data;
+}
+
+export async function getAllAnswerStats(): Promise<AnswerStats[]>
+{
+	const data: AnswerStats[] = await invoke(GET_ALL_ANSWER_STATS);
 	return data;
 }

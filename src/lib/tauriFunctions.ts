@@ -18,3 +18,9 @@ export const GET_ACCOUNTS: string = `get_accounts`;
 export const REMOVE_ACCOUNT: string = `remove_account`;
 export const CREATE_ACCOUNT: string = `create_account`;
 export const RENAME_ACCOUNT: string = `rename_account`;
+
+export const GET_WORD_PARTS: string = `get_word_parts`;
+export const GET_WORD_PART_READINGS: string = `get_word_part_readings`;
+export const GET_ALL_GAME_STATS: string = `get_all_game_stats`;
+export const GET_ANSWER_STATS_BY_GAME: string = `get_answer_stats_by_game`;
+export const GET_ALL_ANSWER_STATS: string = `get_all_answer_stats`;
