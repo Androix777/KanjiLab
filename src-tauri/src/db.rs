@@ -1,8 +1,9 @@
-use crate::get_executable_file_path;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file_as, sqlite::SqlitePool};
 use std::sync::LazyLock;
+
+use crate::tools::get_executable_file_path;
 
 static DB_POOL: LazyLock<SqlitePool> = LazyLock::new(|| {
     let path_str = get_executable_file_path()

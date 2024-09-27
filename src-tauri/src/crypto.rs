@@ -7,8 +7,7 @@ use std::fs::{read, File};
 use std::io::Write;
 use std::path::PathBuf;
 
-// Assuming you have this function defined elsewhere
-use crate::get_executable_file_path;
+use crate::tools::get_executable_file_path;
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
