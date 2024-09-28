@@ -114,8 +114,8 @@ class WebSocketClient
 				await createAccount(getSettings().userName.get());
 			}
 			accounts = await getAccounts();
-			const message = await this.sendPublicKeyMessage(accounts[0].publicKey);
-			const sign = await signMessage(accounts[0].publicKey, message);
+			const message = await this.sendPublicKeyMessage(accounts[getSettings().currentAccount.get()].publicKey);
+			const sign = await signMessage(accounts[getSettings().currentAccount.get()].publicKey, message);
 			await this.sendVerifySignatureMessage(sign);
 
 			const payload = await this.serverConnector.sendRegisterClientMessage();
@@ -384,7 +384,7 @@ class WebSocketClient
 
 		this.timerValue = getSettings().roundDuration.get();
 		clearInterval(this.timerIntervalId);
-		this.timerIntervalId = setInterval(() =>
+		this.timerIntervalId = <number> <unknown> setInterval(() =>
 		{
 			this.timerValue -= 0.01;
 		}, 10);

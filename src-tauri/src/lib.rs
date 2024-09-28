@@ -32,6 +32,7 @@ pub fn run() {
             crypto::verify_signature,
             crypto::get_accounts,
             crypto::remove_account,
+			crypto::rename_account,
             crypto::create_account,
         ])
         .build(tauri::generate_context!())

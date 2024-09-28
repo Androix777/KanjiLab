@@ -30,6 +30,7 @@ const settings = {
 	wordPart: createStateVar(``),
 	selectedFonts: createStateVar(new Array<string>()),
 	fontsInfo: createStateVar(new Array<FontInfo>()),
+	currentAccount: createStateVar(0),
 };
 
 export function getSettings()

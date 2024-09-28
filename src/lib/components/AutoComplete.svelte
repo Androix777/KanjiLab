@@ -1,35 +1,46 @@
 <script lang="ts">
 	type Props = {
 		items: string[];
-		// selectedItem
-		onSelect: (selectedItem: string) => void;
+		selectedIndex: number;
+		onSelect: (selectedIndex: number, selectedItem: string) => void;
 	};
 
 	const // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	{
 		items,
+		selectedIndex,
 		onSelect,
 	}: Props = $props();
 
 	let searchKeyword = $state(``);
 	let inputElement: HTMLInputElement;
-	let selectedItem: string = $state(``);
 
-	function onItemClicked(item: string)
+	function onItemClicked(itemIndexTuple: [number, string])
 	{
 		if (document.activeElement && document.activeElement instanceof HTMLElement)
 		{
 			document.activeElement.blur();
 		}
-		onSelect(item);
-		selectedItem = item;
+		onSelect(...itemIndexTuple);
 		searchKeyword = ``;
 	}
 
-	let filteredItems = $derived(items.filter(function(item)
+	let getItemIndexTuples = $derived((items: string[]) =>
 	{
-		return item.toLowerCase().includes(searchKeyword.toLowerCase());
-	}));
+		let itemIndexTuples: Array<[number, string]> = new Array();
+		for (let i = 0; i < items.length; i++)
+		{
+			itemIndexTuples.push([i, items[i]]);
+		}
+		return itemIndexTuples;
+	});
+
+	let filteredItems = $derived(
+		getItemIndexTuples(items).filter(function(itemIndexTuple)
+		{
+			return itemIndexTuple[1].toLowerCase().includes(searchKeyword.toLowerCase());
+		}),
+	);
 </script>
 
 <div class="dropdown w-full">
@@ -41,7 +52,7 @@
 			inputElement.focus();
 		}}
 	>
-		{selectedItem}
+		{items[selectedIndex]}
 	</button>
 
 	<div class="dropdown-content w-full">
@@ -53,14 +64,14 @@
 		/>
 
 		<ul tabindex="-1" class="menu p-2 shadow bg-base-100 rounded-box max-h-80 flex-nowrap overflow-y-auto w-full">
-			{#each filteredItems as item}
+			{#each filteredItems as itemIndexTuple}
 				<li>
 					<button
 						onclick={(event) =>
 						{
-							onItemClicked(item);
+							onItemClicked(itemIndexTuple);
 						}}
-					>{item}</button>
+					>{itemIndexTuple[1]}</button>
 				</li>
 			{/each}
 		</ul>
