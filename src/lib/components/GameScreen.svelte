@@ -61,16 +61,18 @@
 </script>
 
 <div class="flex flex-col flex-grow min-h-0">
-	<progress class="progress progress-primary" value={timerValue} max={roundDuration}></progress>
+	<progress class="progress progress-primary flex-none" value={timerValue} max={roundDuration}></progress>
 
 	<div>Round {currentRound} of {roundsCount}</div>
 
 	<div class="flex-grow"></div>
 
-	<div class="flex items-center justify-center flex-none my-4 h-24">
+	<div class="flex items-center justify-center flex-none my-4 h-36 relative">
 		{#key currentQuestionInfo?.wordInfo.word}
-			<div class="bg-base-content absolute" style="mask-image: url({currentSvgUrl}); mask-size: 100% 100%" transition:fade={{ duration: 400 }}>
-				<img src={currentSvgUrl} alt="" class="opacity-0">
+			<div class="absolute h-36 top-0 bottom-0">
+				<div class="bg-base-content max-h-full" style="mask-image: url({currentSvgUrl}); mask-size: 100% 100%" transition:fade={{ duration: 400 }}>
+					<img src={currentSvgUrl} alt="" class="opacity-0 object-contain h-36">
+				</div>
 			</div>
 		{/key}
 	</div>
@@ -93,7 +95,8 @@
 		{#key [previousQuestionInfo?.wordInfo.word, previousAnswerRecord?.answer]}
 			<div class="absolute right-0 left-0 top-0 bottom-0 border border-base-100" transition:fade={{ duration: 400 }}>
 				<div
-					class="flex-none divider mb-0 mx-2 {previousAnswerRecord?.answerStatus == `Correct` ? `divider-success text-success` : previousAnswerRecord?.answerStatus == `Incorrect` ? `divider-error text-error` : `divider-neutral text-neutral-content`}">
+					class="flex-none divider mb-0 mx-2 {previousAnswerRecord?.answerStatus == `Correct` ? `divider-success text-success` : previousAnswerRecord?.answerStatus == `Incorrect` ? `divider-error text-error` : `divider-neutral text-neutral-content`}"
+				>
 					{previousAnswerRecord?.answer}
 				</div>
 				<div class="flex flex-col space-y-2 text-xl overflow-y-auto" style="height: 90%">
