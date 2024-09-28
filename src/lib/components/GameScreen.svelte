@@ -65,8 +65,6 @@
 
 	<div>Round {currentRound} of {roundsCount}</div>
 
-	<div class="flex-grow"></div>
-
 	<div class="flex items-center justify-center flex-none my-4 h-36 relative">
 		{#key currentQuestionInfo?.wordInfo.word}
 			<div class="absolute h-36 top-0 bottom-0">
@@ -76,8 +74,6 @@
 			</div>
 		{/key}
 	</div>
-
-	<div class="flex-grow"></div>
 
 	<div class="w-full flex justify-center flex-none my-4">
 		<input
@@ -89,9 +85,7 @@
 		/>
 	</div>
 
-	<div class="flex-grow"></div>
-
-	<div class="h-1/2 w-full flex justify-center flex-none relative">
+	<div class="w-full flex justify-center flex-grow relative">
 		{#key [previousQuestionInfo?.wordInfo.word, previousAnswerRecord?.answer]}
 			<div class="absolute right-0 left-0 top-0 bottom-0 border border-base-100" transition:fade={{ duration: 400 }}>
 				<div
