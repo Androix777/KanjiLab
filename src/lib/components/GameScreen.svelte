@@ -52,6 +52,12 @@
 		return 0;
 	}
 
+	$effect(() =>
+	{
+		currentQuestionInfo;
+		readingInput = ``;
+	});
+
 	onMount(() =>
 	{
 		inputElement.focus();
