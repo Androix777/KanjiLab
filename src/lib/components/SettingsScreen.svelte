@@ -2,24 +2,17 @@
 	import ThemeSelect from "$lib/components/ThemeSelect.svelte";
 	import { createAccount, getAccounts, removeAccount, renameAccount } from "$lib/cryptoTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
-	import blockies from "blockies";
-	import jdenticon from "jdenticon/standalone";
 	import { onMount } from "svelte";
 	import AutoComplete from "./AutoComplete.svelte";
+	import Avatar from "./Avatar.svelte";
 
 	let items: string[] = $state([]);
 	let currentPublicKey: string = $state(``);
-	let blockieContainer: HTMLElement;
 
 	onMount(async () =>
 	{
 		getSettings().userName.set((await getAccounts())[getSettings().currentAccount.get()].name);
 		refreshItems();
-	});
-
-	$effect(() =>
-	{
-		blockieContainer.replaceChildren(blockies({ seed: currentPublicKey, size: 15, scale: 3 }));
 	});
 
 	async function refreshItems()
@@ -74,10 +67,7 @@
 			<div class="flex flex-row mt-4">
 				<div class="flex-1 my-auto"></div>
 				<div class="w-1/2 flex-none flex flex-row items-center justify-evenly">
-					<div class="w-16 [&>*:only-child]:max-w-full [&>*:only-child]:max-h-full">
-						{@html jdenticon.toSvg(currentPublicKey, 80)}
-					</div>
-					<div class="w-14 [&>*:only-child]:w-full [&>*:only-child]:h-full" bind:this={blockieContainer}></div>
+					<Avatar key={currentPublicKey} />
 					<button
 						class="btn btn-primary"
 						onclick={async () =>
@@ -111,6 +101,28 @@
 							refreshItems();
 						}}
 					>Delete</button>
+				</div>
+			</div>
+			<div class="flex flex-row mt-4">
+				<div class="flex-1 text-left my-auto">
+					Avatar style
+				</div>
+				<div class="w-1/2">
+					<select
+						class="select select-bordered w-full"
+						value={getSettings().avatars.get()}
+						onchange={(event) =>
+						{
+							if (event.target instanceof HTMLSelectElement)
+							{
+								getSettings().avatars.set(parseInt(event.target.value));
+							}
+						}}
+					>
+						{#each [0, 1] as styleID}
+							<option value={styleID}>{styleID == 0 ? `Jdenticons` : `Blockies`}</option>
+						{/each}
+					</select>
 				</div>
 			</div>
 			<div class="flex flex-row mt-4">

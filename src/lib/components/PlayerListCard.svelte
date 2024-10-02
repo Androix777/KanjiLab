@@ -3,6 +3,7 @@
 	import jdenticon from "jdenticon/standalone";
 	import { flip } from "svelte/animate";
 	import { SvelteMap } from "svelte/reactivity";
+	import Avatar from "./Avatar.svelte";
 
 	type Props = {
 		clientInfo: ClientInfo;
@@ -63,10 +64,9 @@
 		<span class="indicator-item badge badge-primary mx-4 my-1">You</span>
 	{/if}
 	<div class="m-1 border border-primary bg-base-200 relative w-full overflow-hidden" style="border-radius: var(--rounded-box, 1rem /* 16px */)">
-		<div class="flex flex-row" style="height: 3.75rem">
-			<div class="flex-none w-16 pl-0 pb-2 pt-2 [&>*:only-child]:max-w-full [&>*:only-child]:max-h-full">
-				{@html jdenticon.toSvg(clientInfo.key, 80)}
-			</div>
+		<div class="flex flex-row" style="height: 4rem">
+			<Avatar key={clientInfo.key} />
+			<!-- <Avatar key={clientInfo.key} /> -->
 			<div class="flex-grow flex flex-column flex-wrap">
 				<div class="flex flex-row h-8 w-full p-1">
 					<div class="flex-none w-16 font-bold text-lg text-base-content">
