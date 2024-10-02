@@ -2,17 +2,24 @@
 	import ThemeSelect from "$lib/components/ThemeSelect.svelte";
 	import { createAccount, getAccounts, removeAccount, renameAccount } from "$lib/cryptoTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
+	import blockies from "blockies";
 	import jdenticon from "jdenticon/standalone";
 	import { onMount } from "svelte";
 	import AutoComplete from "./AutoComplete.svelte";
 
 	let items: string[] = $state([]);
 	let currentPublicKey: string = $state(``);
+	let blockieContainer: HTMLElement;
 
 	onMount(async () =>
 	{
 		getSettings().userName.set((await getAccounts())[getSettings().currentAccount.get()].name);
 		refreshItems();
+	});
+
+	$effect(() =>
+	{
+		blockieContainer.replaceChildren(blockies({ seed: currentPublicKey, size: 15, scale: 3 }));
 	});
 
 	async function refreshItems()
@@ -70,6 +77,7 @@
 					<div class="w-16 [&>*:only-child]:max-w-full [&>*:only-child]:max-h-full">
 						{@html jdenticon.toSvg(currentPublicKey, 80)}
 					</div>
+					<div class="w-14 [&>*:only-child]:w-full [&>*:only-child]:h-full" bind:this={blockieContainer}></div>
 					<button
 						class="btn btn-primary"
 						onclick={async () =>
