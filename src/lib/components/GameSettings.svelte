@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { getWordPartReadings, getWordParts } from "$lib/databaseTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
+	import AutoComplete from "./AutoComplete.svelte";
 	import FontsScreen from "./FontsScreen.svelte";
 
 	let webSocketClient: WebSocketClient = $state(WebSocketClient.getInstance());
@@ -58,10 +60,22 @@
 	}
 
 	let isSettingsLocked = $derived(!webSocketClient.isConnectedToSelf || webSocketClient.gameStatus == `Off` || webSocketClient.gameStatus == `Connecting`);
+
+	let selectedWordPartItem: number = $state(-1);
+	let wordPartItems: string[] = $state([]);
+	let selectedWordPartReading: number = $state(0);
+	let wordPartReadings: string[] = $state([]);
+
+	async function refreshItems()
+	{
+		wordPartItems = await getWordParts();
+	}
+
+	refreshItems();
 </script>
 
 <div class="flex flex-col flex-grow h-full">
-	<div class="overflow-y-auto relative">
+	<div class="h-full overflow-y-auto relative">
 		<div class="card-title">Game settings</div>
 		<div class="flex flex-row mt-4">
 			<div class="flex-1 text-left my-auto">
@@ -137,6 +151,44 @@
 
 		<div class="flex flex-row mt-4">
 			<div class="flex-1 text-left my-auto">
+				Word part
+			</div>
+			<div class="w-1/2 flex flex-row">
+				<div class="w-1/2 h-8 [&>*:nth-child(1)>:nth-child(1)]:select-sm">
+					<AutoComplete
+						items={wordPartItems}
+						selectedIndex={selectedWordPartItem}
+						onSelect={async (selectedIndex, selectedItem) =>
+						{
+							selectedWordPartReading = 0;
+							selectedWordPartItem = selectedIndex;
+							wordPartReadings = await getWordPartReadings(selectedItem);
+							getSettings().wordPart.set(selectedItem);
+						}}
+					/>
+				</div>
+				<div class="w-1/2">
+					<select
+						class="select select-bordered w-full select-sm"
+						value={selectedWordPartReading}
+						onchange={(event) =>
+						{
+							if (event.target instanceof HTMLSelectElement)
+							{
+								console.log(event.target.value);
+							}
+						}}
+					>
+						{#each wordPartReadings as readingOption}
+							<option value={readingOption}>{readingOption}</option>
+						{/each}
+					</select>
+				</div>
+			</div>
+		</div>
+
+		<div class="flex flex-row mt-4">
+			<div class="flex-1 text-left my-auto">
 				Round duration
 			</div>
 			<input
@@ -182,24 +234,28 @@
 				<input
 					disabled={true}
 					class="input input-bordered input-disabled input-sm flex-grow text-center join-item"
-					value={countFonts()}>
+					value={countFonts()}
+				>
 				<button
 					class="btn btn-primary btn-sm join-item"
 					onclick={() =>
 					{
 						fontsModal.showModal();
 					}}
-					disabled={isSettingsLocked}>Edit</button>
+					disabled={isSettingsLocked}
+				>Edit</button>
 			</div>
 		</div>
 		<dialog
 			bind:this={fontsModal}
 			class="h-screen w-screen rounded-md bg-black bg-opacity-50"
-			style="min-height: 200vh; min-width: 200vw; margin-left: -50vw">
+			style="min-height: 200vh; min-width: 200vw; margin-left: -50vw"
+		>
 			<form method="dialog">
 				<button
 					class="absolute top-0 left-0 hover:cursor-default"
-					style="min-height: 200vh; min-width: 200vw; margin-left: -50vw">✕</button>
+					style="min-height: 200vh; min-width: 200vw; margin-left: -50vw"
+				>✕</button>
 			</form>
 			<div class="h-full w-full flex justify-center items-center">
 				<FontsScreen />
@@ -212,7 +268,8 @@
 			<button
 				class="btn btn-primary w-full"
 				onclick={startFunction}
-				disabled={!isAdmin}>
+				disabled={!isAdmin}
+			>
 				Start
 			</button>
 		</div>

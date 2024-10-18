@@ -43,7 +43,7 @@
 	);
 </script>
 
-<div class="dropdown w-full">
+<div class="dropdown w-full h-full">
 	<button
 		tabindex="0"
 		class="select select-bordered w-full text-center items-center"
@@ -52,7 +52,7 @@
 			inputElement.focus();
 		}}
 	>
-		{items[selectedIndex]}
+		{selectedIndex == -1 ? `` : items[selectedIndex]}
 	</button>
 
 	<div class="dropdown-content w-full">
@@ -64,7 +64,7 @@
 		/>
 
 		<ul tabindex="-1" class="menu p-2 shadow bg-base-100 rounded-box max-h-80 flex-nowrap overflow-y-auto w-full">
-			{#each filteredItems as itemIndexTuple}
+			{#each filteredItems.slice(0, 5) as itemIndexTuple}
 				<li>
 					<button
 						onclick={(event) =>
