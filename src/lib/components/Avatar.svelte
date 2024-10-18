@@ -18,7 +18,7 @@
 	{
 		if (blockieContainer != null)
 		{
-			blockieContainer.replaceChildren(blockies({ seed: key, size: 12, scale: 100 }));
+			blockieContainer.replaceChildren(blockies({ seed: key, size: 9, scale: 100 }));
 		}
 	});
 </script>
