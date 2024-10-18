@@ -27,6 +27,7 @@
 		getSettings().maxFrequency.get();
 		getSettings().usingMaxFrequency.get();
 		getSettings().wordPart.get();
+		getSettings().wordPartReading.get();
 		getSettings().roundDuration.get();
 		getSettings().roundsCount.get();
 		getSettings().selectedFonts.get();
@@ -180,7 +181,7 @@
 						{
 							if (event.target instanceof HTMLSelectElement)
 							{
-								console.log(event.target.value);
+								getSettings().wordPartReading.set(event.target.value);
 							}
 						}}
 						disabled={isSettingsLocked}

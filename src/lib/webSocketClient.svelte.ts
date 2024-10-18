@@ -219,6 +219,7 @@ class WebSocketClient
 			roundDuration: getSettings().roundDuration.get(),
 			roundsCount: getSettings().roundsCount.get(),
 			wordPart: getSettings().wordPart.get() == `` ? null : getSettings().wordPart.get(),
+			wordPartReading: getSettings().wordPartReading.get() == `` ? null : getSettings().wordPartReading.get(),
 			fontsCount: fontsCount,
 			firstFontName: fontInfo?.fullName ?? null,
 		};
@@ -234,6 +235,7 @@ class WebSocketClient
 		getSettings().roundDuration.set(gameSettings.roundDuration);
 		getSettings().roundsCount.set(gameSettings.roundsCount);
 		getSettings().wordPart.set(gameSettings.wordPart || ``);
+		getSettings().wordPartReading.set(gameSettings.wordPartReading || ``);
 
 		this.onlineFirstFontName = gameSettings.firstFontName || ``;
 		this.onlineFontsCount = gameSettings.fontsCount;

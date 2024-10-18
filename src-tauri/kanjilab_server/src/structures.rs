@@ -91,6 +91,7 @@ pub struct GameSettings {
     pub round_duration: u64,
     pub rounds_count: u64,
     pub word_part: Option<String>,
+    pub word_part_reading: Option<String>,
     pub fonts_count: u64,
     pub first_font_name: Option<String>,
 }

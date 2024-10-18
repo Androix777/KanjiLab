@@ -28,6 +28,7 @@ const settings = {
 	roundDuration: createStateVar(10),
 	roundsCount: createStateVar(10),
 	wordPart: createStateVar(``),
+	wordPartReading: createStateVar(``),
 	selectedFonts: createStateVar(new Array<string>()),
 	fontsInfo: createStateVar(new Array<FontInfo>()),
 	currentAccount: createStateVar(0),

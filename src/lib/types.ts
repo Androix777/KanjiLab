@@ -125,6 +125,7 @@ export type GameSettingsData = {
 	roundDuration: number;
 	roundsCount: number;
 	wordPart: string | null;
+	wordPartReading: string | null;
 	fontsCount: number;
 	firstFontName: string | null;
 };

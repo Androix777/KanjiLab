@@ -25,7 +25,7 @@ pub fn run() {
             db::get_answer_streaks,
             db::get_word_parts,
             db::get_word_part_readings,
-            db::get_all_game_stats,
+            db::get_all_games_stats,
             db::get_answer_stats_by_game,
             db::get_all_answer_stats,
             crypto::sign_message,

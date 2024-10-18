@@ -62,6 +62,7 @@ pub async fn get_words(
     min_frequency: i64,
     max_frequency: Option<i64>,
     word_part: Option<&str>,
+    word_part_reading: Option<&str>,
     examples_count: i64,
 ) -> Result<Vec<WordWithReadings>, String> {
     const GLOSS_SEPARATOR: &str = "␞";
@@ -85,7 +86,8 @@ pub async fn get_words(
             count,
             min_frequency,
             max_frequency,
-            part
+            part,
+			word_part_reading
         )
         .fetch_all(&*DB_POOL)
         .await
@@ -371,13 +373,28 @@ pub struct GameStats {
 }
 
 #[tauri::command]
-pub async fn get_all_game_stats() -> Result<Vec<GameStats>, String> {
-    let data = sqlx::query_file_as!(GameStats, "./queries/get_all_game_stats.sql")
+pub async fn get_all_games_stats() -> Result<Vec<GameStats>, String> {
+    let data = sqlx::query_file_as!(GameStats, "./queries/get_all_games_stats.sql")
         .fetch_all(&*DB_POOL)
         .await
         .map_err(|e| e.to_string())?;
 
     Ok(data)
+}
+
+#[tauri::command]
+pub async fn get_game_stats(id: i64) -> Result<GameStats, String> {
+    let data = sqlx::query_file_as!(GameStats, "./queries/get_game_stats.sql", id)
+        .fetch_optional(&*DB_POOL)
+        .await
+        .map_err(|e| e.to_string())?;
+
+	if let Some(gs) = data{
+		Ok(gs)
+	}
+	else{
+		Err(format!("Game stats not found for id: {}", id))
+	}
 }
 
 #[derive(Debug, Deserialize, Serialize)]

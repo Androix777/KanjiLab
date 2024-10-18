@@ -3,10 +3,11 @@ import {
 	ADD_ANSWER_STATS,
 	ADD_GAME_STATS,
 	GET_ALL_ANSWER_STATS,
-	GET_ALL_GAME_STATS,
+	GET_ALL_GAMES_STATS,
 	GET_ANSWER_STATS_BY_GAME,
 	GET_ANSWER_STREAKS,
 	GET_FONT_ID,
+	GET_GAME_STATS,
 	GET_STATS,
 	GET_WORD_PART_READINGS,
 	GET_WORD_PARTS,
@@ -23,6 +24,7 @@ export async function getRandomWords(count: number): Promise<WordInfo[]>
 		minFrequency: getSettings().minFrequency.get(),
 		maxFrequency: getSettings().usingMaxFrequency.get() ? getSettings().maxFrequency.get() : null,
 		wordPart: getSettings().wordPart.get() == `` ? null : getSettings().wordPart.get(),
+		wordPartReading: getSettings().wordPartReading.get() == `` ? null : getSettings().wordPartReading.get(),
 		examplesCount: 5,
 	});
 
@@ -110,9 +112,15 @@ export async function getWordPartReadings(wordPart: string): Promise<string[]>
 	return data;
 }
 
-export async function getAllGameStats(): Promise<GameStats[]>
+export async function getAllGamesStats(): Promise<GameStats[]>
 {
-	const data: GameStats[] = await invoke(GET_ALL_GAME_STATS);
+	const data: GameStats[] = await invoke(GET_ALL_GAMES_STATS);
+	return data;
+}
+
+export async function getGameStats(): Promise<GameStats>
+{
+	const data: GameStats = await invoke(GET_GAME_STATS);
 	return data;
 }
 

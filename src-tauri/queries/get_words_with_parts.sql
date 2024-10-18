@@ -16,6 +16,10 @@ filtered_word_parts AS (
 	SELECT id
 	FROM word_part_reading
 	WHERE word_part = $4
+		AND (
+			$5 IS NULL
+			OR word_part_reading = $5
+		)
 ),
 filtered_word_readings AS (
 	SELECT wr.id,
