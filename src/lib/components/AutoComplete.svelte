@@ -2,7 +2,10 @@
 	type Props = {
 		items: string[];
 		selectedIndex: number;
-		onSelect: (selectedIndex: number, selectedItem: string) => void;
+		onSelect: (selectedIndex: number, selectedItem: string | null) => void;
+		disabled?: boolean;
+		nullOptionEnabled?: boolean;
+		maxOptions?: number;
 	};
 
 	const // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -10,12 +13,15 @@
 		items,
 		selectedIndex,
 		onSelect,
+		disabled = false,
+		nullOptionEnabled = false,
+		maxOptions = 4,
 	}: Props = $props();
 
 	let searchKeyword = $state(``);
 	let inputElement: HTMLInputElement;
 
-	function onItemClicked(itemIndexTuple: [number, string])
+	function onItemClicked(itemIndexTuple: [number, string | null])
 	{
 		if (document.activeElement && document.activeElement instanceof HTMLElement)
 		{
@@ -46,13 +52,14 @@
 <div class="dropdown w-full h-full">
 	<button
 		tabindex="0"
-		class="select select-bordered w-full text-center items-center"
+		class="select select-bordered w-full items-center"
 		onclick={() =>
 		{
 			inputElement.focus();
 		}}
+		disabled={disabled}
 	>
-		{selectedIndex == -1 ? `` : items[selectedIndex]}
+		{selectedIndex == -1 ? `(no option)` : items[selectedIndex]}
 	</button>
 
 	<div class="dropdown-content w-full">
@@ -64,7 +71,17 @@
 		/>
 
 		<ul tabindex="-1" class="menu p-2 shadow bg-base-100 rounded-box max-h-80 flex-nowrap overflow-y-auto w-full">
-			{#each filteredItems.slice(0, 5) as itemIndexTuple}
+			{#if nullOptionEnabled}
+				<li>
+					<button
+						onclick={(event) =>
+						{
+							onItemClicked([-1, null]);
+						}}
+					>{`(no option)`}</button>
+				</li>
+			{/if}
+			{#each filteredItems.slice(0, maxOptions) as itemIndexTuple}
 				<li>
 					<button
 						onclick={(event) =>

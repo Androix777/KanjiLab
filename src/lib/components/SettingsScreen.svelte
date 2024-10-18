@@ -55,7 +55,7 @@
 					<AutoComplete
 						items={items}
 						selectedIndex={getSettings().currentAccount.get()}
-						onSelect={async (selectedIndex: number, selectedItem: string) =>
+						onSelect={async (selectedIndex: number, selectedItem: string | null) =>
 						{
 							getSettings().currentAccount.set(selectedIndex);
 							getSettings().userName.set((await getAccounts())[getSettings().currentAccount.get()].name);

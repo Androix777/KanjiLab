@@ -63,7 +63,7 @@
 
 	let selectedWordPartItem: number = $state(-1);
 	let wordPartItems: string[] = $state([]);
-	let selectedWordPartReading: number = $state(0);
+	let selectedWordPartReading: string = $state(``);
 	let wordPartReadings: string[] = $state([]);
 
 	async function refreshItems()
@@ -153,18 +153,23 @@
 			<div class="flex-1 text-left my-auto">
 				Word part
 			</div>
-			<div class="w-1/2 flex flex-row">
+			<div class="w-1/2 flex flex-row text-center">
 				<div class="w-1/2 h-8 [&>*:nth-child(1)>:nth-child(1)]:select-sm">
 					<AutoComplete
 						items={wordPartItems}
 						selectedIndex={selectedWordPartItem}
 						onSelect={async (selectedIndex, selectedItem) =>
 						{
-							selectedWordPartReading = 0;
+							selectedWordPartReading = ``;
 							selectedWordPartItem = selectedIndex;
-							wordPartReadings = await getWordPartReadings(selectedItem);
-							getSettings().wordPart.set(selectedItem);
+							if (selectedItem != null)
+							{
+								wordPartReadings = await getWordPartReadings(selectedItem);
+							}
+							getSettings().wordPart.set(selectedItem ? selectedItem : ``);
 						}}
+						disabled={isSettingsLocked}
+						nullOptionEnabled={true}
 					/>
 				</div>
 				<div class="w-1/2">
@@ -178,7 +183,9 @@
 								console.log(event.target.value);
 							}
 						}}
+						disabled={isSettingsLocked}
 					>
+						<option value={``}>(no option)</option>
 						{#each wordPartReadings as readingOption}
 							<option value={readingOption}>{readingOption}</option>
 						{/each}
