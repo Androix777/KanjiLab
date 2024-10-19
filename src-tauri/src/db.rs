@@ -148,6 +148,33 @@ pub async fn get_words(
     Ok(result)
 }
 
+#[tauri::command]
+pub async fn get_words_count(
+    min_frequency: i64,
+    max_frequency: Option<i64>,
+    word_part: Option<&str>,
+    word_part_reading: Option<&str>,
+) -> Result<i64, String> {
+	#[allow(dead_code)]
+    struct RawData {
+        count: i64,
+    }
+
+	let data = query_file_as!(
+		RawData,
+		"./queries/get_words_count.sql",
+		min_frequency,
+		max_frequency,
+		word_part,
+		word_part_reading
+	)
+	.fetch_one(&*DB_POOL)
+	.await
+	.map_err(|e| e.to_string())?;
+
+    Ok(data.count)
+}
+
 async fn get_reading_with_parts(
     reading_id: i64,
     reading: String,

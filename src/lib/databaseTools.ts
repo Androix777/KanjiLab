@@ -12,6 +12,7 @@ import {
 	GET_WORD_PART_READINGS,
 	GET_WORD_PARTS,
 	GET_WORDS,
+	GET_WORDS_COUNT,
 } from "$lib/tauriFunctions";
 import type { AnswerStats, AnswerStreaks, GameStats, WordInfo } from "$lib/types";
 import type { StatsInfo } from "$lib/types";
@@ -26,6 +27,18 @@ export async function getRandomWords(count: number): Promise<WordInfo[]>
 		wordPart: getSettings().wordPart.get() == `` ? null : getSettings().wordPart.get(),
 		wordPartReading: getSettings().wordPartReading.get() == `` ? null : getSettings().wordPartReading.get(),
 		examplesCount: 5,
+	});
+
+	return data;
+}
+
+export async function getWordsCount(): Promise<number>
+{
+	const data: number = await invoke(GET_WORDS_COUNT, {
+		minFrequency: getSettings().minFrequency.get(),
+		maxFrequency: getSettings().usingMaxFrequency.get() ? getSettings().maxFrequency.get() : null,
+		wordPart: getSettings().wordPart.get() == `` ? null : getSettings().wordPart.get(),
+		wordPartReading: getSettings().wordPartReading.get() == `` ? null : getSettings().wordPartReading.get(),
 	});
 
 	return data;
@@ -118,9 +131,9 @@ export async function getAllGamesStats(): Promise<GameStats[]>
 	return data;
 }
 
-export async function getGameStats(): Promise<GameStats>
+export async function getGameStats(id: number): Promise<GameStats>
 {
-	const data: GameStats = await invoke(GET_GAME_STATS);
+	const data: GameStats = await invoke(GET_GAME_STATS, { id });
 	return data;
 }
 

@@ -6,6 +6,7 @@ export const GET_FONT_LIST: string = `get_font_list`;
 export const GET_FONT_INFO: string = `get_font_info`;
 export const GET_ALL_FONTS_INFO: string = `get_all_fonts_info`;
 export const GET_WORDS: string = `get_words`;
+export const GET_WORDS_COUNT: string = `get_words_count`;
 export const GET_STATS: string = `get_stats`;
 export const ADD_ANSWER_STATS: string = `add_answer_stats`;
 export const ADD_GAME_STATS: string = `add_game_stats`;
