@@ -62,14 +62,22 @@
 
 	let isSettingsLocked = $derived(!webSocketClient.isConnectedToSelf || webSocketClient.gameStatus == `Off` || webSocketClient.gameStatus == `Connecting`);
 
-	let selectedWordPartItem: number = $state(-1);
 	let wordPartItems: string[] = $state([]);
-	let selectedWordPartReading: string = $state(``);
 	let wordPartReadings: string[] = $state([]);
+
+	$effect(() =>
+	{
+		getSettings().wordPart.get();
+		refreshItems();
+	});
 
 	async function refreshItems()
 	{
 		wordPartItems = await getWordParts();
+		if (getSettings().wordPart.get())
+		{
+			wordPartReadings = await getWordPartReadings(getSettings().wordPart.get());
+		}
 	}
 
 	refreshItems();
@@ -131,70 +139,79 @@
 				class="input input-bordered w-1/2 text-center input-sm"
 			/>
 		</div>
-
-		<div class="flex flex-row mt-4">
-			<div class="flex-1 text-left my-auto">
-				Word part
-			</div>
-			<input
-				onchange={(event) =>
-				{
-					if (event.target instanceof HTMLInputElement)
-					{
-						getSettings().wordPart.set(event.target.value);
-					}
-				}}
-				value={getSettings().wordPart.get()}
-				disabled={isSettingsLocked}
-				class="input input-bordered w-1/2 text-center input-sm"
-			/>
-		</div>
-
-		<div class="flex flex-row mt-4">
-			<div class="flex-1 text-left my-auto">
-				Word part
-			</div>
-			<div class="w-1/2 flex flex-row text-center">
-				<div class="w-1/2 h-8 [&>*:nth-child(1)>:nth-child(1)]:select-sm">
-					<AutoComplete
-						items={wordPartItems}
-						selectedIndex={selectedWordPartItem}
-						onSelect={async (selectedIndex, selectedItem) =>
-						{
-							selectedWordPartReading = ``;
-							selectedWordPartItem = selectedIndex;
-							if (selectedItem != null)
-							{
-								wordPartReadings = await getWordPartReadings(selectedItem);
-							}
-							getSettings().wordPart.set(selectedItem ? selectedItem : ``);
-						}}
-						disabled={isSettingsLocked}
-						nullOptionEnabled={true}
-					/>
+		{#if !isAdmin}
+			<div class="flex flex-row mt-4">
+				<div class="flex-1 text-left my-auto">
+					Word part
 				</div>
-				<div class="w-1/2">
-					<select
-						class="select select-bordered w-full select-sm"
-						value={selectedWordPartReading}
+				<div class="w-1/2 flex flex-row text-center">
+					<input
 						onchange={(event) =>
 						{
-							if (event.target instanceof HTMLSelectElement)
+							if (event.target instanceof HTMLInputElement)
+							{
+								getSettings().wordPart.set(event.target.value);
+							}
+						}}
+						value={getSettings().wordPart.get()}
+						disabled={isSettingsLocked}
+						class="input input-bordered w-1/2 text-center input-sm"
+					/>
+					<input
+						onchange={(event) =>
+						{
+							if (event.target instanceof HTMLInputElement)
 							{
 								getSettings().wordPartReading.set(event.target.value);
 							}
 						}}
+						value={getSettings().wordPartReading.get()}
 						disabled={isSettingsLocked}
-					>
-						<option value={``}>(no option)</option>
-						{#each wordPartReadings as readingOption}
-							<option value={readingOption}>{readingOption}</option>
-						{/each}
-					</select>
+						class="input input-bordered w-1/2 text-center input-sm"
+					/>
 				</div>
 			</div>
-		</div>
-
+		{:else}
+			<div class="flex flex-row mt-4">
+				<div class="flex-1 text-left my-auto">
+					Word part
+				</div>
+				<div class="w-1/2 flex flex-row text-center">
+					<div class="w-1/2 h-8 [&>*:nth-child(1)>:nth-child(1)]:select-sm">
+						<AutoComplete
+							items={wordPartItems}
+							selectedIndex={wordPartItems.indexOf(getSettings().wordPart.get())}
+							onSelect={async (selectedIndex, selectedItem) =>
+							{
+								refreshItems();
+								getSettings().wordPart.set(selectedItem ? selectedItem : ``);
+							}}
+							disabled={isSettingsLocked}
+							nullOptionEnabled={true}
+						/>
+					</div>
+					<div class="w-1/2">
+						<select
+							class="select select-bordered w-full select-sm"
+							value={getSettings().wordPartReading.get()}
+							onchange={(event) =>
+							{
+								if (event.target instanceof HTMLSelectElement)
+								{
+									getSettings().wordPartReading.set(event.target.value);
+								}
+							}}
+							disabled={isSettingsLocked}
+						>
+							<option value={``}>(no option)</option>
+							{#each wordPartReadings as readingOption}
+								<option value={readingOption}>{readingOption}</option>
+							{/each}
+						</select>
+					</div>
+				</div>
+			</div>
+		{/if}
 		<div class="flex flex-row mt-4">
 			<div class="flex-1 text-left my-auto">
 				Round duration
