@@ -48,12 +48,28 @@
 		{
 			return itemIndexTuple[1].toLowerCase().includes(searchKeyword.toLowerCase());
 		});
-		let preciseMatch: [number, string] | undefined = filteredItemIndexTuples.find((tuple) => tuple[1] == searchKeyword);
-		if (preciseMatch)
+		filteredItemIndexTuples = filteredItemIndexTuples.sort((tuple1, tuple2) =>
 		{
-			filteredItemIndexTuples = filteredItemIndexTuples.filter((tuple) => tuple != preciseMatch);
-			filteredItemIndexTuples.unshift(preciseMatch);
-		}
+			if (tuple1[1].toLowerCase().indexOf(searchKeyword.toLowerCase()) > tuple2[1].toLowerCase().indexOf(searchKeyword.toLowerCase()))
+			{
+				return 1;
+			}
+			else if (tuple1[1].toLowerCase().indexOf(searchKeyword.toLowerCase()) < tuple2[1].toLowerCase().indexOf(searchKeyword.toLowerCase()))
+			{
+				return -1;
+			}
+			else
+			{
+				if (tuple1[1] > tuple2[1])
+				{
+					return 1;
+				}
+				else
+				{
+					return -1;
+				}
+			}
+		});
 		return filteredItemIndexTuples;
 	});
 </script>
