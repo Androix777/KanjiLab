@@ -41,12 +41,21 @@
 		return itemIndexTuples;
 	});
 
-	let filteredItems = $derived(
-		getItemIndexTuples(items).filter(function(itemIndexTuple)
+	let filterItems = $derived((items: string[]) =>
+	{
+		let filteredItemIndexTuples: Array<[number, string]> = new Array();
+		filteredItemIndexTuples = getItemIndexTuples(items).filter(function(itemIndexTuple)
 		{
 			return itemIndexTuple[1].toLowerCase().includes(searchKeyword.toLowerCase());
-		}),
-	);
+		});
+		let preciseMatch: [number, string] | undefined = filteredItemIndexTuples.find((tuple) => tuple[1] == searchKeyword);
+		if (preciseMatch)
+		{
+			filteredItemIndexTuples = filteredItemIndexTuples.filter((tuple) => tuple != preciseMatch);
+			filteredItemIndexTuples.unshift(preciseMatch);
+		}
+		return filteredItemIndexTuples;
+	});
 </script>
 
 <div class="dropdown w-full h-full">
@@ -81,7 +90,7 @@
 					>{`(no option)`}</button>
 				</li>
 			{/if}
-			{#each filteredItems.slice(0, maxOptions) as itemIndexTuple}
+			{#each filterItems(items).slice(0, maxOptions) as itemIndexTuple}
 				<li>
 					<button
 						onclick={(event) =>
