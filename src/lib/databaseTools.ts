@@ -54,6 +54,7 @@ export async function getFontId(name: string): Promise<number>
 export async function addAnswerStats(
 	gameStatsId: number,
 	userKey: string,
+	userName: string,
 	word: string,
 	wordReading: string,
 	duration: number | null,
@@ -64,6 +65,7 @@ export async function addAnswerStats(
 	await invoke(ADD_ANSWER_STATS, {
 		gameStatsId: gameStatsId,
 		userKey: userKey,
+		userName: userName,
 		word: word,
 		wordReading: wordReading,
 		duration: duration,

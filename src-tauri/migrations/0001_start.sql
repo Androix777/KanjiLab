@@ -46,7 +46,8 @@ CREATE INDEX idx_word_reading_word_part_reading_1 ON word_reading_word_part_read
 -- user
 CREATE TABLE IF NOT EXISTS user (
 	id INTEGER PRIMARY KEY NOT NULL,
-	key TEXT UNIQUE NOT NULL
+	key TEXT UNIQUE NOT NULL,
+	last_name TEXT NOT NULL
 );
 -- answer_stats
 CREATE TABLE IF NOT EXISTS answer_stats (

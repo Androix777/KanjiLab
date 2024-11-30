@@ -420,7 +420,7 @@ class WebSocketClient
 			let answer = this.gameHistory.at(-1)?.answers.get(client.id);
 			if (answer && questionInfo)
 			{
-				await addAnswerStats(this.currentGameId, client.key, questionInfo.wordInfo.word, answer.answer, answer.answerTime, answer.answerStatus == `Correct`, fontId);
+				await addAnswerStats(this.currentGameId, client.key, client.name, questionInfo.wordInfo.word, answer.answer, answer.answerTime, answer.answerStatus == `Correct`, fontId);
 			}
 		});
 

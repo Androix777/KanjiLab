@@ -87,7 +87,7 @@ pub async fn get_words(
             min_frequency,
             max_frequency,
             part,
-			word_part_reading
+            word_part_reading
         )
         .fetch_all(&*DB_POOL)
         .await
@@ -155,22 +155,22 @@ pub async fn get_words_count(
     word_part: Option<&str>,
     word_part_reading: Option<&str>,
 ) -> Result<i64, String> {
-	#[allow(dead_code)]
+    #[allow(dead_code)]
     struct RawData {
         count: i64,
     }
 
-	let data = query_file_as!(
-		RawData,
-		"./queries/get_words_count.sql",
-		min_frequency,
-		max_frequency,
-		word_part,
-		word_part_reading
-	)
-	.fetch_one(&*DB_POOL)
-	.await
-	.map_err(|e| e.to_string())?;
+    let data = query_file_as!(
+        RawData,
+        "./queries/get_words_count.sql",
+        min_frequency,
+        max_frequency,
+        word_part,
+        word_part_reading
+    )
+    .fetch_one(&*DB_POOL)
+    .await
+    .map_err(|e| e.to_string())?;
 
     Ok(data.count)
 }
@@ -260,15 +260,23 @@ pub async fn get_font_id(name: &str) -> Result<i64, String> {
 }
 
 #[tauri::command]
-pub async fn get_user_id(key: &str) -> Result<i64, String> {
+pub async fn get_user_id(key: &str, last_name: &str) -> Result<i64, String> {
     struct RawData {
         id: i64,
     }
 
-    let user_id = sqlx::query_file_as!(RawData, "./queries/get_or_create_user.sql", key, key)
-        .fetch_one(&*DB_POOL)
-        .await
-        .map_err(|e| e.to_string())?;
+    let user_id = sqlx::query_file_as!(
+        RawData,
+        "./queries/get_or_create_user.sql",
+        key,
+        last_name,
+        last_name,
+        key,
+        key
+    )
+    .fetch_one(&*DB_POOL)
+    .await
+    .map_err(|e| e.to_string())?;
 
     Ok(user_id.id)
 }
@@ -277,6 +285,7 @@ pub async fn get_user_id(key: &str) -> Result<i64, String> {
 pub async fn add_answer_stats(
     game_stats_id: i64,
     user_key: &str,
+    user_name: &str,
     word: &str,
     word_reading: &str,
     duration: Option<i64>,
@@ -287,7 +296,9 @@ pub async fn add_answer_stats(
         id: i64,
     }
 
-    let user_id = get_user_id(user_key).await.map_err(|e| e.to_string())?;
+    let user_id = get_user_id(user_key, user_name)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let result = query_file_as!(
         RawData,
@@ -416,12 +427,11 @@ pub async fn get_game_stats(id: i64) -> Result<GameStats, String> {
         .await
         .map_err(|e| e.to_string())?;
 
-	if let Some(gs) = data{
-		Ok(gs)
-	}
-	else{
-		Err(format!("Game stats not found for id: {}", id))
-	}
+    if let Some(gs) = data {
+        Ok(gs)
+    } else {
+        Err(format!("Game stats not found for id: {}", id))
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
