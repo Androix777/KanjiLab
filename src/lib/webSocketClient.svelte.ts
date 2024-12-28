@@ -2,13 +2,15 @@ import { getSettings } from "$lib/globalSettings.svelte";
 import { ServerConnector } from "$lib/webSocketConnector";
 import { SvelteMap } from "svelte/reactivity";
 import { createAccount, getAccounts, signMessage } from "./cryptoTools";
-import { addAnswerStats, addGameStats, getFontId, getRandomWords } from "./databaseTools";
+import { addAnswerStats, addGameStats, getAnswerStatsByGame, getFontId, getGameStats, getRandomWords } from "./databaseTools";
 import { getFontInfo, getRandomFont, getSVGText } from "./fontTools";
 import type {
 	AnswerRecord,
+	AnswerStats,
 	ClientInfo,
 	FontInfo,
 	GameSettingsData,
+	GameStats,
 	GameStatus,
 	InRespQuestionPayload,
 	OutNotifChatSentPayload,
@@ -40,7 +42,7 @@ class WebSocketClient
 	private static instance: WebSocketClient | null;
 	private serverConnector: ServerConnector = new ServerConnector();
 	private timerIntervalId: number = 0;
-	private currentGameId: number = 0;
+	public lastGameId: number = $state(0);
 
 	public static getInstance()
 	{
@@ -150,6 +152,7 @@ class WebSocketClient
 		this.isAdmin = false;
 		this.gameHistory = [];
 		this.isConnectedToSelf = true;
+		this.lastGameId = 0;
 	}
 
 	public async sendPublicKeyMessage(key: string)
@@ -197,6 +200,15 @@ class WebSocketClient
 	public async sendNewSettings()
 	{
 		await this.serverConnector.sendNewSettings(this.getGameSettings());
+	}
+
+	public async getCurrentGameStats(): Promise<GameStats>
+	{
+		return getGameStats(this.lastGameId);
+	}
+	public async getCurrentGameAnswerStats(): Promise<AnswerStats[]>
+	{
+		return getAnswerStatsByGame(this.lastGameId);
 	}
 
 	// Private
@@ -306,7 +318,7 @@ class WebSocketClient
 			fontID = await getFontId(this.onlineFirstFontName);
 		}
 
-		this.currentGameId = await addGameStats(
+		this.lastGameId = await addGameStats(
 			customEvent.detail.gameSettings.roundsCount,
 			customEvent.detail.gameSettings.roundDuration * 1000,
 			getSettings().minFrequency.get(),
@@ -420,7 +432,7 @@ class WebSocketClient
 			let answer = this.gameHistory.at(-1)?.answers.get(client.id);
 			if (answer && questionInfo)
 			{
-				await addAnswerStats(this.currentGameId, client.key, client.name, questionInfo.wordInfo.word, answer.answer, answer.answerTime, answer.answerStatus == `Correct`, fontId);
+				await addAnswerStats(this.lastGameId, client.key, client.name, questionInfo.wordInfo.word, answer.answer, answer.answerTime, answer.answerStatus == `Correct`, fontId);
 			}
 		});
 

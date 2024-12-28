@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getSettings } from "$lib/globalSettings.svelte";
 	import { LAUNCH_SERVER, STOP_SERVER } from "$lib/tauriFunctions";
+	import type { AnswerStats } from "$lib/types";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { invoke } from "@tauri-apps/api/core";
 	import { onMount } from "svelte";
@@ -14,6 +15,7 @@
 	let webSocketClient: WebSocketClient = $state(WebSocketClient.getInstance());
 	let chatMessage: string = $state(``);
 	let chatDiv: HTMLElement;
+	let activeTab = $state(0);
 
 	async function launchServer()
 	{
@@ -60,6 +62,34 @@
 		sendChatMessage();
 	}
 
+	function calculateAnswerSum(playerId: number, answerStatsArray: AnswerStats[])
+	{
+		let answerSum = 0;
+		answerStatsArray.forEach((answerStats) => answerSum += (answerStats.userId == playerId && answerStats.isCorrect) ? 1 : 0);
+		return answerSum;
+	}
+
+	function getPlayerIds(answerStatsArray: AnswerStats[])
+	{
+		let playerIds: Set<number> = new Set<number>();
+		answerStatsArray.forEach((answerStats) => playerIds.add(answerStats.userId));
+		return Array.from(playerIds.values());
+	}
+
+	$effect(() =>
+	{
+		webSocketClient.lastGameId;
+		webSocketClient.gameStatus;
+		if (webSocketClient.lastGameId != 0 && webSocketClient.gameStatus == `Lobby`)
+		{
+			activeTab = 1;
+		}
+		else
+		{
+			activeTab = 0;
+		}
+	});
+
 	onMount(() =>
 	{
 		const observer = new MutationObserver(() =>
@@ -80,14 +110,16 @@
 					{
 						void stopGame();
 					}}
-					disabled={webSocketClient.gameStatus != `WaitingQuestion` && webSocketClient.gameStatus != `AnswerQuestion`}>Stop Game</button>
+					disabled={webSocketClient.gameStatus != `WaitingQuestion` && webSocketClient.gameStatus != `AnswerQuestion`}
+				>Stop Game</button>
 				{#if webSocketClient.isConnectedToSelf}
 					<button
 						class="btn btn-outline btn-error"
 						onclick={() =>
 						{
 							void stopServer();
-						}}>Stop Server</button>
+						}}
+					>Stop Server</button>
 				{/if}
 			{:else}
 				{#if webSocketClient.gameStatus == `Off`}
@@ -96,7 +128,8 @@
 						onclick={() =>
 						{
 							void launchServer();
-						}}>Host Game</button>
+						}}
+					>Host Game</button>
 				{/if}
 				<div class="text-center join ml-auto mr-0">
 					<input
@@ -129,7 +162,8 @@
 							onclick={() =>
 							{
 								leaveServer();
-							}}>Leave Server</button>
+							}}
+						>Leave Server</button>
 					{:else}
 						<button
 							class="btn btn-primary join-item"
@@ -137,7 +171,8 @@
 							{
 								void joinServer();
 							}}
-							disabled={webSocketClient.gameStatus == `Connecting`}>Join Game</button>
+							disabled={webSocketClient.gameStatus == `Connecting`}
+						>Join Game</button>
 					{/if}
 				</div>
 			{/if}
@@ -146,6 +181,21 @@
 
 	<div class="flex-grow flex min-h-0 flex-row">
 		<div class="text-center flex flex-1 min-h-0 card card-bordered bg-base-100 shadow-xl p-4">
+			{#if webSocketClient.gameStatus == `Lobby` && webSocketClient.lastGameId != 0}
+				<div role="tablist" class="tabs tabs-bordered">
+					<button
+						role="tab"
+						class="tab {activeTab == 0 ? `tab-active` : ``}"
+						onclick={() => activeTab = 0}
+					>Game Settings</button>
+					<button
+						role="tab"
+						class="tab {activeTab == 1 ? `tab-active` : ``}"
+						onclick={() => activeTab = 1}
+					>Last Game Stats</button>
+				</div>
+			{/if}
+
 			{#if webSocketClient.gameStatus == `WaitingQuestion` || webSocketClient.gameStatus == `AnswerQuestion`}
 				<GameScreen
 					gameHistory={webSocketClient.gameHistory}
@@ -156,7 +206,7 @@
 					currentRound={webSocketClient.currentRound}
 					onAnswer={(answer: string) => webSocketClient.sendAnswer(answer)}
 				/>
-			{:else if true}
+			{:else if activeTab == 0}
 				<GameSettings
 					startFunction={() =>
 					{
@@ -164,6 +214,18 @@
 					}}
 					isAdmin={webSocketClient.isAdmin || false}
 				/>
+			{:else if activeTab == 1}
+				{#if webSocketClient.gameStatus == `Lobby` && webSocketClient.lastGameId != 0}
+					{#await Promise.all([webSocketClient.getCurrentGameStats(), webSocketClient.getCurrentGameAnswerStats()])}
+						Loading stats...
+					{:then [currentGameStats, currentGameAnswerStats]}
+						{#each getPlayerIds(currentGameAnswerStats) as playerId}
+							<div>
+								{`Player ${playerId}: ${calculateAnswerSum(playerId, currentGameAnswerStats)}/${currentGameStats.roundsCount} correct answers`}
+							</div>
+						{/each}
+					{/await}
+				{/if}
 			{/if}
 		</div>
 		<div class="flex flex-col ml-4" style="width: 30vw">
@@ -204,7 +266,8 @@
 						onclick={() =>
 						{
 							sendChatMessage();
-						}}>Send</button>
+						}}
+					>Send</button>
 				</div>
 			</div>
 		</div>
