@@ -25,6 +25,7 @@
 		"@types/blockies": "^0.0.4",
 		"@types/d3": "^7.4.3",
 		"@types/eslint": "^9.6.1",
+		"@types/tabulator-tables": "^6.2.3",
 		"@types/uuid": "^10.0.0",
 		"@typescript-eslint/eslint-plugin": "^8.11.0",
 		"@typescript-eslint/parser": "^8.11.0",
@@ -50,6 +51,7 @@
 		"blockies": "^0.0.2",
 		"d3": "^7.9.0",
 		"jdenticon": "^3.3.0",
+		"tabulator-tables": "^6.3.0",
 		"theme-change": "^2.5.0",
 		"uuid": "^11.0.0",
 		"wanakana": "^5.3.1"

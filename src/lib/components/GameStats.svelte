@@ -2,8 +2,13 @@
 	import { getUsernameById } from "$lib/databaseTools";
 	import type { AnswerStats, GameStats } from "$lib/types";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
+    import { onMount } from "svelte";
+	import { Tabulator } from 'tabulator-tables';
+	import 'tabulator-tables/dist/css/tabulator.min.css';
 
 	let webSocketClient: WebSocketClient = $state(WebSocketClient.getInstance());
+	let tableContainer: HTMLDivElement | null = $state(null);
+	let table: Tabulator | null = $state(null);
 
 	function calculateAnswerSum(playerId: number, answerStatsArray: AnswerStats[]) {
 		let answerSum = 0;
@@ -11,23 +16,41 @@
 		return answerSum;
 	}
 
-	function getPlayerIds(answerStatsArray: AnswerStats[]) {
-		let playerIds: Set<number> = new Set<number>();
-		answerStatsArray.forEach((answerStats) => playerIds.add(answerStats.userId));
-		return Array.from(playerIds.values());
+	async function createTableData(currentGameStats: GameStats, currentGameAnswerStats: AnswerStats[]) {
+		const tableData = [];
+		const playerIds = Array.from(new Set(currentGameAnswerStats.map(answer => answer.userId)));
+		
+		for (const playerId of playerIds) {
+			const username = await getUsernameById(playerId);
+			const correctAnswers = calculateAnswerSum(playerId, currentGameAnswerStats);
+			tableData.push({
+				username,
+				correctAnswers,
+			});
+		}
+		
+		initializeTable(tableData);
 	}
+
+	function initializeTable(tableData: any[]) {
+		if (tableContainer) {
+			table = new Tabulator(tableContainer, {
+				data: tableData,
+				layout: "fitColumns",
+				columns: [
+					{ title: "Player", field: "username", width: 150 },
+					{ title: "Correct Answers", field: "correctAnswers", width: 150 },
+				]
+			});
+		}
+	}
+
+	onMount(async () =>
+	{
+		await createTableData(await webSocketClient.getCurrentGameStats(), await webSocketClient.getCurrentGameAnswerStats());
+	});
 </script>
 
-{#if webSocketClient.gameStatus == `Lobby` && webSocketClient.lastGameId != 0}
-	{#await Promise.all([webSocketClient.getCurrentGameStats(), webSocketClient.getCurrentGameAnswerStats()])}
-		Loading stats...
-	{:then [currentGameStats, currentGameAnswerStats]}
-		{#each getPlayerIds(currentGameAnswerStats) as playerId}
-			{#await getUsernameById(playerId) then username}
-				<div>
-					{`${username}: ${calculateAnswerSum(playerId, currentGameAnswerStats)}/${currentGameStats.roundsCount} correct answers`}
-				</div>
-			{/await}
-		{/each}
-	{/await}
-{/if}
+
+
+<div bind:this={tableContainer} class="w-full h-96"></div>
