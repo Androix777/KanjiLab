@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { getSettings } from "$lib/globalSettings.svelte";
 	import { LAUNCH_SERVER, STOP_SERVER } from "$lib/tauriFunctions";
-	import type { AnswerStats } from "$lib/types";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
-	import { getUsernameById } from "$lib/databaseTools";
+	import GameStats from "./GameStats.svelte";
 	import { invoke } from "@tauri-apps/api/core";
 	import { onMount } from "svelte";
 	import { flip } from "svelte/animate";
@@ -61,20 +60,6 @@
 			return;
 		}
 		sendChatMessage();
-	}
-
-	function calculateAnswerSum(playerId: number, answerStatsArray: AnswerStats[])
-	{
-		let answerSum = 0;
-		answerStatsArray.forEach((answerStats) => answerSum += (answerStats.userId == playerId && answerStats.isCorrect) ? 1 : 0);
-		return answerSum;
-	}
-
-	function getPlayerIds(answerStatsArray: AnswerStats[])
-	{
-		let playerIds: Set<number> = new Set<number>();
-		answerStatsArray.forEach((answerStats) => playerIds.add(answerStats.userId));
-		return Array.from(playerIds.values());
 	}
 
 	$effect(() =>
@@ -216,19 +201,7 @@
 					isAdmin={webSocketClient.isAdmin || false}
 				/>
 			{:else if activeTab == 1}
-				{#if webSocketClient.gameStatus == `Lobby` && webSocketClient.lastGameId != 0}
-					{#await Promise.all([webSocketClient.getCurrentGameStats(), webSocketClient.getCurrentGameAnswerStats()])}
-						Loading stats...
-					{:then [currentGameStats, currentGameAnswerStats]}
-						{#each getPlayerIds(currentGameAnswerStats) as playerId}
-							{#await getUsernameById(playerId) then username}
-								<div>
-									{`${username}: ${calculateAnswerSum(playerId, currentGameAnswerStats)}/${currentGameStats.roundsCount} correct answers`}
-								</div>
-							{/await}
-						{/each}
-					{/await}
-				{/if}
+				<GameStats />
 			{/if}
 		</div>
 		<div class="flex flex-col ml-4" style="width: 30vw">
