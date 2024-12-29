@@ -297,7 +297,10 @@ export type OutNotifClientAnsweredPayload = {
 };
 export type OutNotifClientAnsweredMessage = BaseMessage<OutNotifClientAnsweredPayload, `OUT_NOTIF_clientAnswered`>;
 
-export type OutNotifGameStoppedPayload = object;
+export type OutNotifGameStoppedPayload = {
+	question: QuestionInfo;
+	answers: AnswerInfo[];
+};
 export type OutNotifGameStoppedMessage = BaseMessage<OutNotifGameStoppedPayload, `OUT_NOTIF_gameStopped`>;
 
 export type OutNotifGameSettingsChangedPayload = {

@@ -718,7 +718,10 @@ async fn handle_state_game_starting() {
 }
 
 async fn handle_state_lobby() {
-    let event_payload = OutNotifGameStoppedPayload {};
+	let event_payload = OutNotifGameStoppedPayload {
+        question: get_question_for_round(get_current_round()).unwrap(),
+        answers: get_answers_for_round(get_current_round()),
+    };
     let event = BaseMessage::new(event_payload, None);
     send_all(event).await;
 }

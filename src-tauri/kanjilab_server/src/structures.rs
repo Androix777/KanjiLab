@@ -258,7 +258,10 @@ pub struct OutNotifGameStartedPayload {
 #[derive(Serialize, Deserialize, MessageType)]
 #[serde(rename_all = "camelCase")]
 #[message_type("OUT_NOTIF_gameStopped")]
-pub struct OutNotifGameStoppedPayload {}
+pub struct OutNotifGameStoppedPayload {
+	pub question: QuestionInfo,
+    pub answers: Vec<AnswerInfo>,
+}
 
 #[derive(Serialize, Deserialize, MessageType)]
 #[serde(rename_all = "camelCase")]

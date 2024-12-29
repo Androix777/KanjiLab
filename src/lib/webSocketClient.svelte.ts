@@ -19,6 +19,7 @@ import type {
 	OutNotifClientRegisteredPayload,
 	OutNotifGameSettingsChangedPayload,
 	OutNotifGameStartedPayload,
+	OutNotifGameStoppedPayload,
 	OutNotifQuestionPayload,
 	OutNotifRoundEndedPayload,
 	RoundHistory,
@@ -100,9 +101,9 @@ class WebSocketClient
 		{
 			this.handleNotifClientAnswered(event);
 		});
-		this.serverConnector.addEventListener(`OUT_NOTIF_gameStopped`, () =>
+		this.serverConnector.addEventListener(`OUT_NOTIF_gameStopped`, (event) =>
 		{
-			this.handleNotifGameStopped();
+			this.handleNotifGameStopped(event);
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_gameSettingsChanged`, (event) =>
 		{
@@ -455,12 +456,42 @@ class WebSocketClient
 		}
 	}
 
-	private handleNotifGameStopped()
+	private async handleNotifGameStopped(event: Event)
 	{
-		this.gameHistory = [];
-		this.gameStatus = `Lobby`;
+		const customEvent: CustomEvent<OutNotifGameStoppedPayload> = <CustomEvent<OutNotifGameStoppedPayload>> event;
+		this.gameHistory[this.gameHistory.length - 1].question = customEvent.detail.question;
+		customEvent.detail.answers.forEach((answer) =>
+		{
+			this.gameHistory[this.gameHistory.length - 1].answers.set(answer.id, {
+				answer: answer.answer,
+				answerStatus: answer.isCorrect ? `Correct` : `Incorrect`,
+				answerTime: answer.answerTime,
+			});
+		});
+		this.clientList.sort((e1, e2) =>
+		{
+			const e1Score = this.gameHistory.reduce((acc, round) => acc + (round.answers.get(e1.id)?.answerStatus == `Correct` ? 1 : 0), 0);
+			const e2Score = this.gameHistory.reduce((acc, round) => acc + (round.answers.get(e2.id)?.answerStatus == `Correct` ? 1 : 0), 0);
+			return (e1Score < e2Score) ? 1 : (e1Score > e2Score) ? -1 : 0;
+		});
 
+		const questionInfo = this.gameHistory.at(-1)?.question;
+		const fontId = await getFontId(customEvent.detail.question.fontName);
+
+		const answerPromises = this.clientList.map(async (client) =>
+		{
+			let answer = this.gameHistory.at(-1)?.answers.get(client.id);
+			if (answer && questionInfo)
+			{
+				await addAnswerStats(this.lastGameId, client.key, client.name, questionInfo.wordInfo.word, answer.answer, answer.answerTime, answer.answerStatus == `Correct`, fontId);
+			}
+		});
+
+		await Promise.all(answerPromises);
+
+		this.gameHistory = [];
 		clearInterval(this.timerIntervalId);
+		this.gameStatus = `Lobby`;
 	}
 
 	private handleNotifGameSettingsChanged(event: Event)
