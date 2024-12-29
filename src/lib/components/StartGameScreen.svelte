@@ -3,6 +3,7 @@
 	import { LAUNCH_SERVER, STOP_SERVER } from "$lib/tauriFunctions";
 	import type { AnswerStats } from "$lib/types";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
+	import { getUsernameById } from "$lib/databaseTools";
 	import { invoke } from "@tauri-apps/api/core";
 	import { onMount } from "svelte";
 	import { flip } from "svelte/animate";
@@ -220,9 +221,11 @@
 						Loading stats...
 					{:then [currentGameStats, currentGameAnswerStats]}
 						{#each getPlayerIds(currentGameAnswerStats) as playerId}
-							<div>
-								{`Player ${playerId}: ${calculateAnswerSum(playerId, currentGameAnswerStats)}/${currentGameStats.roundsCount} correct answers`}
-							</div>
+							{#await getUsernameById(playerId) then username}
+								<div>
+									{`${username}: ${calculateAnswerSum(playerId, currentGameAnswerStats)}/${currentGameStats.roundsCount} correct answers`}
+								</div>
+							{/await}
 						{/each}
 					{/await}
 				{/if}
@@ -257,7 +260,7 @@
 						bind:value={chatMessage}
 						disabled={webSocketClient.gameStatus == `Off` || webSocketClient.gameStatus == `Connecting`}
 						onkeydown={chatOnKeyDown}
-						placeholder="{getSettings().userName.get()}:"
+						placeholder="{webSocketClient.accountName}:"
 						class="input input-bordered text-left w-full placeholder:text-base-content placeholder:text-opacity-30 join-item"
 					/>
 					<button

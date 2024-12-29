@@ -8,20 +8,22 @@
 
 	let items: string[] = $state([]);
 	let currentPublicKey: string = $state(``);
+	let currentName: string = $state(``);
 
 	onMount(async () =>
 	{
-		getSettings().userName.set((await getAccounts())[getSettings().currentAccount.get()].name);
 		refreshItems();
 	});
 
 	async function refreshItems()
 	{
-		items = (await getAccounts()).map((account) =>
+		const accounts = await getAccounts();
+		items = accounts.map((account) =>
 		{
 			return account.name;
 		});
-		currentPublicKey = (await getAccounts())[getSettings().currentAccount.get()].publicKey;
+		currentPublicKey = accounts[getSettings().currentAccount.get()].publicKey;
+		currentName = accounts[getSettings().currentAccount.get()].name;
 	}
 </script>
 
@@ -39,11 +41,10 @@
 						if (event.target instanceof HTMLInputElement)
 						{
 							await renameAccount((await getAccounts())[getSettings().currentAccount.get()].publicKey, event.target.value);
-							getSettings().userName.set((await getAccounts())[getSettings().currentAccount.get()].name);
 							refreshItems();
 						}
 					}}
-					value={getSettings().userName.get()}
+					value={currentName}
 					class="flex-none input input-bordered text-center w-1/2"
 				/>
 			</div>
@@ -58,7 +59,6 @@
 						onSelect={async (selectedIndex: number, selectedItem: string | null) =>
 						{
 							getSettings().currentAccount.set(selectedIndex);
-							getSettings().userName.set((await getAccounts())[getSettings().currentAccount.get()].name);
 							refreshItems();
 						}}
 					/>
@@ -74,7 +74,6 @@
 						{
 							await createAccount("New account");
 							getSettings().currentAccount.set((await getAccounts()).length - 1);
-							getSettings().userName.set((await getAccounts())[getSettings().currentAccount.get()].name);
 							refreshItems();
 						}}
 					>Create</button>
@@ -97,7 +96,6 @@
 								}
 							}
 
-							getSettings().userName.set((await getAccounts())[getSettings().currentAccount.get()].name);
 							refreshItems();
 						}}
 					>Delete</button>

@@ -193,13 +193,13 @@ export class ServerConnector extends EventTarget
 		}
 	}
 
-	public async sendRegisterClientMessage()
+	public async sendRegisterClientMessage(accountName: string)
 	{
 		const message: InReqRegisterClientMessage = {
 			messageType: `IN_REQ_registerClient`,
 			correlationId: crypto.randomUUID(),
 			payload: {
-				name: getSettings().userName.get(),
+				name: accountName,
 			},
 		};
 

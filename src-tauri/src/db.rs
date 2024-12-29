@@ -500,3 +500,21 @@ pub async fn get_all_answer_stats() -> Result<Vec<AnswerStats>, String> {
 
     Ok(data.into_iter().map(AnswerStats::from).collect())
 }
+
+#[tauri::command]
+pub async fn get_username_by_id(user_id: i64) -> Result<String, String> {
+    struct RawData {
+        username: String,
+    }
+
+    let data = sqlx::query_file_as!(RawData, "./queries/get_username_by_id.sql", user_id)
+        .fetch_optional(&*DB_POOL)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if let Some(user) = data {
+        Ok(user.username)
+    } else {
+        Err(format!("User not found with id: {}", user_id))
+    }
+}

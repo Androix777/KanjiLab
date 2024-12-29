@@ -30,6 +30,7 @@ pub fn run() {
             db::get_game_stats,
             db::get_answer_stats_by_game,
             db::get_all_answer_stats,
+            db::get_username_by_id,
             crypto::sign_message,
             crypto::verify_signature,
             crypto::get_accounts,

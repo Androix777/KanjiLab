@@ -26,3 +26,4 @@ export const GET_GAME_STATS: string = `get_game_stats`;
 export const GET_ALL_GAMES_STATS: string = `get_all_games_stats`;
 export const GET_ANSWER_STATS_BY_GAME: string = `get_answer_stats_by_game`;
 export const GET_ALL_ANSWER_STATS: string = `get_all_answer_stats`;
+export const GET_USERNAME_BY_ID: string = `get_username_by_id`;

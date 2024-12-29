@@ -9,6 +9,7 @@ import {
 	GET_FONT_ID,
 	GET_GAME_STATS,
 	GET_STATS,
+	GET_USERNAME_BY_ID,
 	GET_WORD_PART_READINGS,
 	GET_WORD_PARTS,
 	GET_WORDS,
@@ -149,4 +150,10 @@ export async function getAllAnswerStats(): Promise<AnswerStats[]>
 {
 	const data: AnswerStats[] = await invoke(GET_ALL_ANSWER_STATS);
 	return data;
+}
+
+export async function getUsernameById(userId: number): Promise<string>
+{
+	const username: string = await invoke(GET_USERNAME_BY_ID, { userId });
+	return username;
 }

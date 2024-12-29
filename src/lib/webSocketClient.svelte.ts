@@ -35,6 +35,8 @@ class WebSocketClient
 	public gameHistory: Array<RoundHistory> = $state([]);
 	public timerValue: number = $state(0);
 	public currentRound: number = 0;
+	public lastGameId: number = $state(0);
+	public accountName: string = $state(``);
 
 	public onlineFirstFontName: string = $state(``);
 	public onlineFontsCount: number = $state(0);
@@ -42,7 +44,6 @@ class WebSocketClient
 	private static instance: WebSocketClient | null;
 	private serverConnector: ServerConnector = new ServerConnector();
 	private timerIntervalId: number = 0;
-	public lastGameId: number = $state(0);
 
 	public static getInstance()
 	{
@@ -54,6 +55,8 @@ class WebSocketClient
 	public async connectToServer(ipAddress: string)
 	{
 		this.gameStatus = `Connecting`;
+
+		this.accountName = (await getAccounts())[getSettings().currentAccount.get()].name;
 
 		this.serverConnector = new ServerConnector();
 
@@ -113,14 +116,14 @@ class WebSocketClient
 			let accounts = await getAccounts();
 			if (accounts.length == 0)
 			{
-				await createAccount(getSettings().userName.get());
+				await createAccount(`New account`);
 			}
 			accounts = await getAccounts();
 			const message = await this.sendPublicKeyMessage(accounts[getSettings().currentAccount.get()].publicKey);
 			const sign = await signMessage(accounts[getSettings().currentAccount.get()].publicKey, message);
 			await this.sendVerifySignatureMessage(sign);
 
-			const payload = await this.serverConnector.sendRegisterClientMessage();
+			const payload = await this.serverConnector.sendRegisterClientMessage(this.accountName);
 			this.id = payload.id;
 			if (!this.isConnectedToSelf)
 			{
