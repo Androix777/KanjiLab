@@ -6,37 +6,76 @@
 	});
 </script>
 
-<select data-choose-theme class="select select-bordered w-full">
-	<option value="light">light</option>
-	<option value="dark" selected>dark</option>
-	<option value="cupcake">cupcake</option>
-	<option value="bumblebee">bumblebee</option>
-	<option value="emerald">emerald</option>
-	<option value="corporate">corporate</option>
-	<option value="synthwave">synthwave</option>
-	<option value="retro">retro</option>
-	<option value="cyberpunk">cyberpunk</option>
-	<option value="valentine">valentine</option>
-	<option value="halloween">halloween</option>
-	<option value="garden">garden</option>
-	<option value="forest">forest</option>
-	<option value="aqua">aqua</option>
-	<option value="lofi">lofi</option>
-	<option value="pastel">pastel</option>
-	<option value="fantasy">fantasy</option>
-	<option value="wireframe">wireframe</option>
-	<option value="black">black</option>
-	<option value="luxury">luxury</option>
-	<option value="dracula">dracula</option>
-	<option value="cmyk">cmyk</option>
-	<option value="autumn">autumn</option>
-	<option value="business">business</option>
-	<option value="acid">acid</option>
-	<option value="lemonade">lemonade</option>
-	<option value="night">night</option>
-	<option value="coffee">coffee</option>
-	<option value="winter">winter</option>
-	<option value="dim">dim</option>
-	<option value="nord">nord</option>
-	<option value="sunset">sunset</option>
-</select>
+<div title="Change Theme" class="dropdown dropdown-end w-full">
+	<div tabindex="0" role="button" class="btn outline-2 outline-transparent w-full py-2">
+		<span class="flex-grow text-sm">Select theme</span>
+		<span class="flex h-full shrink-0 flex-wrap gap-1">
+			<span class="bg-primary rounded-badge w-2"></span>
+			<span class="bg-secondary rounded-badge w-2"></span>
+			<span class="bg-accent rounded-badge w-2"></span>
+			<span class="bg-neutral rounded-badge w-2"></span>
+		</span>
+	</div>
+	<div
+		class="dropdown-content bg-base-200 text-base-content rounded-box top-px h-[28.6rem] max-h-[calc(100vh-10rem)] w-72 overflow-y-auto border border-white/5 shadow-2xl outline outline-1 outline-black/5 mt-14"
+	>
+		<div class="grid grid-cols-1 gap-3 p-3">
+			{#each [
+		"light",
+		"dark",
+		"cupcake",
+		"bumblebee",
+		"emerald",
+		"corporate",
+		"synthwave",
+		"retro",
+		"cyberpunk",
+		"valentine",
+		"halloween",
+		"garden",
+		"forest",
+		"aqua",
+		"lofi",
+		"pastel",
+		"fantasy",
+		"wireframe",
+		"black",
+		"luxury",
+		"dracula",
+		"cmyk",
+		"autumn",
+		"business",
+		"acid",
+		"lemonade",
+		"night",
+		"coffee",
+		"winter",
+		"dim",
+		"nord",
+		"sunset",
+	] as
+				theme
+			}
+				<button
+					class="outline-base-content text-start outline-offset-4"
+					data-set-theme={theme}
+					data-theme={theme}
+				>
+					<span class="bg-base-100 rounded-btn text-base-content block w-full cursor-pointer font-sans">
+						<span class="grid grid-cols-5 grid-rows-3">
+							<span class="col-span-5 row-span-3 row-start-1 flex items-center gap-2 px-4 py-3">
+								<span class="flex-grow text-sm">{theme}</span>
+								<span class="flex h-full shrink-0 flex-wrap gap-1">
+									<span class="bg-primary rounded-badge w-2"></span>
+									<span class="bg-secondary rounded-badge w-2"></span>
+									<span class="bg-accent rounded-badge w-2"></span>
+									<span class="bg-neutral rounded-badge w-2"></span>
+								</span>
+							</span>
+						</span>
+					</span>
+				</button>
+			{/each}
+		</div>
+	</div>
+</div>
