@@ -5,7 +5,10 @@
 	import StartGameScreen from "$lib/components/StartGameScreen.svelte";
 	import StatsScreen from "$lib/components/StatsScreen.svelte";
 	import SvgIcon from "$lib/components/SVGIcon.svelte";
+	import { getAccounts } from "$lib/cryptoTools";
+	import { getSettings } from "$lib/globalSettings.svelte";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
+	import { onMount } from "svelte";
 	import { quintOut } from "svelte/easing";
 	import { fly } from "svelte/transition";
 	import { themeChange } from "theme-change";
@@ -18,9 +21,22 @@
 		currentScreenType = screenType;
 	}
 
+	async function initApp()
+	{
+		const accounts = await getAccounts();
+		const client = WebSocketClient.getInstance();
+		client.accountKey = accounts[getSettings().currentAccount.get()].publicKey;
+		client.accountName = accounts[getSettings().currentAccount.get()].name;
+	}
+
 	$effect(() =>
 	{
 		themeChange(false);
+	});
+
+	onMount(async () =>
+	{
+		initApp();
 	});
 </script>
 
@@ -33,7 +49,8 @@
 				{
 					setScreen(`StartGame`);
 				}}
-				disabled={false}>
+				disabled={false}
+			>
 				<SvgIcon
 					name="Quiz"
 					disabled={false}
@@ -45,7 +62,8 @@
 				{
 					setScreen(`Stats`);
 				}}
-				disabled={WebSocketClient.getInstance().gameStatus != `Off`}>
+				disabled={WebSocketClient.getInstance().gameStatus != `Off`}
+			>
 				<SvgIcon
 					name="Bars"
 					disabled={WebSocketClient.getInstance().gameStatus != `Off`}
@@ -57,7 +75,8 @@
 				{
 					setScreen(`Settings`);
 				}}
-				disabled={WebSocketClient.getInstance().gameStatus != `Off`}>
+				disabled={WebSocketClient.getInstance().gameStatus != `Off`}
+			>
 				<SvgIcon
 					name="Gears"
 					disabled={WebSocketClient.getInstance().gameStatus != `Off`}
@@ -70,7 +89,8 @@
 			<div
 				class="flex-1 bg-base-300 z-0"
 				in:fly={{ duration: 300, x: `-100vw`, y: 0, opacity: 0.5, easing: quintOut }}
-				out:fly={{ duration: 300, x: `100vw`, y: 0, opacity: 0.5, easing: quintOut }}>
+				out:fly={{ duration: 300, x: `100vw`, y: 0, opacity: 0.5, easing: quintOut }}
+			>
 				{#if currentScreenType === `StartGame`}
 					<StartGameScreen />
 				{:else if currentScreenType === `Stats`}

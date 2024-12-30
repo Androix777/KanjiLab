@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { HeatmapTable, PieChart } from "$lib/charts";
 	import { getAnswerStreaks, getStats } from "$lib/databaseTools";
-	import { getSettings } from "$lib/globalSettings.svelte";
 	import type { StatsInfo } from "$lib/types";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
-	import * as d3 from "d3";
 	import { onMount } from "svelte";
 
 	const frequencyValuesX = [0, 1000, 2500, 5000, 7500, 10000, 15000, 20000, 30000, 50000, 100000];

@@ -2,9 +2,12 @@
 	import ThemeSelect from "$lib/components/ThemeSelect.svelte";
 	import { createAccount, getAccounts, removeAccount, renameAccount } from "$lib/cryptoTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
+	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { onMount } from "svelte";
 	import AutoComplete from "./AutoComplete.svelte";
 	import Avatar from "./Avatar.svelte";
+
+	const client = WebSocketClient.getInstance();
 
 	let items: string[] = $state([]);
 	let currentPublicKey: string = $state(``);
@@ -24,6 +27,9 @@
 		});
 		currentPublicKey = accounts[getSettings().currentAccount.get()].publicKey;
 		currentName = accounts[getSettings().currentAccount.get()].name;
+
+		client.accountKey = currentPublicKey;
+		client.accountName = currentName;
 	}
 </script>
 
