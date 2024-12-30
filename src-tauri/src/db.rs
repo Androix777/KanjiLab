@@ -360,13 +360,17 @@ pub async fn get_answer_streaks(
     min_frequency: i64,
     max_frequency: i64,
     count: i64,
+    user_key: &str,
+    user_name: &str,
 ) -> Result<Vec<AnswerStreaks>, String> {
+    let user_id = get_user_id(user_key, user_name).await?;
     let data = sqlx::query_file_as!(
         AnswerStreaks,
         "./queries/get_answer_streaks.sql",
         min_frequency,
         max_frequency,
-        count
+        count,
+        user_id
     )
     .fetch_all(&*DB_POOL)
     .await

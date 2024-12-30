@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { HeatmapTable, PieChart } from "$lib/charts";
 	import { getAnswerStreaks, getStats } from "$lib/databaseTools";
+	import { getSettings } from "$lib/globalSettings.svelte";
 	import type { StatsInfo } from "$lib/types";
+	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import * as d3 from "d3";
 	import { onMount } from "svelte";
 
@@ -59,7 +61,7 @@
 				}
 				else
 				{
-					const streak = await getAnswerStreaks(min, max, 1);
+					const streak = await getAnswerStreaks(min, max, 1, WebSocketClient.getInstance().accountKey, WebSocketClient.getInstance().accountName);
 					row.push(streak.length > 0 ? streak[0].length : 0);
 				}
 			}

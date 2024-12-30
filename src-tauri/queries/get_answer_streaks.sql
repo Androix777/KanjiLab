@@ -14,6 +14,7 @@ WITH RankedAnswers AS (
 		JOIN answer_stats ans ON gs.id = ans.game_stats_id
 	WHERE gs.min_frequency = $1
 		AND gs.max_frequency >= $2
+		AND ans.user_id = $4
 )
 SELECT game_id,
 	COUNT(*) AS length

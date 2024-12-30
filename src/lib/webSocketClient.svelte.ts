@@ -38,6 +38,7 @@ class WebSocketClient
 	public currentRound: number = 0;
 	public lastGameId: number = $state(0);
 	public accountName: string = $state(``);
+	public accountKey: string = $state(``);
 
 	public onlineFirstFontName: string = $state(``);
 	public onlineFontsCount: number = $state(0);
@@ -57,7 +58,14 @@ class WebSocketClient
 	{
 		this.gameStatus = `Connecting`;
 
-		this.accountName = (await getAccounts())[getSettings().currentAccount.get()].name;
+		let accounts = await getAccounts();
+		if (accounts.length == 0)
+		{
+			await createAccount(`New account`);
+			accounts = await getAccounts();
+		}
+		this.accountName = accounts[getSettings().currentAccount.get()].name;
+		this.accountKey = accounts[getSettings().currentAccount.get()].publicKey;
 
 		this.serverConnector = new ServerConnector();
 
@@ -113,13 +121,6 @@ class WebSocketClient
 		try
 		{
 			await this.serverConnector.connect(ipAddress);
-
-			let accounts = await getAccounts();
-			if (accounts.length == 0)
-			{
-				await createAccount(`New account`);
-			}
-			accounts = await getAccounts();
 			const message = await this.sendPublicKeyMessage(accounts[getSettings().currentAccount.get()].publicKey);
 			const sign = await signMessage(accounts[getSettings().currentAccount.get()].publicKey, message);
 			await this.sendVerifySignatureMessage(sign);

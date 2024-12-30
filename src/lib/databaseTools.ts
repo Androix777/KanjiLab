@@ -106,12 +106,16 @@ export async function getAnswerStreaks(
 	minFrequency: number,
 	maxFrequency: number,
 	count: number,
+	userKey: string,
+	userName: string,
 ): Promise<AnswerStreaks[]>
 {
 	const data: AnswerStreaks[] = await invoke(GET_ANSWER_STREAKS, {
 		minFrequency: minFrequency,
 		maxFrequency: maxFrequency,
 		count: count,
+		userKey: userKey,
+		userName: userName,
 	});
 	return data;
 }
