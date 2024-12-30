@@ -187,6 +187,8 @@ class WebSocketClient
 
 	public async sendAnswer(answer: string)
 	{
+		if (this.timerValue <= 0) return;
+
 		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {
 			answer: answer != `` ? answer : `　`,
 			answerStatus: `Unknown`,
