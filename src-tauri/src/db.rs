@@ -236,8 +236,9 @@ pub struct StatsInfo {
 }
 
 #[tauri::command]
-pub async fn get_stats() -> Result<StatsInfo, String> {
-    let data = query_file_as!(StatsInfo, "./queries/get_stats.sql")
+pub async fn get_overall_stats(user_key: &str,) -> Result<StatsInfo, String> {
+	let user_id = get_user_id(user_key, None).await?;
+    let data = query_file_as!(StatsInfo, "./queries/get_overall_stats.sql", user_id)
         .fetch_one(&*DB_POOL)
         .await
         .map_err(|e| e.to_string())?;
@@ -260,25 +261,42 @@ pub async fn get_font_id(name: &str) -> Result<i64, String> {
 }
 
 #[tauri::command]
-pub async fn get_user_id(key: &str, last_name: &str) -> Result<i64, String> {
+pub async fn get_user_id(key: &str, last_name: Option<&str>) -> Result<i64, String> {
     struct RawData {
         id: i64,
     }
 
-    let user_id = sqlx::query_file_as!(
-        RawData,
-        "./queries/get_or_create_user.sql",
-        key,
-        last_name,
-        last_name,
-        key,
-        key
-    )
-    .fetch_one(&*DB_POOL)
-    .await
-    .map_err(|e| e.to_string())?;
-
-    Ok(user_id.id)
+    if let Some(name) = last_name {
+        let user_id = sqlx::query_file_as!(
+            RawData,
+            "./queries/get_or_create_user.sql",
+            key,
+            name,
+            name,
+            key,
+            key
+        )
+        .fetch_one(&*DB_POOL)
+        .await
+        .map_err(|e| e.to_string())?;
+        
+        Ok(user_id.id)
+    } else {
+        let userdata = sqlx::query_file_as!(
+            User,
+            "./queries/get_userdata_by_key.sql",
+            key
+        )
+        .fetch_optional(&*DB_POOL)
+        .await
+        .map_err(|e| e.to_string())?;
+        
+        if let Some(user) = userdata {
+            Ok(user.id)
+        } else {
+            Err("User not found".to_string())
+        }
+    }
 }
 
 #[tauri::command]
@@ -296,7 +314,7 @@ pub async fn add_answer_stats(
         id: i64,
     }
 
-    let user_id = get_user_id(user_key, user_name)
+    let user_id = get_user_id(user_key, Some(user_name))
         .await
         .map_err(|e| e.to_string())?;
 
@@ -361,9 +379,8 @@ pub async fn get_answer_streaks(
     max_frequency: i64,
     count: i64,
     user_key: &str,
-    user_name: &str,
 ) -> Result<Vec<AnswerStreaks>, String> {
-    let user_id = get_user_id(user_key, user_name).await?;
+    let user_id = get_user_id(user_key, None).await?;
     let data = sqlx::query_file_as!(
         AnswerStreaks,
         "./queries/get_answer_streaks.sql",
@@ -505,20 +522,38 @@ pub async fn get_all_answer_stats() -> Result<Vec<AnswerStats>, String> {
     Ok(data.into_iter().map(AnswerStats::from).collect())
 }
 
-#[tauri::command]
-pub async fn get_username_by_id(user_id: i64) -> Result<String, String> {
-    struct RawData {
-        username: String,
-    }
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct User {
+    id: i64,
+    key: String,
+    username: String,
+}
 
-    let data = sqlx::query_file_as!(RawData, "./queries/get_username_by_id.sql", user_id)
+#[tauri::command]
+pub async fn get_userdata_by_id(user_id: i64) -> Result<User, String> {
+    let data = sqlx::query_file_as!(User, "./queries/get_userdata_by_id.sql", user_id)
         .fetch_optional(&*DB_POOL)
         .await
         .map_err(|e| e.to_string())?;
 
     if let Some(user) = data {
-        Ok(user.username)
+        Ok(User {
+			id: user_id,
+            username: user.username,
+            key: user.key,
+        })
     } else {
         Err(format!("User not found with id: {}", user_id))
     }
+}
+
+
+#[tauri::command]
+pub async fn get_all_users() -> Result<Vec<User>, String> {
+    let users = sqlx::query_file_as!(User, "./queries/get_all_users.sql")
+        .fetch_all(&*DB_POOL)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(users)
 }

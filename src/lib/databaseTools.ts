@@ -4,6 +4,7 @@ import {
 	ADD_GAME_STATS,
 	GET_ALL_ANSWER_STATS,
 	GET_ALL_GAMES_STATS,
+	GET_ALL_USERS,
 	GET_ANSWER_STATS_BY_GAME,
 	GET_ANSWER_STREAKS,
 	GET_FONT_ID,
@@ -15,7 +16,7 @@ import {
 	GET_WORDS,
 	GET_WORDS_COUNT,
 } from "$lib/tauriFunctions";
-import type { AnswerStats, AnswerStreaks, GameStats, WordInfo } from "$lib/types";
+import type { AnswerStats, AnswerStreaks, GameStats, User, WordInfo } from "$lib/types";
 import type { StatsInfo } from "$lib/types";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -96,9 +97,11 @@ export async function addGameStats(
 	return index;
 }
 
-export async function getStats(): Promise<StatsInfo>
+export async function getOverallStats(userKey: string): Promise<StatsInfo>
 {
-	const data: StatsInfo = await invoke(GET_STATS);
+	const data: StatsInfo = await invoke(GET_STATS, {
+		userKey: userKey,
+	});
 	return data;
 }
 
@@ -107,7 +110,6 @@ export async function getAnswerStreaks(
 	maxFrequency: number,
 	count: number,
 	userKey: string,
-	userName: string,
 ): Promise<AnswerStreaks[]>
 {
 	const data: AnswerStreaks[] = await invoke(GET_ANSWER_STREAKS, {
@@ -115,7 +117,6 @@ export async function getAnswerStreaks(
 		maxFrequency: maxFrequency,
 		count: count,
 		userKey: userKey,
-		userName: userName,
 	});
 	return data;
 }
@@ -156,8 +157,14 @@ export async function getAllAnswerStats(): Promise<AnswerStats[]>
 	return data;
 }
 
-export async function getUsernameById(userId: number): Promise<string>
+export async function getUserdataById(userId: number): Promise<User>
 {
-	const username: string = await invoke(GET_USERNAME_BY_ID, { userId });
-	return username;
+	const userdata: User = await invoke(GET_USERNAME_BY_ID, { userId });
+	return userdata;
+}
+
+export async function getAllUsers(): Promise<User[]>
+{
+	const users: User[] = await invoke(GET_ALL_USERS);
+	return users;
 }

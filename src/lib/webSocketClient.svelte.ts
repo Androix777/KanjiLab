@@ -59,11 +59,6 @@ class WebSocketClient
 		this.gameStatus = `Connecting`;
 
 		let accounts = await getAccounts();
-		if (accounts.length == 0)
-		{
-			await createAccount(`New account`);
-			accounts = await getAccounts();
-		}
 		this.accountName = accounts[getSettings().currentAccount.get()].name;
 		this.accountKey = accounts[getSettings().currentAccount.get()].publicKey;
 

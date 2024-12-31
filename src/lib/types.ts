@@ -56,6 +56,12 @@ export type AnswerStreaks = {
 	length: number;
 };
 
+export type User = {
+	id: number;
+	key: string;
+	username: string;
+};
+
 export type ClientInfo = {
 	id: string;
 	key: string;

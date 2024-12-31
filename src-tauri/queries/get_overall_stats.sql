@@ -10,4 +10,5 @@ SELECT SUM(
 			ELSE 0
 		END
 	) AS "wrong_count!"
-FROM answer_stats;
+FROM answer_stats
+WHERE user_id = ?;

@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { CREATE_ACCOUNT, GET_ACCOUNTS, REMOVE_ACCOUNT, RENAME_ACCOUNT, SIGN_MESSAGE, VERIFY_SIGNATURE } from "./tauriFunctions";
 
-type AccountInfo = {
+export type AccountInfo = {
 	name: string;
 	privateKey: string;
 	publicKey: string;

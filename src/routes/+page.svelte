@@ -5,7 +5,7 @@
 	import StartGameScreen from "$lib/components/StartGameScreen.svelte";
 	import StatsScreen from "$lib/components/StatsScreen.svelte";
 	import SvgIcon from "$lib/components/SVGIcon.svelte";
-	import { getAccounts } from "$lib/cryptoTools";
+	import { createAccount, getAccounts } from "$lib/cryptoTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { onMount } from "svelte";
@@ -23,7 +23,13 @@
 
 	async function initApp()
 	{
-		const accounts = await getAccounts();
+		let accounts = await getAccounts();
+		if (accounts.length == 0)
+		{
+			await createAccount(`New account`);
+			accounts = await getAccounts();
+		}
+
 		const client = WebSocketClient.getInstance();
 		client.accountKey = accounts[getSettings().currentAccount.get()].publicKey;
 		client.accountName = accounts[getSettings().currentAccount.get()].name;
