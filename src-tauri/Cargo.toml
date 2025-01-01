@@ -33,3 +33,4 @@ tauri-plugin-fs = "2.0.0-rc.0"
 tokio = { version = "1.0", features = ["full"] }
 ttf-parser = "0.24.1"
 usvg = "0.43.0"
+indexmap = "2.7.0"

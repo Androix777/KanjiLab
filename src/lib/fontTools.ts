@@ -1,28 +1,9 @@
-import { GET_ALL_FONTS_INFO, GET_EXECUTABLE_FILE_PATH, GET_SVG_TEXT } from "$lib/tauriFunctions";
+import { GET_ALL_FONTS_INFO, GET_FONT_LIST, GET_SVG_TEXT } from "$lib/tauriFunctions";
 import { invoke } from "@tauri-apps/api/core";
-import { type DirEntry, readDir } from "@tauri-apps/plugin-fs";
 import { getSettings } from "./globalSettings.svelte";
 import type { FontInfo } from "./types";
 
-let fontDirectory: string = ``;
 let fontNames: string[] | null = null;
-
-async function initialize(): Promise<void>
-{
-	if (!fontDirectory)
-	{
-		try
-		{
-			const path: string = await invoke(GET_EXECUTABLE_FILE_PATH);
-			fontDirectory = `${path}\\fonts`;
-		}
-		catch (error)
-		{
-			console.error(`Error getting executable file path:`, error);
-			throw error;
-		}
-	}
-}
 
 async function loadFonts(): Promise<void>
 {
@@ -30,11 +11,7 @@ async function loadFonts(): Promise<void>
 	{
 		try
 		{
-			await initialize();
-			const entries: DirEntry[] = await readDir(fontDirectory);
-			fontNames = entries
-				.filter(entry => entry.isFile && entry.name)
-				.map(entry => entry.name);
+			fontNames = await invoke(GET_FONT_LIST);
 		}
 		catch (error)
 		{
@@ -51,6 +28,16 @@ export async function getRandomFont(): Promise<string>
 	{
 		const randomIndex = Math.floor(Math.random() * fontNames.length);
 		return fontNames[randomIndex];
+	}
+	throw new Error(`No fonts available`);
+}
+
+export async function getDefaultFont(): Promise<string>
+{
+	await loadFonts();
+	if (fontNames && fontNames.length > 0)
+	{
+		return fontNames[0];
 	}
 	throw new Error(`No fonts available`);
 }

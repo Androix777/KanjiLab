@@ -43,9 +43,11 @@
 			/>
 		</div>
 		<div class="w-1/2 my-auto justify-center overflow-hidden">
-			<div class="text-ellipsis inline-block overflow-hidden whitespace-nowrap -mb-1" style="width: calc(100%)">File: {fontInfo.fontFile}</div>
-			<div class="text-ellipsis inline-block overflow-hidden whitespace-nowrap -mb-1" style="width: calc(100%)">Full name: {fontInfo.fullName}</div>
-			<div class="text-ellipsis inline-block overflow-hidden whitespace-nowrap -mb-1" style="width: calc(100%)">Number of glyphs: {fontInfo.numGlyphs}</div>
+			<div class="text-ellipsis inline-block overflow-hidden whitespace-nowrap -mb-1" style="width: calc(100%)">{fontInfo.fontFile}</div>
+			<div class="text-ellipsis inline-block overflow-hidden whitespace-nowrap -mb-1" style="width: calc(100%)">{fontInfo.fullName}</div>
+			{#if fontInfo.isEmbedded}
+				<div class="text-ellipsis inline-block overflow-hidden whitespace-nowrap -mb-1" style="width: calc(100%)">DEFAULT</div>
+			{/if}
 		</div>
 		{#if fontSVG != ``}
 			<div class="m-auto flex-none justify-center" transition:fade>

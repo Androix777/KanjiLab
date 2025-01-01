@@ -299,6 +299,7 @@ pub async fn get_user_id(key: &str, last_name: Option<&str>) -> Result<i64, Stri
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 #[tauri::command]
 pub async fn add_answer_stats(
     game_stats_id: i64,

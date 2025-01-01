@@ -1,9 +1,9 @@
 import { getSettings } from "$lib/globalSettings.svelte";
 import { ServerConnector } from "$lib/webSocketConnector";
 import { SvelteMap } from "svelte/reactivity";
-import { createAccount, getAccounts, signMessage } from "./cryptoTools";
+import { getAccounts, signMessage } from "./cryptoTools";
 import { addAnswerStats, addGameStats, getAnswerStatsByGame, getFontId, getGameStats, getRandomWords } from "./databaseTools";
-import { getFontInfo, getRandomFont, getSVGText } from "./fontTools";
+import { getDefaultFont, getFontInfo, getSVGText } from "./fontTools";
 import type {
 	AnswerRecord,
 	AnswerStats,
@@ -350,7 +350,7 @@ class WebSocketClient
 				}
 				else
 				{
-					font = await getRandomFont();
+					font = await getDefaultFont();
 				}
 				const fontInfo: FontInfo | null = getFontInfo(font);
 				if (fontInfo == null)

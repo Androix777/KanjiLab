@@ -83,6 +83,7 @@ export type AnswerInfo = {
 
 export type FontInfo = {
 	fontFile: string;
+	isEmbedded: boolean;
 	copyrightNotice: string;
 	family: string;
 	subfamily: string;
