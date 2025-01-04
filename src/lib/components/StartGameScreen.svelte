@@ -2,13 +2,13 @@
 	import { getSettings } from "$lib/globalSettings.svelte";
 	import { LAUNCH_SERVER, STOP_SERVER } from "$lib/tauriFunctions";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
-	import GameStats from "./GameStats.svelte";
 	import { invoke } from "@tauri-apps/api/core";
 	import { onMount } from "svelte";
 	import { flip } from "svelte/animate";
 	import { fade } from "svelte/transition";
 	import GameScreen from "./GameScreen.svelte";
 	import GameSettings from "./GameSettings.svelte";
+	import GameStats from "./GameStats.svelte";
 	import MessageCard from "./MessageCard.svelte";
 	import PlayerListCard from "./PlayerListCard.svelte";
 
@@ -167,21 +167,6 @@
 
 	<div class="flex-grow flex min-h-0 flex-row">
 		<div class="text-center flex flex-1 min-h-0 card card-bordered bg-base-100 shadow-xl p-4">
-			{#if webSocketClient.gameStatus == `Lobby` && webSocketClient.lastGameId != 0}
-				<div role="tablist" class="tabs tabs-bordered">
-					<button
-						role="tab"
-						class="tab {activeTab == 0 ? `tab-active` : ``}"
-						onclick={() => activeTab = 0}
-					>Game Settings</button>
-					<button
-						role="tab"
-						class="tab {activeTab == 1 ? `tab-active` : ``}"
-						onclick={() => activeTab = 1}
-					>Last Game Stats</button>
-				</div>
-			{/if}
-
 			{#if webSocketClient.gameStatus == `WaitingQuestion` || webSocketClient.gameStatus == `AnswerQuestion`}
 				<GameScreen
 					gameHistory={webSocketClient.gameHistory}
@@ -193,6 +178,11 @@
 					onAnswer={(answer: string) => webSocketClient.sendAnswer(answer)}
 				/>
 			{:else if activeTab == 0}
+				<button
+					class="btn btn-primary w-32 min-h-6 h-6 absolute top-2 right-2 text-xs z-10"
+					disabled={webSocketClient.lastGameId == 0}
+					onclick={() => activeTab = 1}
+				>Last round</button>
 				<GameSettings
 					startFunction={() =>
 					{
@@ -202,6 +192,12 @@
 				/>
 			{:else if activeTab == 1}
 				<GameStats />
+				<div class="h-full w-full flex items-end justify-center my-2">
+					<button
+						class="btn btn-primary w-32"
+						onclick={() => activeTab = 0}
+					>Got it</button>
+				</div>
 			{/if}
 		</div>
 		<div class="flex flex-col ml-4" style="width: 30vw">
