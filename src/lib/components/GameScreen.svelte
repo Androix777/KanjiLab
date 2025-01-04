@@ -73,9 +73,9 @@
 
 	<div class="flex items-center justify-center flex-none my-4 h-36 relative">
 		{#key currentQuestionInfo?.wordInfo.word}
-			<div class="absolute h-36 top-0 bottom-0">
-				<div class="bg-base-content max-h-full" style="mask-image: url({currentSvgUrl}); mask-size: 100% 100%" transition:fade={{ duration: 400 }}>
-					<img src={currentSvgUrl} alt="" class="opacity-0 object-contain h-36">
+			<div class="absolute h-36 top-0 bottom-0 flex items-center">
+				<div class="bg-base-content max-h-full max-w-fit min-w-fit" style="mask-image: url({currentSvgUrl}); mask-size: 100% 100%" transition:fade={{ duration: 400 }}>
+					<img src={currentSvgUrl} alt="" class="opacity-0 object-contain max-h-36">
 				</div>
 			</div>
 		{/key}
