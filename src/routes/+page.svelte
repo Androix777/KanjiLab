@@ -5,8 +5,8 @@
 	import StartGameScreen from "$lib/components/StartGameScreen.svelte";
 	import StatsScreen from "$lib/components/StatsScreen.svelte";
 	import SvgIcon from "$lib/components/SVGIcon.svelte";
-	import { createAccount, getAccounts } from "$lib/cryptoTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
+	import { createAccount, getAccounts } from "$lib/networkTools";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { onMount } from "svelte";
 	import { quintOut } from "svelte/easing";

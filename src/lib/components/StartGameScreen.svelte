@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { getSettings } from "$lib/globalSettings.svelte";
-	import { LAUNCH_SERVER, STOP_SERVER } from "$lib/tauriFunctions";
+	import { launchServer, stopServer } from "$lib/networkTools";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
-	import { invoke } from "@tauri-apps/api/core";
 	import { onMount } from "svelte";
 	import { flip } from "svelte/animate";
 	import { fade } from "svelte/transition";
@@ -17,18 +16,18 @@
 	let chatDiv: HTMLElement;
 	let activeTab = $state(0);
 
-	async function launchServer()
+	async function runServer()
 	{
-		getSettings().adminPassword.set(await invoke(LAUNCH_SERVER));
+		getSettings().adminPassword.set(await launchServer());
 		webSocketClient.isConnectedToSelf = true;
 		await webSocketClient.connectToServer(`ws://127.0.0.1:8080`);
 		await webSocketClient.makeAdmin();
 	}
 
-	async function stopServer()
+	async function closeServer()
 	{
 		leaveServer();
-		await invoke(STOP_SERVER);
+		await stopServer();
 	}
 
 	async function stopGame()
@@ -103,7 +102,7 @@
 						class="btn btn-outline btn-error"
 						onclick={() =>
 						{
-							void stopServer();
+							void closeServer();
 						}}
 					>Stop Server</button>
 				{/if}
@@ -113,7 +112,7 @@
 						class="btn btn-primary"
 						onclick={() =>
 						{
-							void launchServer();
+							void runServer();
 						}}
 					>Host Game</button>
 				{/if}

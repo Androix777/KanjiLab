@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ThemeSelect from "$lib/components/ThemeSelect.svelte";
-	import { createAccount, getAccounts, removeAccount, renameAccount } from "$lib/cryptoTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
+	import { createAccount, getAccounts, removeAccount, renameAccount } from "$lib/networkTools";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { onMount } from "svelte";
 	import AutoComplete from "./AutoComplete.svelte";

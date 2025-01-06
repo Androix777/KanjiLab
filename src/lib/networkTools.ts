@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { CREATE_ACCOUNT, GET_ACCOUNTS, REMOVE_ACCOUNT, RENAME_ACCOUNT, SIGN_MESSAGE, VERIFY_SIGNATURE } from "./tauriFunctions";
+import { CREATE_ACCOUNT, GET_ACCOUNTS, LAUNCH_SERVER, REMOVE_ACCOUNT, RENAME_ACCOUNT, SIGN_MESSAGE, STOP_SERVER, VERIFY_SIGNATURE } from "./tauriFunctions";
 
 export type AccountInfo = {
 	name: string;
@@ -35,4 +35,14 @@ export async function verifySignature(publicKey: string, message: string, signat
 export async function renameAccount(publicKey: string, newName: string): Promise<void>
 {
 	await invoke(RENAME_ACCOUNT, { publicKey, newName });
+}
+
+export async function launchServer(): Promise<string>
+{
+	return await invoke(LAUNCH_SERVER);
+}
+
+export async function stopServer(): Promise<void>
+{
+	await invoke(STOP_SERVER);
 }

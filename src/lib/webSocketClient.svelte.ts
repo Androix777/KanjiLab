@@ -1,9 +1,9 @@
 import { getSettings } from "$lib/globalSettings.svelte";
 import { ServerConnector } from "$lib/webSocketConnector";
 import { SvelteMap } from "svelte/reactivity";
-import { getAccounts, signMessage } from "./cryptoTools";
 import { addAnswerStats, addGameStats, getAnswerStatsByGame, getFontId, getGameStats, getRandomWords } from "./databaseTools";
 import { getDefaultFont, getFontInfo, getSVGText } from "./fontTools";
+import { getAccounts, signMessage } from "./networkTools";
 import type {
 	AnswerRecord,
 	AnswerStats,
