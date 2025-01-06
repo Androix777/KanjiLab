@@ -13,9 +13,7 @@
 
 	async function createTableData(currentGameStats: GameStats, currentGameAnswerStats: AnswerStats[])
 	{
-		const tableData: any[] = [];
 		const playerIds = Array.from(new Set(currentGameAnswerStats.map(answer => answer.userId)));
-		const questions = Array.from(new Set(currentGameAnswerStats.map(answer => answer.word)));
 
 		const players = await Promise.all(playerIds.map(async (playerId) => ({
 			id: playerId,
@@ -41,26 +39,28 @@
 			});
 		});
 
-		questions.forEach(question =>
+		const rows: any[] = [];
+		players.forEach(player =>
 		{
-			const row: any = { question };
-			const questionAnswers = currentGameAnswerStats.filter(a => a.word === question);
-
-			players.forEach(player =>
+			let rowId = 0;
+			currentGameAnswerStats.forEach(answerStats =>
 			{
-				const answer = questionAnswers.find(a => a.userId === player.id);
-				row[`${player.id}`] = answer ?
+				if (answerStats.userId == player.id)
+				{
+					if (rows.length <= rowId)
 					{
-						answer: answer.wordReading,
-						isCorrect: answer.isCorrect,
-					} :
-					null;
+						rows[rowId] = { question: answerStats.word };
+					}
+					rows[rowId][player.id] = {
+						answer: answerStats.wordReading == "" ? "　" : answerStats.wordReading,
+						isCorrect: answerStats.isCorrect,
+					};
+					rowId++;
+				}
 			});
-
-			tableData.push(row);
 		});
 
-		initializeTable(tableData, columns);
+		initializeTable(rows, columns);
 	}
 
 	function initializeTable(tableData: any[], columns: any[])
