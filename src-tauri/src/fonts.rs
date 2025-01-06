@@ -29,6 +29,56 @@ impl FontManager {
             include_bytes!("../fonts/NotoSansJP-Regular.ttf") as &'static [u8],
         );
 
+		embedded_fonts.insert(
+            "NotoSerifJP-Regular.ttf".to_string(),
+            include_bytes!("../fonts/NotoSerifJP-Regular.ttf") as &'static [u8],
+        );
+
+		embedded_fonts.insert(
+            "AoyagiKouzanT.ttf".to_string(),
+            include_bytes!("../fonts/AoyagiKouzanT.ttf") as &'static [u8],
+        );
+
+		embedded_fonts.insert(
+            "AoyagiReisho.ttf".to_string(),
+            include_bytes!("../fonts/AoyagiReisho.ttf") as &'static [u8],
+        );
+
+		embedded_fonts.insert(
+            "AoyagiSoseki.ttf".to_string(),
+            include_bytes!("../fonts/AoyagiSoseki.ttf") as &'static [u8],
+        );
+
+		embedded_fonts.insert(
+            "KouzanGyousho.ttf".to_string(),
+            include_bytes!("../fonts/KouzanGyousho.ttf") as &'static [u8],
+        );
+		
+		embedded_fonts.insert(
+            "KouzanMouhitu.ttf".to_string(),
+            include_bytes!("../fonts/KouzanMouhitu.ttf") as &'static [u8],
+        );
+
+		embedded_fonts.insert(
+            "KouzanSousho.ttf".to_string(),
+            include_bytes!("../fonts/KouzanSousho.ttf") as &'static [u8],
+        );
+
+		embedded_fonts.insert(
+            "BestTen-DOT.otf".to_string(),
+            include_bytes!("../fonts/BestTen-DOT.otf") as &'static [u8],
+        );
+
+		embedded_fonts.insert(
+            "DelaSukoGothicOne-R.ttf".to_string(),
+            include_bytes!("../fonts/DelaSukoGothicOne-R.ttf") as &'static [u8],
+        );
+
+		embedded_fonts.insert(
+            "Pigmo-01.otf".to_string(),
+            include_bytes!("../fonts/Pigmo-01.otf") as &'static [u8],
+        );
+
         Self {
             embedded_fonts,
             fonts_dir,
