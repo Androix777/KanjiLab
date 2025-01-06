@@ -15,8 +15,7 @@
 		onAnswer: (answer: string) => void;
 	};
 
-	const // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-	{
+	const {
 		gameHistory,
 		clientID,
 		roundDuration,
@@ -58,6 +57,12 @@
 		readingInput = ``;
 	});
 
+	$effect(() =>
+	{
+		gameHistory.at(-1)?.answers.get(clientID)?.answer;
+		inputElement.focus();
+	});
+
 	onMount(() =>
 	{
 		inputElement.focus();
@@ -87,6 +92,7 @@
 			onkeydown={checkWord}
 			bind:this={inputElement}
 			placeholder={gameHistory.at(-1)?.answers.get(clientID)?.answer}
+			disabled={gameHistory.at(-1)?.answers.get(clientID)?.answer != ``}
 			class="input input-bordered input-lg text-center w-3/4 text-3xl placeholder:{ currentAnswerRecord?.answerStatus == `Correct` ? `text-success` : currentAnswerRecord?.answerStatus == `Incorrect` ? `text-error` : `text-warning`}"
 		/>
 	</div>

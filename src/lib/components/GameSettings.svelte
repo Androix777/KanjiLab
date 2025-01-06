@@ -12,11 +12,9 @@
 		isAdmin: boolean;
 	};
 
-	const // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-	{
-		startFunction = () =>
-		{},
-		isAdmin = false,
+	const {
+		startFunction,
+		isAdmin,
 	}: Props = $props();
 
 	let fontsModal: HTMLDialogElement;
