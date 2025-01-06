@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getWordsCount } from "$lib/databaseTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
 	import { launchServer, stopServer } from "$lib/networkTools";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
@@ -183,9 +184,17 @@
 					onclick={() => activeTab = 1}
 				>Last round</button>
 				<GameSettings
-					startFunction={() =>
+					startFunction={async () =>
 					{
-						void webSocketClient.startGame();
+						var possibleWordsCount: number = await getWordsCount();
+						if (possibleWordsCount <= 0)
+						{
+							console.log("No possible words");
+						}
+						else
+						{
+							void webSocketClient.startGame();
+						}
 					}}
 					isAdmin={webSocketClient.isAdmin || false}
 				/>
