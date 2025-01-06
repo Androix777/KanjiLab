@@ -82,7 +82,7 @@
 </script>
 
 <div class="flex flex-col flex-grow h-full">
-	<div class="h-full overflow-y-auto relative">
+	<div class="h-full overflow-y-auto overflow-x-hidden relative">
 		<div class="card-title">Game settings</div>
 		<div class="flex flex-row mt-4">
 			<div class="flex-1 text-left my-auto">
