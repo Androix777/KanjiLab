@@ -168,6 +168,27 @@ pub fn set_current_question(question: QuestionInfo) {
             _ = sleep(duration) => {},
             _ = cancel_receiver => {}
         }
+        
+        {
+            let current_round = *CURRENT_ROUND_INDEX.read().unwrap();
+            let mut answers_by_round = ANSWERS_BY_ROUND.write().unwrap();
+            let client_list = CLIENT_LIST.read().unwrap();
+            
+            if let Some((_question, answers)) = answers_by_round.get_mut(&current_round) {
+                for client in client_list.values() {
+                    if !answers.contains_key(&client.id) {
+                        let answer_info = AnswerInfo {
+                            id: client.id.clone(),
+                            answer: String::new(),
+                            is_correct: false,
+                            answer_time: GAME_SETTINGS.read().unwrap().round_duration * 1000,
+                        };
+                        answers.insert(client.id.clone(), answer_info);
+                    }
+                }
+            }
+        }
+        
         let game_state = {
             let mut marker = END_GAME_MARKER.write().unwrap();
             if *marker {
