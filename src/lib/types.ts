@@ -7,7 +7,9 @@ export type GameStats = {
 	minFrequency: number;
 	maxFrequency?: number | null;
 	fontId?: number | null;
+	font?: string | null;
 	dictionaryId: number;
+	dictionary: string;
 	timestamp: string;
 };
 
@@ -15,12 +17,14 @@ export type AnswerStats = {
 	id: number;
 	gameStatsId: number;
 	userId: number;
+	user: string;
 	word: string;
 	wordReading: string;
 	duration?: number | null;
 	isCorrect: boolean;
 	timestamp: string;
 	fontId: number;
+	font: string;
 };
 
 export type WordPartExample = {

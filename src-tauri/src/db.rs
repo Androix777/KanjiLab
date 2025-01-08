@@ -428,7 +428,9 @@ pub struct GameStats {
     min_frequency: i64,
     max_frequency: Option<i64>,
     font_id: Option<i64>,
+    font: Option<String>,
     dictionary_id: i64,
+    dictionary: String,
     timestamp: NaiveDateTime,
 }
 
@@ -462,12 +464,14 @@ pub struct AnswerStats {
     id: i64,
     game_stats_id: i64,
     user_id: i64,
+    user: String,
     word: String,
     word_reading: String,
     duration: Option<i64>,
     is_correct: bool,
     timestamp: NaiveDateTime,
     font_id: i64,
+    font: String,
 }
 
 #[derive(sqlx::FromRow)]
@@ -475,12 +479,14 @@ struct AnswerStatsDB {
     id: i64,
     game_stats_id: i64,
     user_id: i64,
+    user: String,
     word: String,
     word_reading: String,
     duration: Option<i64>,
     is_correct: i64,
     timestamp: NaiveDateTime,
     font_id: i64,
+    font: String,
 }
 
 impl From<AnswerStatsDB> for AnswerStats {
@@ -489,12 +495,14 @@ impl From<AnswerStatsDB> for AnswerStats {
             id: db.id,
             game_stats_id: db.game_stats_id,
             user_id: db.user_id,
+            user: db.user,
             word: db.word,
             word_reading: db.word_reading,
             duration: db.duration,
             is_correct: db.is_correct != 0,
             timestamp: db.timestamp,
             font_id: db.font_id,
+            font: db.font,
         }
     }
 }
