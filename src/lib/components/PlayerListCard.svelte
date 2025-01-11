@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { ClientInfo, RoundHistory } from "$lib/types";
-	import jdenticon from "jdenticon/standalone";
 	import { flip } from "svelte/animate";
 	import { SvelteMap } from "svelte/reactivity";
 	import Avatar from "./Avatar.svelte";
@@ -11,7 +10,7 @@
 		gameHistory: Array<RoundHistory>;
 	};
 
-	const // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	const
 	{
 		clientInfo = {
 			id: `NULL`,

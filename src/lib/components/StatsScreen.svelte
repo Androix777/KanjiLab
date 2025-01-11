@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { HeatmapTable, PieChart } from "$lib/charts";
 	import { getAllUsers, getAnswerStreaks, getOverallStats } from "$lib/databaseTools";
-	import { getSettings } from "$lib/globalSettings.svelte";
 	import type { StatsInfo, User } from "$lib/types";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { onMount } from "svelte";

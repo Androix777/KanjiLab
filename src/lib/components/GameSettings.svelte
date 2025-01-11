@@ -66,7 +66,7 @@
 	$effect(() =>
 	{
 		getSettings().wordPart.get();
-		refreshItems();
+		void refreshItems();
 	});
 
 	async function refreshItems()
@@ -78,7 +78,7 @@
 		}
 	}
 
-	refreshItems();
+	void refreshItems();
 </script>
 
 <div class="flex flex-col flex-grow h-full">
@@ -179,10 +179,10 @@
 						<AutoComplete
 							items={wordPartItems}
 							selectedIndex={wordPartItems.indexOf(getSettings().wordPart.get())}
-							onSelect={async (selectedIndex, selectedItem) =>
+							onSelect={(selectedIndex, selectedItem: string | null) =>
 							{
-								refreshItems();
-								getSettings().wordPart.set(selectedItem ? selectedItem : ``);
+								void refreshItems();
+								getSettings().wordPart.set(selectedItem != null ? selectedItem : ``);
 							}}
 							disabled={isSettingsLocked}
 							nullOptionEnabled={true}

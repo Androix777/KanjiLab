@@ -4,7 +4,7 @@
 		disabled: boolean;
 	};
 
-	const // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	const
 	{
 		name,
 		disabled,

@@ -8,7 +8,7 @@
 		maxOptions?: number;
 	};
 
-	const // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	const
 	{
 		items,
 		selectedIndex,
@@ -33,7 +33,7 @@
 
 	let getItemIndexTuples = $derived((items: string[]) =>
 	{
-		let itemIndexTuples: Array<[number, string]> = new Array();
+		let itemIndexTuples: Array<[number, string]> = [];
 		for (let i = 0; i < items.length; i++)
 		{
 			itemIndexTuples.push([i, items[i]]);
@@ -43,7 +43,7 @@
 
 	let filterItems = $derived((items: string[]) =>
 	{
-		let filteredItemIndexTuples: Array<[number, string]> = new Array();
+		let filteredItemIndexTuples: Array<[number, string]> = [];
 		filteredItemIndexTuples = getItemIndexTuples(items).filter(function(itemIndexTuple)
 		{
 			return itemIndexTuple[1].toLowerCase().includes(searchKeyword.toLowerCase());
@@ -99,7 +99,7 @@
 			{#if nullOptionEnabled}
 				<li>
 					<button
-						onclick={(event) =>
+						onclick={() =>
 						{
 							onItemClicked([-1, null]);
 						}}
@@ -109,7 +109,7 @@
 			{#each filterItems(items).slice(0, maxOptions) as itemIndexTuple}
 				<li>
 					<button
-						onclick={(event) =>
+						onclick={() =>
 						{
 							onItemClicked(itemIndexTuple);
 						}}

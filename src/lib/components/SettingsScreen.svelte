@@ -13,9 +13,9 @@
 	let currentPublicKey: string = $state(``);
 	let currentName: string = $state(``);
 
-	onMount(async () =>
+	onMount(() =>
 	{
-		refreshItems();
+		void refreshItems();
 	});
 
 	async function refreshItems()
@@ -47,7 +47,7 @@
 						if (event.target instanceof HTMLInputElement)
 						{
 							await renameAccount((await getAccounts())[getSettings().currentAccount.get()].publicKey, event.target.value);
-							refreshItems();
+							void refreshItems();
 						}
 					}}
 					value={currentName}
@@ -65,7 +65,7 @@
 						onSelect={async (selectedIndex: number, selectedItem: string | null) =>
 						{
 							getSettings().currentAccount.set(selectedIndex);
-							refreshItems();
+							void refreshItems();
 						}}
 					/>
 				</div>
@@ -80,7 +80,7 @@
 						{
 							await createAccount("New account");
 							getSettings().currentAccount.set((await getAccounts()).length - 1);
-							refreshItems();
+							void refreshItems();
 						}}
 					>Create</button>
 					<button
@@ -102,7 +102,7 @@
 								}
 							}
 
-							refreshItems();
+							void refreshItems();
 						}}
 					>Delete</button>
 				</div>

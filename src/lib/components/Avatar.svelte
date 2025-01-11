@@ -7,7 +7,7 @@
 		key: string;
 	};
 
-	const // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	const
 	{
 		key,
 	}: Props = $props();

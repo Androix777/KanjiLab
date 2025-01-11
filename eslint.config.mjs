@@ -62,7 +62,7 @@ export default [{
 
 	rules: {
 		"@typescript-eslint/restrict-template-expressions": "off",
-
+		"@typescript-eslint/no-unused-expressions": "off",
 		"@typescript-eslint/no-misused-promises": ["error", {
 			checksVoidReturn: false,
 		}],
