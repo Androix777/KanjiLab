@@ -1,4 +1,3 @@
-import { getSettings } from "./globalSettings.svelte";
 import {
 	type BaseMessage,
 	type GameSettingsData,

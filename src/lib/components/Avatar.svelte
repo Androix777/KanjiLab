@@ -7,8 +7,7 @@
 		key: string;
 	};
 
-	const
-	{
+	const {
 		key,
 	}: Props = $props();
 
@@ -16,8 +15,10 @@
 
 	$effect(() =>
 	{
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 		if (blockieContainer != null)
 		{
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			blockieContainer.replaceChildren(blockies({ seed: key, size: 9, scale: 100 }));
 		}
 	});

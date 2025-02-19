@@ -40,9 +40,9 @@
 		themeChange(false);
 	});
 
-	onMount(async () =>
+	onMount(() =>
 	{
-		initApp();
+		void initApp();
 	});
 </script>
 
@@ -58,7 +58,7 @@
 				disabled={false}
 			>
 				<SvgIcon
-					name="Quiz"
+					iconName="Quiz"
 					disabled={false}
 				/>
 			</button>
@@ -71,7 +71,7 @@
 				disabled={WebSocketClient.getInstance().gameStatus != `Off`}
 			>
 				<SvgIcon
-					name="Bars"
+					iconName="Bars"
 					disabled={WebSocketClient.getInstance().gameStatus != `Off`}
 				/>
 			</button>
@@ -84,7 +84,7 @@
 				disabled={WebSocketClient.getInstance().gameStatus != `Off`}
 			>
 				<SvgIcon
-					name="Gears"
+					iconName="Gears"
 					disabled={WebSocketClient.getInstance().gameStatus != `Off`}
 				/>
 			</button>

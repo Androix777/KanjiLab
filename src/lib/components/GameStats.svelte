@@ -9,7 +9,15 @@
 
 	let webSocketClient: WebSocketClient = $state(WebSocketClient.getInstance());
 	let tableContainer: HTMLDivElement | null = $state(null);
-	let table: Tabulator | null = $state(null);
+
+	type AnswerCell = {
+		answer: string;
+		isCorrect: boolean;
+	};
+	type TableRow = {
+		question: string;
+		[key: number]: AnswerCell;
+	};
 
 	async function createTableData(currentGameStats: GameStats, currentGameAnswerStats: AnswerStats[])
 	{
@@ -32,14 +40,13 @@
 				width: 150,
 				formatter: (cell: CellComponent) =>
 				{
-					const value = cell.getValue();
-					if (!value) return "";
-					return `<div class="${value.isCorrect ? "bg-green-100" : "bg-red-100"}">${value.answer}</div>`;
+					const value: AnswerCell = cell.getValue() as AnswerCell;
+					return `<div class="${value.isCorrect ? `bg-green-100` : `bg-red-100`}">${value.answer}</div>`;
 				},
 			});
 		});
 
-		const rows: any[] = [];
+		const rows: TableRow[] = [];
 		players.forEach(player =>
 		{
 			let rowId = 0;
@@ -49,7 +56,9 @@
 				{
 					if (rows.length <= rowId)
 					{
-						rows[rowId] = { question: answerStats.word };
+						rows[rowId] = {
+							question: answerStats.word,
+						};
 					}
 					rows[rowId][player.id] = {
 						answer: answerStats.wordReading == "" ? "　" : answerStats.wordReading,
@@ -63,11 +72,11 @@
 		initializeTable(rows, columns);
 	}
 
-	function initializeTable(tableData: any[], columns: any[])
+	function initializeTable(tableData: TableRow[], columns: ColumnDefinition[])
 	{
 		if (tableContainer)
 		{
-			table = new Tabulator(tableContainer, {
+			new Tabulator(tableContainer, {
 				data: tableData,
 				layout: "fitColumns",
 				columns,

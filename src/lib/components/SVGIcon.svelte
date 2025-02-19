@@ -1,12 +1,11 @@
 <script lang="ts">
 	type Props = {
-		name: string;
+		iconName: string;
 		disabled: boolean;
 	};
 
-	const
-	{
-		name,
+	const {
+		iconName,
 		disabled,
 	}: Props = $props();
 
@@ -18,7 +17,7 @@
 </script>
 
 <div class="flex h-full w-full items-center justify-center">
-	{#await getIcon(name)}
+	{#await getIcon(iconName as string)}
 		<span class="loading loading-ring loading-xs"></span>
 	{:then { icon }}
 		<div class="h-full w-full {disabled ? `bg-base-content` : `bg-primary`}" style="mask-image: url({icon}); mask-size: 100% 100%"></div>

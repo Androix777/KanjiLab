@@ -63,6 +63,8 @@ export default [{
 	rules: {
 		"@typescript-eslint/restrict-template-expressions": "off",
 		"@typescript-eslint/no-unused-expressions": "off",
+		"svelte/no-at-html-tags": "off",
+		"no-irregular-whitespace": "off",
 		"@typescript-eslint/no-misused-promises": ["error", {
 			checksVoidReturn: false,
 		}],

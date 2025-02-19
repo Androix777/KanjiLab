@@ -116,7 +116,7 @@
 		items={usernames}
 		selectedIndex={selectedUserIndex}
 		maxOptions={10}
-		onSelect={async (selectedIndex: number, selectedItem: string | null) =>
+		onSelect={async (selectedIndex: number) =>
 		{
 			selectedUserIndex = selectedIndex;
 			selectedUser = users[selectedUserIndex];

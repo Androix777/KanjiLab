@@ -58,7 +58,7 @@ class WebSocketClient
 	{
 		this.gameStatus = `Connecting`;
 
-		let accounts = await getAccounts();
+		const accounts = await getAccounts();
 		this.accountName = accounts[getSettings().currentAccount.get()].name;
 		this.accountKey = accounts[getSettings().currentAccount.get()].publicKey;
 
@@ -106,7 +106,7 @@ class WebSocketClient
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_gameStopped`, (event) =>
 		{
-			this.handleNotifGameStopped(event);
+			void this.handleNotifGameStopped(event);
 		});
 		this.serverConnector.addEventListener(`OUT_NOTIF_gameSettingsChanged`, (event) =>
 		{
@@ -431,7 +431,7 @@ class WebSocketClient
 
 		this.clientList.forEach(async (client) =>
 		{
-			let answer = this.gameHistory.at(-1)?.answers.get(client.id);
+			const answer = this.gameHistory.at(-1)?.answers.get(client.id);
 			if (answer && questionInfo)
 			{
 				await addAnswerStats(this.lastGameId, client.key, client.name, questionInfo.wordInfo.word, answer.answer, answer.answerTime, answer.answerStatus == `Correct`, fontId);
@@ -478,7 +478,7 @@ class WebSocketClient
 
 		const answerPromises = this.clientList.map(async (client) =>
 		{
-			let answer = this.gameHistory.at(-1)?.answers.get(client.id);
+			const answer = this.gameHistory.at(-1)?.answers.get(client.id);
 			if (answer && questionInfo)
 			{
 				await addAnswerStats(this.lastGameId, client.key, client.name, questionInfo.wordInfo.word, answer.answer, answer.answerTime, answer.answerStatus == `Correct`, fontId);

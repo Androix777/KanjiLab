@@ -62,7 +62,7 @@
 					<AutoComplete
 						items={items}
 						selectedIndex={getSettings().currentAccount.get()}
-						onSelect={async (selectedIndex: number, selectedItem: string | null) =>
+						onSelect={(selectedIndex: number) =>
 						{
 							getSettings().currentAccount.set(selectedIndex);
 							void refreshItems();
