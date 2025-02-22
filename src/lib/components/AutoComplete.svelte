@@ -6,16 +6,17 @@
 		disabled?: boolean;
 		nullOptionEnabled?: boolean;
 		maxOptions?: number;
+		fitOptions?: number;
 	};
 
-	const
-	{
+	const {
 		items,
 		selectedIndex,
 		onSelect,
 		disabled = false,
 		nullOptionEnabled = false,
-		maxOptions = 4,
+		maxOptions = 100,
+		fitOptions = 4,
 	}: Props = $props();
 
 	let searchKeyword = $state(``);
@@ -74,7 +75,7 @@
 	});
 </script>
 
-<div class="dropdown w-full h-full">
+<div class="dropdown w-full h-full z-10">
 	<button
 		tabindex="0"
 		class="select select-bordered w-full items-center"
@@ -89,16 +90,17 @@
 
 	<div class="dropdown-content w-full">
 		<input
-			class="input input-bordered w-full"
+			class="input input-bordered w-full h-10"
 			placeholder="Search..."
 			bind:value={searchKeyword}
 			bind:this={inputElement}
 		/>
 
-		<ul tabindex="-1" class="menu p-2 shadow bg-base-100 rounded-box max-h-80 flex-nowrap overflow-y-auto w-full">
+		<ul tabindex="-1" class="menu p-2 shadow bg-base-100 rounded-box flex-nowrap overflow-y-auto w-full" style="max-height: {fitOptions * 2.5 + 0.75}rem;">
 			{#if nullOptionEnabled}
 				<li>
 					<button
+						class="h-10"
 						onclick={() =>
 						{
 							onItemClicked([-1, null]);
@@ -109,6 +111,7 @@
 			{#each filterItems(items).slice(0, maxOptions) as itemIndexTuple}
 				<li>
 					<button
+						class="h-10"
 						onclick={() =>
 						{
 							onItemClicked(itemIndexTuple);
