@@ -94,6 +94,14 @@
 			placeholder="Search..."
 			bind:value={searchKeyword}
 			bind:this={inputElement}
+			onkeydown={(event: KeyboardEvent) =>
+			{
+				let currentItems = filterItems(items);
+				if (event.key == `Enter` && currentItems.length > 0)
+				{
+					onItemClicked(currentItems[0]);
+				}
+			}}
 		/>
 
 		<ul tabindex="-1" class="menu p-2 shadow bg-base-100 rounded-box flex-nowrap overflow-y-auto w-full" style="max-height: {fitOptions * 2.5 + 0.75}rem;">
