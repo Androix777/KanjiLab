@@ -1,13 +1,21 @@
 <script lang="ts">
 	import { getUserdataById } from "$lib/databaseTools";
 	import type { AnswerStats, GameStats } from "$lib/types";
-	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { onMount } from "svelte";
 	import { TabulatorFull as Tabulator } from "tabulator-tables";
 	import type { CellComponent, ColumnDefinition } from "tabulator-tables";
 	import "tabulator-tables/dist/css/tabulator.min.css";
 
-	let webSocketClient: WebSocketClient = $state(WebSocketClient.getInstance());
+	type Props = {
+		gameStats: GameStats;
+		gameAnswerStats: AnswerStats[];
+	};
+
+	const {
+		gameStats,
+		gameAnswerStats,
+	}: Props = $props();
+
 	let tableContainer: HTMLDivElement | null = $state(null);
 
 	type AnswerCell = {
@@ -19,9 +27,9 @@
 		[key: number]: AnswerCell;
 	};
 
-	async function createTableData(currentGameStats: GameStats, currentGameAnswerStats: AnswerStats[])
+	async function createTableData(gameStats: GameStats, gameAnswerStats: AnswerStats[])
 	{
-		const playerIds = Array.from(new Set(currentGameAnswerStats.map(answer => answer.userId)));
+		const playerIds = Array.from(new Set(gameAnswerStats.map(answer => answer.userId)));
 
 		const players = await Promise.all(playerIds.map(async (playerId) => ({
 			id: playerId,
@@ -50,7 +58,7 @@
 		players.forEach(player =>
 		{
 			let rowId = 0;
-			currentGameAnswerStats.forEach(answerStats =>
+			gameAnswerStats.forEach(answerStats =>
 			{
 				if (answerStats.userId == player.id)
 				{
@@ -86,7 +94,7 @@
 
 	onMount(async () =>
 	{
-		await createTableData(await webSocketClient.getCurrentGameStats(), await webSocketClient.getCurrentGameAnswerStats());
+		await createTableData(gameStats, gameAnswerStats);
 	});
 </script>
 

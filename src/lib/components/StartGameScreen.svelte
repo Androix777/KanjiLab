@@ -8,7 +8,7 @@
 	import { fade } from "svelte/transition";
 	import GameScreen from "./GameScreen.svelte";
 	import GameSettings from "./GameSettings.svelte";
-	import GameStats from "./GameStats.svelte";
+	import GameStatsTable from "./GameStatsTable.svelte";
 	import MessageCard from "./MessageCard.svelte";
 	import PlayerListCard from "./PlayerListCard.svelte";
 
@@ -199,13 +199,20 @@
 					isAdmin={webSocketClient.isAdmin || false}
 				/>
 			{:else if activeTab == 1}
-				<GameStats />
-				<div class="h-full w-full flex items-end justify-center my-2">
-					<button
-						class="btn btn-primary w-32"
-						onclick={() => activeTab = 0}
-					>Got it</button>
-				</div>
+				{#await Promise.all([webSocketClient.getCurrentGameStats(), webSocketClient.getCurrentGameAnswerStats()])}
+					Loading...
+				{:then gameStats}
+					<GameStatsTable
+						gameStats={gameStats[0]}
+						gameAnswerStats={gameStats[1]}
+					/>
+					<div class="h-full w-full flex items-end justify-center my-2">
+						<button
+							class="btn btn-primary w-32"
+							onclick={() => activeTab = 0}
+						>Got it</button>
+					</div>
+				{/await}
 			{/if}
 		</div>
 		<div class="flex flex-col ml-4" style="width: 30vw">
