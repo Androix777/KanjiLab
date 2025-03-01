@@ -3,8 +3,8 @@ pub mod server_logic;
 pub mod structures;
 pub mod tools;
 
-pub async fn call_launch_server() {
-    server::call_launch_server().await;
+pub async fn call_launch_server(host_port: String) {
+    server::call_launch_server(host_port).await;
 }
 
 pub async fn call_stop_server() {

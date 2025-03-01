@@ -59,7 +59,7 @@ impl PendingResponses {
 
 // #region ServerControl
 
-pub async fn call_launch_server() {
+pub async fn call_launch_server(host_port: String) {
     let rt = Runtime::new().unwrap();
     let (stop_tx, stop_rx) = oneshot::channel();
     let (start_tx, start_rx) = oneshot::channel();
@@ -69,7 +69,7 @@ pub async fn call_launch_server() {
 
     std::thread::spawn(move || {
         rt.block_on(async {
-            launch_server(stop_rx, start_tx).await;
+            launch_server(stop_rx, start_tx, host_port).await;
         });
     });
 
@@ -93,12 +93,12 @@ async fn disconnect_all_clients() {
     }
 }
 
-pub async fn launch_server(stop_signal: oneshot::Receiver<()>, start_signal: oneshot::Sender<()>) {
+pub async fn launch_server(stop_signal: oneshot::Receiver<()>, start_signal: oneshot::Sender<()>, host_port: String) {
     initialize();
-    let listener = TcpListener::bind("0.0.0.0:8080")
+    let listener = TcpListener::bind(format!("0.0.0.0:{}", host_port))
         .await
         .expect("Failed to bind");
-    println!("WebSocket server listening on ws://0.0.0.0:8080");
+    println!("{}", format!("WebSocket server listening on ws://0.0.0.0:{}", host_port));
 
     start_signal.send(()).unwrap();
     let mut game_state_receiver = subscribe_to_game_state();

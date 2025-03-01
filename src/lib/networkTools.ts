@@ -37,9 +37,9 @@ export async function renameAccount(publicKey: string, newName: string): Promise
 	await invoke(RENAME_ACCOUNT, { publicKey, newName });
 }
 
-export async function launchServer(): Promise<string>
+export async function launchServer(hostPort: string): Promise<string>
 {
-	return await invoke(LAUNCH_SERVER);
+	return await invoke(LAUNCH_SERVER, { hostPort: hostPort });
 }
 
 export async function stopServer(): Promise<void>

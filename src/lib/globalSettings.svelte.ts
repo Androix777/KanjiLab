@@ -20,6 +20,7 @@ function createStateVar<T>(initial: T): StateVar<T>
 const settings = {
 	ipAddress: createStateVar(`127.0.0.1`),
 	joinPort: createStateVar(`8080`),
+	hostPort: createStateVar(`8080`),
 	adminPassword: createStateVar(``),
 	minFrequency: createStateVar(0),
 	maxFrequency: createStateVar(10000),

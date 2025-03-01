@@ -12,8 +12,8 @@ pub fn get_executable_file_path() -> Result<PathBuf, String> {
 }
 
 #[tauri::command]
-pub async fn launch_server() -> String {
-    kanjilab_server::call_launch_server().await;
+pub async fn launch_server(host_port: String) -> String {
+    kanjilab_server::call_launch_server(host_port).await;
     kanjilab_server::get_admin_password()
 }
 
