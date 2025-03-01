@@ -116,10 +116,10 @@
 					>{`(no option)`}</button>
 				</li>
 			{/if}
-			{#each filterItems(items).slice(0, maxOptions) as itemIndexTuple}
+			{#each filterItems(items).slice(0, maxOptions) as itemIndexTuple, index}
 				<li>
 					<button
-						class="h-10"
+						class="h-10 {index == 0 ? "bg-primary bg-opacity-10" : ""}"
 						onclick={() =>
 						{
 							onItemClicked(itemIndexTuple);
