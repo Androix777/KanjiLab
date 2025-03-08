@@ -42,11 +42,11 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
         .run(|_app_handle, event| match event {
-            tauri::RunEvent::Ready { .. } => {
+            tauri::RunEvent::Ready => {
                 on_ready();
                 println!("Ready");
             }
-            tauri::RunEvent::Exit {} => {
+            tauri::RunEvent::Exit => {
                 on_exit();
                 println!("Exit");
             }
