@@ -4,19 +4,28 @@
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { onMount } from "svelte";
 	import AutoComplete from "./AutoComplete.svelte";
-    import Heatmap from "./Heatmap.svelte";
+	import Heatmap from "./Heatmap.svelte";
 	import type { HeatmapData } from "./Heatmap.svelte";
+	import MedalStats from "./MedalStats.svelte";
 
 	const frequencyValuesX = [0, 1000, 2500, 5000, 7500, 10000, 15000, 20000, 30000, 50000, 100000];
-	let heatmap : ReturnType<typeof Heatmap>;
-	let data: HeatmapData = $state({axisValues: [], intersectionMatrix: []});
+	const thresholds = [
+		{ value: 0, color: "#gray", points: 0 },
+		{ value: 5, color: "#cd7f32", points: 1 },
+		{ value: 10, color: "#c0c0c0", points: 2 },
+		{ value: 25, color: "#ffd700", points: 3 },
+		{ value: 100, color: "#b9f2ff", points: 5 },
+	];
+
+	let heatmap: ReturnType<typeof Heatmap>;
+	let medalStats: ReturnType<typeof MedalStats>;
+	let data: HeatmapData = $state({ axisValues: [], intersectionMatrix: [] });
 	let streaks: (number | null)[][] = $state([]);
 
 	let users: User[];
 	let selectedUser: User;
 	let selectedUserIndex: number = $state(0);
 	let usernames: string[] = $state([]);
-
 
 	async function getStreaks()
 	{
@@ -46,6 +55,8 @@
 
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		heatmap.redraw();
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+		medalStats.redraw();
 	}
 
 	async function redraw()
@@ -55,7 +66,7 @@
 
 	onMount(async () =>
 	{
-		console.log("onMount")
+		console.log("onMount");
 		users = await getAllUsers();
 		selectedUserIndex = users.findIndex(x => x.key == WebSocketClient.getInstance().accountKey) || 0;
 		selectedUser = users[selectedUserIndex];
@@ -81,17 +92,18 @@
 			await redraw();
 		}}
 	/>
-	<Heatmap
-		bind:this={heatmap}
+	<MedalStats
+		bind:this={medalStats}
 		data={data}
-		width={800}
-		height={800}
-		thresholds={[
-			{ value: 0, color: "#gray" },
-			{ value: 5, color: "#cd7f32" },
-			{ value: 10, color: "#c0c0c0" },
-			{ value: 50, color: "#ffd700" },
-			{ value: 100, color: "#b9f2ff" },
-		]}
+		thresholds={thresholds}
 	/>
+	<div class="w-full max-w-[1000px]">
+		<Heatmap
+			bind:this={heatmap}
+			data={data}
+			width={800}
+			height={800}
+			thresholds={thresholds}
+		/>
+	</div>
 </div>
