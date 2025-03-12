@@ -49,7 +49,7 @@
 				formatter: (cell: CellComponent) =>
 				{
 					const value: AnswerCell = cell.getValue() as AnswerCell;
-					return `<div class="${value.isCorrect ? `bg-green-100` : `bg-red-100`}">${value.answer}</div>`;
+					return `<div class="bg-opacity-40 ${value.isCorrect ? `bg-success` : `bg-error`}">${value.answer}</div>`;
 				},
 			});
 		});
@@ -98,4 +98,28 @@
 	});
 </script>
 
-<div bind:this={tableContainer} class="w-full h-96"></div>
+<style>
+	* :global(.tabulator) {
+	  background-color: var(--fallback-b2, oklch(var(--b2) / var(--tw-bg-opacity)));
+	}
+	* :global(.tabulator-header) {
+	  background-color: var(--fallback-b1, oklch(var(--b1) / var(--tw-bg-opacity)));
+	}
+	* :global(.tabulator-row) {
+	  background-color: var(--fallback-b1, oklch(var(--b1) / var(--tw-bg-opacity)));
+	  color: var(--fallback-bc, oklch(var(--bc) / var(--tw-bg-opacity)));
+	}
+	* :global(.tabulator-cell) {
+	  border: 1px solid var(--fallback-b3, oklch(var(--b3) / var(--tw-bg-opacity)));
+	}
+	* :global(.tabulator-col) {
+	  background-color: var(--fallback-b1, oklch(var(--b1) / var(--tw-bg-opacity))) !important;
+	  color: var(--fallback-bc, oklch(var(--bc) / var(--tw-bg-opacity)));
+	}
+	* :global(.tabulator-row.tabulator-selectable:hover) {
+	  background-color: var(--fallback-b3, oklch(var(--b3) / var(--tw-bg-opacity)));
+	}
+</style>
+<div>
+	<div bind:this={tableContainer} class="w-full h-96 bg-base-content"></div>
+</div>
