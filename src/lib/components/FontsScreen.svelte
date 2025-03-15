@@ -2,6 +2,7 @@
 	import { getAllFontsInfo, getSVGText } from "$lib/fontTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
 	import type { FontInfo } from "$lib/types";
+	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { onMount } from "svelte";
 	import { fade } from "svelte/transition";
 	import FontCard from "./FontCard.svelte";
@@ -14,6 +15,7 @@
 	let fontRecords: Array<FontRecord> = $state([]);
 	let filteredFontList: Array<FontInfo> = $state([]);
 	let controlsDisabled: boolean = $state(false);
+	let webSocketClient: WebSocketClient = WebSocketClient.getInstance();
 
 	let pageSize: number = 4;
 	let currentPage: number = $state(1);
@@ -29,15 +31,15 @@
 
 	async function updateFontsPage()
 	{
-		if (getSettings().fontsInfo.get().length == 0)
+		if (webSocketClient.fontsInfo.length == 0)
 		{
-			getSettings().fontsInfo.set(await getAllFontsInfo());
+			webSocketClient.fontsInfo = await getAllFontsInfo();
 		}
-		maxPages = Math.ceil(((showOnlySelected || searchKeyword != ``) ? filteredFontList : getSettings().fontsInfo.get()).length / pageSize);
+		maxPages = Math.ceil(((showOnlySelected || searchKeyword != ``) ? filteredFontList : webSocketClient.fontsInfo).length / pageSize);
 		if (currentPage > maxPages) currentPage = maxPages;
 		if (currentPage < 1) currentPage = 1;
 		fontRecords = [];
-		let fontPage = ((showOnlySelected || searchKeyword != ``) ? filteredFontList : getSettings().fontsInfo.get()).slice(pageSize * (currentPage - 1), pageSize * currentPage);
+		let fontPage = ((showOnlySelected || searchKeyword != ``) ? filteredFontList : webSocketClient.fontsInfo).slice(pageSize * (currentPage - 1), pageSize * currentPage);
 		for (let i = 0; i < fontPage.length; i++)
 		{
 			fontRecords.push({ fontInfo: fontPage[i], fontSVG: `` });
@@ -62,12 +64,12 @@
 
 	function generateSelectedFonts()
 	{
-		return getSettings().fontsInfo.get().filter(fontInfo => getSettings().selectedFonts.get().includes(fontInfo.fontFile));
+		return webSocketClient.fontsInfo.filter(fontInfo => getSettings().selectedFonts.get().includes(fontInfo.fontFile));
 	}
 
 	function generateFilteredFonts(keyword: string)
 	{
-		return getSettings().fontsInfo.get().filter((fontInfo) =>
+		return webSocketClient.fontsInfo.filter((fontInfo) =>
 		{
 			return (fontInfo.fontFile.toLocaleLowerCase().includes(keyword.toLocaleLowerCase())) || fontInfo.fullName.toLocaleLowerCase().includes(keyword.toLocaleLowerCase());
 		});
@@ -75,7 +77,7 @@
 
 	function filterFonts(selected: boolean, keyword: string)
 	{
-		filteredFontList = getSettings().fontsInfo.get().filter(fontInfo => fontInfo.fontFile.toLocaleLowerCase().includes(keyword.toLocaleLowerCase()));
+		filteredFontList = webSocketClient.fontsInfo.filter(fontInfo => fontInfo.fontFile.toLocaleLowerCase().includes(keyword.toLocaleLowerCase()));
 		if (selected && keyword != ``)
 		{
 			filteredFontList = generateSelectedFonts().filter(font => generateFilteredFonts(keyword).includes(font));
@@ -90,7 +92,7 @@
 		}
 		else
 		{
-			filteredFontList = getSettings().fontsInfo.get();
+			filteredFontList = webSocketClient.fontsInfo;
 		}
 	}
 </script>
@@ -106,17 +108,19 @@
 						onclick={() =>
 						{
 							let selectedFonts: Array<string> = [];
-							getSettings().fontsInfo.get().forEach(fontInfo => selectedFonts.push(fontInfo.fontFile));
+							webSocketClient.fontsInfo.forEach(fontInfo => selectedFonts.push(fontInfo.fontFile));
 							getSettings().selectedFonts.set(selectedFonts);
 							void updateFontsPage();
-						}}>Select all</button>
+						}}
+					>Select all</button>
 					<button
 						class="btn btn-primary join-item"
 						onclick={() =>
 						{
 							getSettings().selectedFonts.set([]);
 							void updateFontsPage();
-						}}>Unselect all</button>
+						}}
+					>Unselect all</button>
 					<input
 						class="input input-bordered"
 						type="text"
@@ -180,7 +184,8 @@
 						if (currentPage <= 1) return;
 						currentPage--;
 						void updateFontsPage();
-					}}>🠈</button>
+					}}
+				>🠈</button>
 				<input
 					type="text"
 					class="join-item input w-10 p-0 text-center"
@@ -197,7 +202,8 @@
 						if (currentPage >= maxPages) return;
 						currentPage++;
 						void updateFontsPage();
-					}}>🠊</button>
+					}}
+				>🠊</button>
 			</div>
 			<div class="">
 				{#each fontRecords as fontRecord (fontRecord.fontInfo.fontFile)}

@@ -1,7 +1,7 @@
 import { GET_ALL_FONTS_INFO, GET_FONT_LIST, GET_SVG_TEXT } from "$lib/tauriFunctions";
 import { invoke } from "@tauri-apps/api/core";
-import { getSettings } from "./globalSettings.svelte";
 import type { FontInfo } from "./types";
+import WebSocketClient from "./webSocketClient.svelte";
 
 let fontNames: string[] | null = null;
 
@@ -44,7 +44,7 @@ export async function getDefaultFont(): Promise<string>
 
 export function getFontInfo(fontName: string): FontInfo | null
 {
-	const fontInfo = getSettings().fontsInfo.get().filter((fontInfo) =>
+	const fontInfo = WebSocketClient.getInstance().fontsInfo.filter((fontInfo) =>
 	{
 		return fontInfo.fontFile == fontName;
 	}).at(0);

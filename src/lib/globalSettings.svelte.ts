@@ -1,5 +1,3 @@
-import type { FontInfo } from "./types";
-
 type StateVar<T> = {
 	get: () => T;
 	set: (value: T) => void;
@@ -21,7 +19,6 @@ const settings = {
 	ipAddress: createStateVar(`127.0.0.1`),
 	joinPort: createStateVar(`8080`),
 	hostPort: createStateVar(`8080`),
-	adminPassword: createStateVar(``),
 	minFrequency: createStateVar(0),
 	maxFrequency: createStateVar(10000),
 	usingMaxFrequency: createStateVar(true),
@@ -30,7 +27,6 @@ const settings = {
 	wordPart: createStateVar(``),
 	wordPartReading: createStateVar(``),
 	selectedFonts: createStateVar(new Array<string>()),
-	fontsInfo: createStateVar(new Array<FontInfo>()),
 	currentAccount: createStateVar(0),
 	avatars: createStateVar(0),
 };

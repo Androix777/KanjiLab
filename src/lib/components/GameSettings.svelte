@@ -39,7 +39,7 @@
 	{
 		let fontsCount = webSocketClient.isConnectedToSelf ? getSettings().selectedFonts.get().length : webSocketClient.onlineFontsCount;
 		let firstFontName = webSocketClient.isConnectedToSelf ?
-			getSettings().fontsInfo.get().filter((fontInfo) =>
+			webSocketClient.fontsInfo.filter((fontInfo) =>
 			{
 				return fontInfo.fontFile == getSettings().selectedFonts.get().at(0);
 			}).at(0)?.fullName :

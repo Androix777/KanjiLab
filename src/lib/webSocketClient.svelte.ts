@@ -39,6 +39,8 @@ class WebSocketClient
 	public lastGameId: number = $state(0);
 	public accountName: string = $state(``);
 	public accountKey: string = $state(``);
+	public adminPassword: string = ``;
+	public fontsInfo: Array<FontInfo> = new Array<FontInfo>();
 
 	public onlineFirstFontName: string = $state(``);
 	public onlineFontsCount: number = $state(0);
@@ -172,7 +174,7 @@ class WebSocketClient
 
 	public async makeAdmin()
 	{
-		await this.serverConnector.sendMakeAdmin(getSettings().adminPassword.get(), this.id);
+		await this.serverConnector.sendMakeAdmin(this.adminPassword, this.id);
 		this.isAdmin = true;
 	}
 
