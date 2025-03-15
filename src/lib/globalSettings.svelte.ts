@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { writeTextFile, readTextFile, exists } from "@tauri-apps/plugin-fs";
+import { exists, readFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { GET_EXECUTABLE_FILE_PATH } from "./tauriFunctions";
 
 type StateVar<T> = {
@@ -12,7 +12,7 @@ let savingInProgress = false;
 
 async function getSettingsFilePath(): Promise<string>
 {
-	let path: string =  await invoke(GET_EXECUTABLE_FILE_PATH);
+	let path: string = await invoke(GET_EXECUTABLE_FILE_PATH);
 	path = path + "\\settings.json";
 	return path;
 }
@@ -52,7 +52,7 @@ function createStateVar<T>(initial: T): StateVar<T>
 		set: (newValue: T) =>
 		{
 			value = newValue;
-			
+
 			if (initialized && !savingInProgress)
 			{
 				void saveSettings();
@@ -102,7 +102,7 @@ async function loadSettings()
 		let settingsJson;
 		try
 		{
-			settingsJson = await readTextFile(filePath);
+			settingsJson = (new TextDecoder()).decode(await readFile(filePath));
 			const loadedSettings = JSON.parse(settingsJson) as Record<string, unknown>;
 
 			const oldSavingInProgress = savingInProgress;
@@ -112,7 +112,7 @@ async function loadSettings()
 			{
 				if (key in settings)
 				{
-					settings[key].set(value);
+					settings[key as keyof typeof settings].set(value as never);
 				}
 			}
 
