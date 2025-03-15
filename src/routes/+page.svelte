@@ -93,7 +93,7 @@
 	{#key currentScreenType}
 		<div class="absolute pl-16 w-full h-full overflow-hidden">
 			<div
-				class="flex-1 bg-base-300 z-0"
+				class="h-full bg-base-300 z-0"
 				in:fly={{ duration: 300, x: `-100vw`, y: 0, opacity: 0.5, easing: quintOut }}
 				out:fly={{ duration: 300, x: `100vw`, y: 0, opacity: 0.5, easing: quintOut }}
 			>

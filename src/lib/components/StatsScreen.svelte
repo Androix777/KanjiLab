@@ -80,18 +80,20 @@
 	});
 </script>
 
-<div>
-	<AutoComplete
-		items={usernames}
-		selectedIndex={selectedUserIndex}
-		maxOptions={10}
-		onSelect={async (selectedIndex: number) =>
-		{
-			selectedUserIndex = selectedIndex;
-			selectedUser = users[selectedUserIndex];
-			await redraw();
-		}}
-	/>
+<div class="h-full overflow-y-scroll">
+	<div>
+		<AutoComplete
+			items={usernames}
+			selectedIndex={selectedUserIndex}
+			maxOptions={10}
+			onSelect={async (selectedIndex: number) =>
+			{
+				selectedUserIndex = selectedIndex;
+				selectedUser = users[selectedUserIndex];
+				await redraw();
+			}}
+		/>
+	</div>
 	<MedalStats
 		bind:this={medalStats}
 		data={data}

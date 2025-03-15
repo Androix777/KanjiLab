@@ -49,7 +49,9 @@
 				formatter: (cell: CellComponent) =>
 				{
 					const value: AnswerCell = cell.getValue() as AnswerCell;
-					return `<div class="bg-opacity-40 ${value.isCorrect ? `bg-success` : `bg-error`}">${value.answer}</div>`;
+					return `<div class="absolute right-0 left-0 top-0 bottom-0 z-0 ${
+						value.isCorrect ? `bg-success` : `bg-error`
+					} bg-opacity-40"></div><div class="z-10 fixed">${value.answer}</div>`;
 				},
 			});
 		});
@@ -111,6 +113,7 @@
 	}
 	* :global(.tabulator-cell) {
 	  border: 1px solid var(--fallback-b3, oklch(var(--b3) / var(--tw-bg-opacity)));
+	  overflow: hidden;
 	}
 	* :global(.tabulator-col) {
 	  background-color: var(--fallback-b1, oklch(var(--b1) / var(--tw-bg-opacity))) !important;
