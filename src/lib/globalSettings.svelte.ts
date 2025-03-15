@@ -1,7 +1,48 @@
+import { invoke } from "@tauri-apps/api/core";
+import { writeTextFile, readTextFile, exists } from "@tauri-apps/plugin-fs";
+import { GET_EXECUTABLE_FILE_PATH } from "./tauriFunctions";
+
 type StateVar<T> = {
 	get: () => T;
 	set: (value: T) => void;
 };
+
+let initialized = false;
+let savingInProgress = false;
+
+async function getSettingsFilePath(): Promise<string>
+{
+	let path: string =  await invoke(GET_EXECUTABLE_FILE_PATH);
+	path = path + "\\settings.json";
+	return path;
+}
+
+async function saveSettings()
+{
+	if (savingInProgress) return;
+
+	savingInProgress = true;
+	try
+	{
+		const filePath = await getSettingsFilePath();
+
+		const settingsObj: Record<string, unknown> = {};
+		for (const [key, stateVar] of Object.entries(settings))
+		{
+			settingsObj[key] = stateVar.get();
+		}
+
+		await writeTextFile(filePath, JSON.stringify(settingsObj, null, 2));
+	}
+	catch (error)
+	{
+		console.error("Failed to save settings:", error);
+	}
+	finally
+	{
+		savingInProgress = false;
+	}
+}
 
 function createStateVar<T>(initial: T): StateVar<T>
 {
@@ -11,6 +52,11 @@ function createStateVar<T>(initial: T): StateVar<T>
 		set: (newValue: T) =>
 		{
 			value = newValue;
+			
+			if (initialized && !savingInProgress)
+			{
+				void saveSettings();
+			}
 		},
 	};
 }
@@ -31,7 +77,67 @@ const settings = {
 	avatars: createStateVar(0),
 };
 
+async function loadSettings()
+{
+	try
+	{
+		const filePath = await getSettingsFilePath();
+
+		let settingsExists = false;
+		try
+		{
+			settingsExists = await exists(filePath);
+		}
+		catch (error)
+		{
+			console.error("Error checking if settings file exists:", error);
+		}
+
+		if (!settingsExists)
+		{
+			await saveSettings();
+			return;
+		}
+
+		let settingsJson;
+		try
+		{
+			settingsJson = await readTextFile(filePath);
+			const loadedSettings = JSON.parse(settingsJson) as Record<string, unknown>;
+
+			const oldSavingInProgress = savingInProgress;
+			savingInProgress = true;
+
+			for (const [key, value] of Object.entries(loadedSettings))
+			{
+				if (key in settings)
+				{
+					settings[key].set(value);
+				}
+			}
+
+			savingInProgress = oldSavingInProgress;
+		}
+		catch (error)
+		{
+			console.error("Error processing settings file:", error);
+			await saveSettings();
+		}
+	}
+	catch (error)
+	{
+		console.error("Failed to load settings:", error);
+		await saveSettings();
+	}
+}
+
 export function getSettings()
 {
+	if (!initialized)
+	{
+		initialized = true;
+
+		void loadSettings();
+	}
 	return settings;
 }

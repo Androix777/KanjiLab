@@ -16,10 +16,15 @@
     "core:menu:default",
     "core:tray:default",
     "fs:write-all",
-	"fs:read-all",
-	{
-		"identifier": "fs:scope",
-		"allow": [{ "path": "**" }]
-	}
+    "fs:read-all",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
+    },
+    "fs:default"
   ]
 }
