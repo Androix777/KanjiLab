@@ -123,6 +123,7 @@
 	  background-color: var(--fallback-b3, oklch(var(--b3) / var(--tw-bg-opacity)));
 	}
 </style>
+
 <div>
 	<div bind:this={tableContainer} class="w-full h-96 bg-base-content"></div>
 </div>
