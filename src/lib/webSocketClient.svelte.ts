@@ -187,12 +187,6 @@ class WebSocketClient
 	{
 		if (this.timerValue <= 0) return;
 
-		this.gameHistory[this.gameHistory.length - 1].answers.set(this.id, {
-			answer: answer != `` ? answer : `　`,
-			answerStatus: `Unknown`,
-			answerTime: null,
-		});
-
 		await this.serverConnector.sendAnswer(answer);
 	}
 
@@ -412,15 +406,24 @@ class WebSocketClient
 	private async handleNotifRoundEnded(event: Event)
 	{
 		const customEvent: CustomEvent<OutNotifRoundEndedPayload> = <CustomEvent<OutNotifRoundEndedPayload>> event;
-		this.gameHistory[this.gameHistory.length - 1].question = customEvent.detail.question;
+		const lastRoundHistory: RoundHistory | undefined = this.gameHistory.at(-1);
+
+		if (lastRoundHistory == undefined)
+		{
+			return;
+		}
+
+		lastRoundHistory.question = customEvent.detail.question;
+
 		customEvent.detail.answers.forEach((answer) =>
 		{
-			this.gameHistory[this.gameHistory.length - 1].answers.set(answer.id, {
+			lastRoundHistory.answers.set(answer.id, {
 				answer: answer.answer,
 				answerStatus: answer.isCorrect ? `Correct` : `Incorrect`,
 				answerTime: answer.answerTime,
 			});
 		});
+
 		this.clientList.sort((e1, e2) =>
 		{
 			const e1Score = this.gameHistory.reduce((acc, round) => acc + (round.answers.get(e1.id)?.answerStatus == `Correct` ? 1 : 0), 0);
@@ -428,15 +431,23 @@ class WebSocketClient
 			return (e1Score < e2Score) ? 1 : (e1Score > e2Score) ? -1 : 0;
 		});
 
-		const questionInfo = this.gameHistory.at(-1)?.question;
 		const fontId = await getFontId(customEvent.detail.question.fontName);
 
 		this.clientList.forEach(async (client) =>
 		{
-			const answer = this.gameHistory.at(-1)?.answers.get(client.id);
-			if (answer && questionInfo)
+			const answer = lastRoundHistory.answers.get(client.id);
+			if (answer)
 			{
-				await addAnswerStats(this.lastGameId, client.key, client.name, questionInfo.wordInfo.word, answer.answer, answer.answerTime, answer.answerStatus == `Correct`, fontId);
+				await addAnswerStats(
+					this.lastGameId,
+					client.key,
+					client.name,
+					lastRoundHistory.question.wordInfo.word,
+					answer.answer,
+					answer.answerTime,
+					answer.answerStatus == `Correct`,
+					fontId,
+				);
 			}
 		});
 
@@ -459,15 +470,24 @@ class WebSocketClient
 	private async handleNotifGameStopped(event: Event)
 	{
 		const customEvent: CustomEvent<OutNotifGameStoppedPayload> = <CustomEvent<OutNotifGameStoppedPayload>> event;
-		this.gameHistory[this.gameHistory.length - 1].question = customEvent.detail.question;
+		const lastRoundHistory: RoundHistory | undefined = this.gameHistory.at(-1);
+
+		if (lastRoundHistory == undefined)
+		{
+			return;
+		}
+
+		lastRoundHistory.question = customEvent.detail.question;
+
 		customEvent.detail.answers.forEach((answer) =>
 		{
-			this.gameHistory[this.gameHistory.length - 1].answers.set(answer.id, {
+			lastRoundHistory.answers.set(answer.id, {
 				answer: answer.answer,
 				answerStatus: answer.isCorrect ? `Correct` : `Incorrect`,
 				answerTime: answer.answerTime,
 			});
 		});
+
 		this.clientList.sort((e1, e2) =>
 		{
 			const e1Score = this.gameHistory.reduce((acc, round) => acc + (round.answers.get(e1.id)?.answerStatus == `Correct` ? 1 : 0), 0);
@@ -475,15 +495,14 @@ class WebSocketClient
 			return (e1Score < e2Score) ? 1 : (e1Score > e2Score) ? -1 : 0;
 		});
 
-		const questionInfo = this.gameHistory.at(-1)?.question;
 		const fontId = await getFontId(customEvent.detail.question.fontName);
 
 		const answerPromises = this.clientList.map(async (client) =>
 		{
-			const answer = this.gameHistory.at(-1)?.answers.get(client.id);
-			if (answer && questionInfo)
+			const answer = lastRoundHistory.answers.get(client.id);
+			if (answer)
 			{
-				await addAnswerStats(this.lastGameId, client.key, client.name, questionInfo.wordInfo.word, answer.answer, answer.answerTime, answer.answerStatus == `Correct`, fontId);
+				await addAnswerStats(this.lastGameId, client.key, client.name, lastRoundHistory.question.wordInfo.word, answer.answer, answer.answerTime, answer.answerStatus == `Correct`, fontId);
 			}
 		});
 

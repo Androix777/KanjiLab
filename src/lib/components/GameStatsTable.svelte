@@ -57,7 +57,7 @@
 					}
 					else
 					{
-						return `<div class="absolute right-0 left-0 top-0 bottom-0 z-0 bg-error bg-opacity-40"></div><div class="z-10 relative">(Missing answer!)</div>`;
+						return `<div class="absolute right-0 left-0 top-0 bottom-0 z-0 bg-info bg-opacity-40"></div><div class="z-10 relative">(Missing answer!)</div>`;
 					}
 				},
 			});
@@ -77,6 +77,7 @@
 							question: answerStats.word,
 						};
 					}
+					
 					rows[rowId][player.id] = {
 						answer: answerStats.wordReading == "" ? "　" : answerStats.wordReading,
 						isCorrect: answerStats.isCorrect,

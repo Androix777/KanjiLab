@@ -35,6 +35,8 @@
 	let currentAnswerRecord = $derived(gameHistory.at(-1)?.answers.get(clientID));
 	let previousAnswerRecord = $derived(gameHistory.at(-2)?.answers.get(clientID));
 
+	let sentAnswer: string | null = $state(null);
+
 	function checkWord(e: KeyboardEvent)
 	{
 		const realInput: string = inputElement.value;
@@ -48,6 +50,8 @@
 		readingInput = ``;
 		onAnswer(realInput);
 
+		sentAnswer = realInput;
+
 		return 0;
 	}
 
@@ -60,6 +64,7 @@
 	$effect(() =>
 	{
 		gameHistory.at(-1)?.answers.get(clientID)?.answer;
+		sentAnswer = null;
 		inputElement.focus();
 	});
 
@@ -91,8 +96,8 @@
 			bind:value={readingInput}
 			onkeydown={checkWord}
 			bind:this={inputElement}
-			placeholder={gameHistory.at(-1)?.answers.get(clientID)?.answer}
-			disabled={gameHistory.at(-1)?.answers.get(clientID)?.answer != ``}
+			placeholder={sentAnswer}
+			disabled={sentAnswer != null}
 			class="input input-bordered input-lg text-center w-3/4 text-3xl placeholder:{ currentAnswerRecord?.answerStatus == `Correct` ? `text-success` : currentAnswerRecord?.answerStatus == `Incorrect` ? `text-error` : `text-warning`}"
 		/>
 	</div>
