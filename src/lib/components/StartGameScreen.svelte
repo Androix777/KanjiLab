@@ -202,11 +202,13 @@
 				{#await Promise.all([webSocketClient.getCurrentGameStats(), webSocketClient.getCurrentGameAnswerStats()])}
 					Loading...
 				{:then gameStats}
-					<GameStatsTable
-						gameStats={gameStats[0]}
-						gameAnswerStats={gameStats[1]}
-					/>
-					<div class="h-full w-full flex items-end justify-center my-2">
+					<div style="height: 85%;">
+						<GameStatsTable
+							gameStats={gameStats[0]}
+							gameAnswerStats={gameStats[1]}
+						/>
+					</div>
+					<div class="w-full flex items-end justify-center my-2" style="height: 15%;">
 						<button
 							class="btn btn-primary w-32"
 							onclick={() => activeTab = 0}
