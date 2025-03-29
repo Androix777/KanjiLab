@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { getUserdataById } from "$lib/databaseTools";
 	import type { AnswerStats, GameStats } from "$lib/types";
-	import { onMount } from "svelte";
 	import { TabulatorFull as Tabulator } from "tabulator-tables";
 	import type { CellComponent, ColumnDefinition } from "tabulator-tables";
 	import "tabulator-tables/dist/css/tabulator.min.css";
@@ -17,6 +16,7 @@
 	}: Props = $props();
 
 	let tableContainer: HTMLDivElement | null = $state(null);
+	let table: Tabulator | null = null;
 
 	type AnswerCell = {
 		answer: string;
@@ -48,10 +48,17 @@
 				width: 150,
 				formatter: (cell: CellComponent) =>
 				{
-					const value: AnswerCell = cell.getValue() as AnswerCell;
-					return `<div class="absolute right-0 left-0 top-0 bottom-0 z-0 ${
-						value.isCorrect ? `bg-success` : `bg-error`
-					} bg-opacity-40"></div><div class="z-10 relative">${value.answer}</div>`;
+					const value: AnswerCell | undefined = cell.getValue() as AnswerCell | undefined;
+					if (value != undefined)
+					{
+						return `<div class="absolute right-0 left-0 top-0 bottom-0 z-0 ${
+							value.isCorrect ? `bg-success` : `bg-error`
+						} bg-opacity-40"></div><div class="z-10 relative">${value.answer}</div>`;
+					}
+					else
+					{
+						return `<div class="absolute right-0 left-0 top-0 bottom-0 z-0 bg-error bg-opacity-40"></div><div class="z-10 relative">(Missing answer!)</div>`;
+					}
 				},
 			});
 		});
@@ -86,7 +93,8 @@
 	{
 		if (tableContainer)
 		{
-			new Tabulator(tableContainer, {
+			table = new Tabulator(tableContainer, {
+				height: "100%",
 				data: tableData,
 				layout: "fitColumns",
 				columns,
@@ -94,9 +102,14 @@
 		}
 	}
 
-	onMount(async () =>
+	$effect(() =>
 	{
-		await createTableData(gameStats, gameAnswerStats);
+		if (table != null)
+		{
+			table.destroy();
+			table = null;
+		}
+		void createTableData(gameStats, gameAnswerStats);
 	});
 </script>
 
@@ -124,6 +137,6 @@
 	}
 </style>
 
-<div>
-	<div bind:this={tableContainer} class="w-full h-96 bg-base-content"></div>
+<div class="w-full h-full bg-base-content">
+	<div bind:this={tableContainer} ></div>
 </div>

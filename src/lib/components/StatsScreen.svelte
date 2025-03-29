@@ -4,10 +4,10 @@
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { onMount } from "svelte";
 	import AutoComplete from "./AutoComplete.svelte";
+	import GamesTable from "./GamesTable.svelte";
 	import Heatmap from "./Heatmap.svelte";
 	import type { HeatmapData } from "./Heatmap.svelte";
 	import MedalStats from "./MedalStats.svelte";
-    import GamesTable from "./GamesTable.svelte";
 
 	const frequencyValuesX = [0, 1000, 2500, 5000, 7500, 10000, 15000, 20000, 30000, 50000, 100000];
 	const thresholds = [
@@ -113,10 +113,10 @@
 	<div>
 		{#await getAllGamesStats()}
 			Loading games...
-		{:then games } 
-			<GamesTable 
-				games = { games }
-			/>	
+		{:then games}
+			<GamesTable
+				games={games}
+			/>
 		{/await}
 	</div>
 </div>
