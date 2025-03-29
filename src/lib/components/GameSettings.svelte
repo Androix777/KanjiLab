@@ -276,9 +276,10 @@
 		>
 			<form method="dialog">
 				<button
+					aria-label="modal-bg"
 					class="absolute top-0 left-0 hover:cursor-default"
 					style="min-height: 200vh; min-width: 200vw; margin-left: -50vw"
-				>✕</button>
+				></button>
 			</form>
 			<div class="h-full w-full flex justify-center items-center">
 				<FontsScreen />
