@@ -446,6 +446,7 @@ class WebSocketClient
 					answer.answer,
 					answer.answerTime,
 					answer.answerStatus == `Correct`,
+					this.currentRound - 1,
 					fontId,
 				);
 			}
@@ -502,7 +503,15 @@ class WebSocketClient
 			const answer = lastRoundHistory.answers.get(client.id);
 			if (answer)
 			{
-				await addAnswerStats(this.lastGameId, client.key, client.name, lastRoundHistory.question.wordInfo.word, answer.answer, answer.answerTime, answer.answerStatus == `Correct`, fontId);
+				await addAnswerStats(
+					this.lastGameId, 
+					client.key, client.name, 
+					lastRoundHistory.question.wordInfo.word, 
+					answer.answer, 
+					answer.answerTime, 
+					answer.answerStatus == `Correct`, 
+					this.currentRound - 1,
+					fontId);
 			}
 		});
 

@@ -22,6 +22,7 @@ export type AnswerStats = {
 	wordReading: string;
 	duration?: number | null;
 	isCorrect: boolean;
+	roundIndex: number;
 	timestamp: string;
 	fontId: number;
 	font: string;

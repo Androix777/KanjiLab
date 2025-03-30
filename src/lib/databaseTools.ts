@@ -61,6 +61,7 @@ export async function addAnswerStats(
 	wordReading: string,
 	duration: number | null,
 	isCorrect: boolean,
+	roundIndex: number,
 	fontId: number,
 ): Promise<void>
 {
@@ -72,6 +73,7 @@ export async function addAnswerStats(
 		wordReading: wordReading,
 		duration: duration,
 		isCorrect: isCorrect,
+		roundIndex: roundIndex,
 		fontId: fontId,
 	});
 }

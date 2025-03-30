@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS answer_stats (
 	word_reading TEXT NOT NULL,
 	duration INTEGER,
 	is_correct INTEGER NOT NULL,
+	round_index INTEGER NOT NULL,
 	timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	font_id INTEGER NOT NULL,
 	FOREIGN KEY(game_stats_id) REFERENCES game_stats(id),
@@ -74,5 +75,31 @@ CREATE TABLE IF NOT EXISTS game_stats (
 	font_id INTEGER,
 	dictionary_id INTEGER NOT NULL,
 	timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	real_rounds_count INTEGER NOT NULL DEFAULT 0,
+    users_count INTEGER NOT NULL DEFAULT 0,
 	FOREIGN KEY(font_id) REFERENCES font(id)
 );
+
+CREATE TRIGGER IF NOT EXISTS update_real_rounds_count 
+AFTER INSERT ON answer_stats
+BEGIN
+    UPDATE game_stats 
+    SET real_rounds_count = (
+        SELECT MAX(round_index) + 1
+        FROM answer_stats
+        WHERE game_stats_id = NEW.game_stats_id
+    )
+    WHERE id = NEW.game_stats_id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS update_users_count 
+AFTER INSERT ON answer_stats
+BEGIN
+    UPDATE game_stats 
+    SET users_count = (
+        SELECT COUNT(DISTINCT user_id)
+        FROM answer_stats
+        WHERE game_stats_id = NEW.game_stats_id
+    )
+    WHERE id = NEW.game_stats_id;
+END;

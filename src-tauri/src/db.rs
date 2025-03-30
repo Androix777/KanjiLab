@@ -309,6 +309,7 @@ pub async fn add_answer_stats(
     word_reading: &str,
     duration: Option<i64>,
     is_correct: bool,
+    round_index: i64,
     font_id: i64,
 ) -> Result<i64, String> {
     struct RawData {
@@ -328,6 +329,7 @@ pub async fn add_answer_stats(
         word_reading,
         duration,
         is_correct,
+        round_index, // Added round_index to query parameters
         font_id,
     )
     .fetch_one(&*DB_POOL)
@@ -431,6 +433,8 @@ pub struct GameStats {
     font: Option<String>,
     dictionary_id: i64,
     dictionary: String,
+    real_rounds_count: i64,
+    users_count: i64,
     timestamp: NaiveDateTime,
 }
 
@@ -469,6 +473,7 @@ pub struct AnswerStats {
     word_reading: String,
     duration: Option<i64>,
     is_correct: bool,
+    round_index: i64,
     timestamp: NaiveDateTime,
     font_id: i64,
     font: String,
@@ -484,6 +489,7 @@ struct AnswerStatsDB {
     word_reading: String,
     duration: Option<i64>,
     is_correct: i64,
+    round_index: i64,
     timestamp: NaiveDateTime,
     font_id: i64,
     font: String,
@@ -500,6 +506,7 @@ impl From<AnswerStatsDB> for AnswerStats {
             word_reading: db.word_reading,
             duration: db.duration,
             is_correct: db.is_correct != 0,
+            round_index: db.round_index,
             timestamp: db.timestamp,
             font_id: db.font_id,
             font: db.font,

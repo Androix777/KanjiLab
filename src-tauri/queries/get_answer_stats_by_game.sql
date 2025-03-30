@@ -6,6 +6,7 @@ SELECT answer_stats.id,
 	word_reading,
 	duration,
 	is_correct,
+	round_index,
 	timestamp,
 	font_id,
 	font.name as "font!"

@@ -7,7 +7,9 @@ SELECT game_stats.id,
 	font.name as "font",
 	dictionary_id,
 	dictionary.name as "dictionary!",
-	timestamp
+	timestamp,
+	real_rounds_count,
+	users_count
 FROM game_stats
 LEFT JOIN font
 ON game_stats.font_id = font.id

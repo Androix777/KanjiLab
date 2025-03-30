@@ -5,7 +5,8 @@ INSERT INTO answer_stats (
 		word_reading,
 		duration,
 		is_correct,
+		round_index,
 		font_id
 	)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING id;
