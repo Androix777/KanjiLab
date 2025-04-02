@@ -100,23 +100,25 @@
 		data={data}
 		thresholds={thresholds}
 	/>
-	<div class="w-full max-w-[1000px]">
-		<Heatmap
-			bind:this={heatmap}
-			data={data}
-			width={800}
-			height={800}
-			thresholds={thresholds}
-		/>
-	</div>
-
-	<div>
-		{#await getAllGamesStats()}
-			Loading games...
-		{:then games}
-			<GamesTable
-				games={games}
+	<div class="flex flex-row w-full overflow-hidden">
+		<div class="flex-none w-1/2">
+			<Heatmap
+				bind:this={heatmap}
+				data={data}
+				width={800}
+				height={800}
+				thresholds={thresholds}
 			/>
-		{/await}
+		</div>
+
+		<div class="w-1/2 p-4 pt-10" style="min-height: 85%;">
+			{#await getAllGamesStats()}
+				Loading games...
+			{:then games}
+				<GamesTable
+					games={games}
+				/>
+			{/await}
+		</div>
 	</div>
 </div>

@@ -50,12 +50,12 @@
 
 		const columns: ColumnDefinition[] = [
 			{ title: "ID", field: "id", width: 50 },
-			{ title: "Dictionary", field: "dictionary", width: 200 },
-			{ title: "Font", field: "font", width: 200 },
-			{ title: "Max frequency", field: "maxFrequency", width: 200 },
-			{ title: "Min frequency", field: "minFrequency", width: 200 },
-			{ title: "Round duration", field: "roundDuration", width: 200 },
-			{ title: "Number of rounds", field: "roundsCount", width: 200 },
+			{ title: "Dictionary", field: "dictionary", width: 75 },
+			{ title: "Font", field: "font", width: 75 },
+			{ title: "Max frequency", field: "maxFrequency", width: 75 },
+			{ title: "Min frequency", field: "minFrequency", width: 75 },
+			{ title: "Round duration", field: "roundDuration", width: 75 },
+			{ title: "Number of rounds", field: "roundsCount", width: 75 },
 		];
 
 		rows.reverse();
@@ -115,8 +115,8 @@
 	}
 </style>
 
-<div>
-	<div bind:this={tableContainer} class="w-full h-96 bg-base-content"></div>
+<div class="w-full h-full bg-base-content">
+	<div class="h-full" bind:this={tableContainer}></div>
 	<dialog
 		bind:this={fontsModal}
 		class="h-screen w-screen rounded-md bg-black bg-opacity-50"
