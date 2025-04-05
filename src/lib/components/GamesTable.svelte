@@ -29,7 +29,7 @@
 		roundDuration: number;
 		roundsCount: number;
 		realRoundsCount: number;
-		userCount: number;
+		usersCount: number;
 		timestamp: string;
 	};
 
@@ -47,7 +47,7 @@
 				roundDuration: game.roundDuration,
 				roundsCount: game.roundsCount,
 				realRoundsCount: game.realRoundsCount,
-				userCount: game.userCount,
+				usersCount: game.usersCount,
 				timestamp: game.timestamp,
 			};
 
@@ -63,7 +63,7 @@
 			{ title: "Round duration", field: "roundDuration", width: 100 },
 			{ title: "Number of rounds", field: "roundsCount", width: 100 },
 			{ title: "Rounds", field: "realRoundsCount", width: 100 },
-			{ title: "Users", field: "userCount", width: 100 },
+			{ title: "Users", field: "usersCount", width: 100 },
 			{ title: "Time", field: "timestamp", width: 100 },
 		];
 

@@ -11,7 +11,7 @@ export type GameStats = {
 	dictionaryId: number;
 	dictionary: string;
 	realRoundsCount: number,
-    userCount: number,
+    usersCount: number,
 	timestamp: string;
 };
 
