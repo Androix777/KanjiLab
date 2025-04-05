@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { getAllGamesStats, getAllUsers, getAnswerStreaks } from "$lib/databaseTools";
-	import type { User } from "$lib/types";
+	import { getAllGamesStats, getAllUsers, getAnswerStatsByGame, getAnswerStreaks } from "$lib/databaseTools";
+	import type { AnswerStats, GameStats, User } from "$lib/types";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { onMount } from "svelte";
 	import AutoComplete from "./AutoComplete.svelte";
@@ -24,12 +24,14 @@
 	let streaks: (number | null)[][] = $state([]);
 
 	let users: User[];
-	let selectedUser: User;
+	let selectedUser: User | undefined = $state();
 	let selectedUserIndex: number = $state(0);
 	let usernames: string[] = $state([]);
 
 	async function getStreaks()
 	{
+		if (selectedUser == undefined) return;
+
 		streaks = [];
 		for (const min of frequencyValuesX)
 		{
@@ -65,9 +67,23 @@
 		await getStreaks();
 	}
 
+	async function getGameStatsForPlayer(playerId: number)
+	{
+		const games: GameStats[] = await getAllGamesStats();
+		const filteredGames: GameStats[] = [];
+		for (let i = 0; i < games.length; i++)
+		{
+			let gameAnswerStats: AnswerStats[] = await getAnswerStatsByGame(games[i].id);
+			if (gameAnswerStats.find((answerStats) => answerStats.userId == playerId) != undefined)
+			{
+				filteredGames.push(games[i]);
+			}
+		}
+		return filteredGames;
+	}
+
 	onMount(async () =>
 	{
-		console.log("onMount");
 		users = await getAllUsers();
 		selectedUserIndex = users.findIndex(x => x.key == WebSocketClient.getInstance().accountKey) || 0;
 		selectedUser = users[selectedUserIndex];
@@ -111,14 +127,14 @@
 			/>
 		</div>
 
-		<div class="w-1/2 p-4 pt-10" style="min-height: 85%;">
-			{#await getAllGamesStats()}
-				Loading games...
-			{:then games}
-				<GamesTable
-					games={games}
-				/>
-			{/await}
+		<div class="w-1/2 p-4 pt-10" style="min-height: 85%">
+			{#if selectedUser != undefined}
+				{#await getGameStatsForPlayer(selectedUser.id)}
+					Loading games...
+				{:then games}
+					<GamesTable games={games} />
+				{/await}
+			{/if}
 		</div>
 	</div>
 </div>
