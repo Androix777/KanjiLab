@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { exists, readFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { getAllFonts } from "./fontTools";
 import { GET_EXECUTABLE_FILE_PATH } from "./tauriFunctions";
 
 type StateVar<T> = {
@@ -115,6 +116,9 @@ async function loadSettings()
 					settings[key as keyof typeof settings].set(value as never);
 				}
 			}
+
+			const availableFonts: string[] = await getAllFonts();
+			getSettings().selectedFonts.set(getSettings().selectedFonts.get().filter((fontName) => availableFonts.includes(fontName)));
 
 			savingInProgress = oldSavingInProgress;
 		}
