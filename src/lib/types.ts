@@ -10,6 +10,8 @@ export type GameStats = {
 	font?: string | null;
 	dictionaryId: number;
 	dictionary: string;
+	realRoundsCount: number,
+    userCount: number,
 	timestamp: string;
 };
 

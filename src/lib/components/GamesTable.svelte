@@ -28,6 +28,9 @@
 		minFrequency: number;
 		roundDuration: number;
 		roundsCount: number;
+		realRoundsCount: number;
+		userCount: number;
+		timestamp: string;
 	};
 
 	function createTableData(games: GameStats[])
@@ -43,6 +46,9 @@
 				minFrequency: game.minFrequency,
 				roundDuration: game.roundDuration,
 				roundsCount: game.roundsCount,
+				realRoundsCount: game.realRoundsCount,
+				userCount: game.userCount,
+				timestamp: game.timestamp,
 			};
 
 			rows.push(row);
@@ -50,12 +56,15 @@
 
 		const columns: ColumnDefinition[] = [
 			{ title: "ID", field: "id", width: 50 },
-			{ title: "Dictionary", field: "dictionary", width: 75 },
-			{ title: "Font", field: "font", width: 75 },
-			{ title: "Max frequency", field: "maxFrequency", width: 75 },
-			{ title: "Min frequency", field: "minFrequency", width: 75 },
-			{ title: "Round duration", field: "roundDuration", width: 75 },
-			{ title: "Number of rounds", field: "roundsCount", width: 75 },
+			{ title: "Dictionary", field: "dictionary", width: 100 },
+			{ title: "Font", field: "font", width: 100 },
+			{ title: "Max frequency", field: "maxFrequency", width: 100 },
+			{ title: "Min frequency", field: "minFrequency", width: 100 },
+			{ title: "Round duration", field: "roundDuration", width: 100 },
+			{ title: "Number of rounds", field: "roundsCount", width: 100 },
+			{ title: "Rounds", field: "realRoundsCount", width: 100 },
+			{ title: "Users", field: "userCount", width: 100 },
+			{ title: "Time", field: "timestamp", width: 100 },
 		];
 
 		rows.reverse();
