@@ -64,28 +64,27 @@
 		});
 
 		const rows: TableRow[] = [];
-		players.forEach(player =>
+
+		for (let roundId = 0; roundId < gameStats.realRoundsCount; roundId++)
 		{
-			let rowId = 0;
-			gameAnswerStats.forEach(answerStats =>
+			players.forEach(player =>
 			{
-				if (answerStats.userId == player.id)
+				let playerAnswerStats: AnswerStats | undefined = gameAnswerStats.find((answerStats) => answerStats.userId == player.id && answerStats.roundIndex == roundId);
+				if (playerAnswerStats != undefined)
 				{
-					if (rows.length <= rowId)
+					if (rows.length < roundId + 1)
 					{
-						rows[rowId] = {
-							question: answerStats.word,
+						rows[roundId] = {
+							question: playerAnswerStats.word,
 						};
 					}
-					
-					rows[rowId][player.id] = {
-						answer: answerStats.wordReading == "" ? "　" : answerStats.wordReading,
-						isCorrect: answerStats.isCorrect,
+					rows[roundId][player.id] = {
+						answer: playerAnswerStats.wordReading == "" ? "　" : playerAnswerStats.wordReading,
+						isCorrect: playerAnswerStats.isCorrect,
 					};
-					rowId++;
 				}
 			});
-		});
+		}
 
 		initializeTable(rows, columns);
 	}
