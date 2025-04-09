@@ -97,8 +97,8 @@
                     </span>
                 </div>
                 <div>
-                    <div class="font-semibold" style="color: {threshold.color};">{stats.counts[threshold.value]} medals</div>
-                    <div class="text-sm font-medium" style="color: {threshold.color};">{threshold.points} points each</div>
+                    <div class="font-semibold text-base-content">{stats.counts[threshold.value]} medals</div>
+                    <div class="text-sm font-medium text-base-content">{threshold.points} points each</div>
                 </div>
             </div>
         {/each}
