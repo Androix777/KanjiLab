@@ -119,7 +119,7 @@
 		/>
 	</div>
 	<div class="grid grid-cols-2 lg:flex lg:flex-row w-full overflow-hidden flex-grow" style="min-height: min-content;">
-		<div class="h-full col-span-2 lg:flex-none aspect-square">
+		<div class="h-full col-span-2 aspect-square lg:flex-none lg:max-w-[50%]">
 			<Heatmap
 				bind:this={heatmap}
 				data={data}
@@ -129,7 +129,7 @@
 			/>
 		</div>
 
-		<div class="p-4 pt-10 col-span-2 lg:flex-grow min-w-0" style="min-height: 85%">
+		<div class="p-4 pt-10 col-span-2 min-w-0 min-h-full max-h-[50%] lg:flex-grow lg:max-h-full lg:min-h-[85%]">
 			{#if selectedUser != undefined}
 				{#await getGameStatsForPlayer(selectedUser.id)}
 					Loading games...
