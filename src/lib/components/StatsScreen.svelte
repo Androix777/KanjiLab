@@ -97,27 +97,29 @@
 	});
 </script>
 
-<div class="h-full overflow-y-scroll">
-	<div>
-		<AutoComplete
-			items={usernames}
-			selectedIndex={selectedUserIndex}
-			maxOptions={10}
-			onSelect={async (selectedIndex: number) =>
-			{
-				selectedUserIndex = selectedIndex;
-				selectedUser = users[selectedUserIndex];
-				await redraw();
-			}}
+<div class="h-full flex flex-col overflow-y-auto">
+	<div class="flex-none relative">
+		<div class="absolute left-5 top-10 w-1/4">
+			<AutoComplete
+				items={usernames}
+				selectedIndex={selectedUserIndex}
+				maxOptions={10}
+				onSelect={async (selectedIndex: number) =>
+				{
+					selectedUserIndex = selectedIndex;
+					selectedUser = users[selectedUserIndex];
+					await redraw();
+				}}
+			/>
+		</div>
+		<MedalStats
+			bind:this={medalStats}
+			data={data}
+			thresholds={thresholds}
 		/>
 	</div>
-	<MedalStats
-		bind:this={medalStats}
-		data={data}
-		thresholds={thresholds}
-	/>
-	<div class="flex flex-row w-full overflow-hidden">
-		<div class="flex-none w-1/2">
+	<div class="grid grid-cols-2 lg:flex lg:flex-row w-full overflow-hidden flex-grow" style="min-height: min-content;">
+		<div class="h-full col-span-2 lg:flex-none aspect-square">
 			<Heatmap
 				bind:this={heatmap}
 				data={data}
@@ -127,7 +129,7 @@
 			/>
 		</div>
 
-		<div class="w-1/2 p-4 pt-10" style="min-height: 85%">
+		<div class="p-4 pt-10 col-span-2 lg:flex-grow min-w-0" style="min-height: 85%">
 			{#if selectedUser != undefined}
 				{#await getGameStatsForPlayer(selectedUser.id)}
 					Loading games...
