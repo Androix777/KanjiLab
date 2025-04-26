@@ -76,6 +76,7 @@ const settings = {
 	selectedFonts: createStateVar(new Array<string>()),
 	currentAccount: createStateVar(0),
 	avatars: createStateVar(0),
+	toggledColumns: createStateVar(['dictionary', 'font', 'realRoundsCount', 'usersCount', 'timestamp']),
 };
 
 async function loadSettings()

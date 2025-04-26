@@ -2,9 +2,10 @@
 	import type { AnswerStats, GameStats } from "$lib/types";
 	import { onMount } from "svelte";
 	import { TabulatorFull as Tabulator } from "tabulator-tables";
-	import type { ColumnComponent, ColumnDefinition } from "tabulator-tables";
+	import type { ColumnDefinition } from "tabulator-tables";
 	import "tabulator-tables/dist/css/tabulator.min.css";
 	import { getAnswerStatsByGame } from "$lib/databaseTools";
+	import { getSettings } from "$lib/globalSettings.svelte";
 	import GameStatsTable from "./GameStatsTable.svelte";
 
 	type Props = {
@@ -17,7 +18,7 @@
 
 	let table: Tabulator | null = $state(null);
 	let tableContainer: HTMLDivElement | null = $state(null);
-	let tableColumns: Array<ColumnState> = $state([])
+	let tableColumns: Array<ColumnState> = $state([]);
 	let fontsModal: HTMLDialogElement;
 	let selectedGameStats: GameStats = $state(games[0]);
 	let selectedGameAnswerStats: AnswerStats[] = $state([]);
@@ -38,7 +39,7 @@
 	type ColumnState = {
 		definition: ColumnDefinition;
 		state: boolean;
-	}
+	};
 
 	function createTableData(games: GameStats[])
 	{
@@ -81,6 +82,15 @@
 
 	function initializeTable(tableData: TableRow[], columns: ColumnDefinition[])
 	{
+		columns.forEach((column) =>
+		{
+			if (column.field)
+			{
+				tableColumns.push({ definition: column, state: (getSettings().toggledColumns.get().includes(column.field)) });
+				column.visible = getSettings().toggledColumns.get().includes(column.field);
+			}
+		});
+
 		if (tableContainer)
 		{
 			table = new Tabulator(tableContainer, {
@@ -98,9 +108,6 @@
 					fontsModal.showModal();
 				}
 			});
-			columns.forEach((column) => {
-				tableColumns.push({definition: column, state: true})
-			})
 		}
 	}
 
@@ -139,27 +146,31 @@
 		<div class="absolute -top-7 left-0 z-10 dropdown">
 			<div tabindex="0" role="button" class="btn btn-xs">...</div>
 			<div class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
-				{#each tableColumns as column}
+				{#each tableColumns as tableColumn}
 					<div class="flex flex-row m-1">
 						<input
 							type="checkbox"
 							class="checkbox checkbox-xs"
-							bind:checked={column.state}
+							bind:checked={tableColumn.state}
 							onchange={() =>
 							{
-								if (table != null)
+								if (table != null && tableColumn.definition.field != null)
 								{
-									table.getColumns().forEach((tableColumn: ColumnComponent) =>
+									table.getColumns().find((column) => column.getDefinition().field == tableColumn.definition.field)?.toggle();
+									let toggledColumns: Array<string> = getSettings().toggledColumns.get();
+									if (toggledColumns.find((toggledColumn) => toggledColumn == tableColumn.definition.field) != null)
 									{
-										if (tableColumn.getDefinition().field == column.definition.field)
-										{
-											tableColumn.toggle();
-										}
-									});
+										toggledColumns = toggledColumns.filter((toggledColumn) => toggledColumn != tableColumn.definition.field);
+									}
+									else
+									{
+										toggledColumns.push(tableColumn.definition.field);
+									}
+									getSettings().toggledColumns.set(toggledColumns);
 								}
 							}}
 						/>
-						<div class="flex-grow text-center">{column.definition.title}</div>
+						<div class="flex-grow text-center">{tableColumn.definition.title}</div>
 					</div>
 				{/each}
 			</div>
