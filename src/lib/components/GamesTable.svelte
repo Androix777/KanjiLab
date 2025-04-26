@@ -2,7 +2,7 @@
 	import type { AnswerStats, GameStats } from "$lib/types";
 	import { onMount } from "svelte";
 	import { TabulatorFull as Tabulator } from "tabulator-tables";
-	import type { ColumnDefinition } from "tabulator-tables";
+	import type { ColumnComponent, ColumnDefinition } from "tabulator-tables";
 	import "tabulator-tables/dist/css/tabulator.min.css";
 	import { getAnswerStatsByGame } from "$lib/databaseTools";
 	import GameStatsTable from "./GameStatsTable.svelte";
@@ -15,7 +15,9 @@
 		games,
 	}: Props = $props();
 
+	let table: Tabulator | null = $state(null);
 	let tableContainer: HTMLDivElement | null = $state(null);
+	let tableColumns: Array<ColumnState> = $state([])
 	let fontsModal: HTMLDialogElement;
 	let selectedGameStats: GameStats = $state(games[0]);
 	let selectedGameAnswerStats: AnswerStats[] = $state([]);
@@ -32,6 +34,11 @@
 		usersCount: number;
 		timestamp: string;
 	};
+
+	type ColumnState = {
+		definition: ColumnDefinition;
+		state: boolean;
+	}
 
 	function createTableData(games: GameStats[])
 	{
@@ -76,7 +83,7 @@
 	{
 		if (tableContainer)
 		{
-			let table = new Tabulator(tableContainer, {
+			table = new Tabulator(tableContainer, {
 				data: tableData,
 				layout: "fitColumns",
 				columns,
@@ -91,6 +98,9 @@
 					fontsModal.showModal();
 				}
 			});
+			columns.forEach((column) => {
+				tableColumns.push({definition: column, state: true})
+			})
 		}
 	}
 
@@ -124,7 +134,37 @@
 	}
 </style>
 
-<div class="w-full h-full bg-base-content">
+<div class="w-full h-full bg-base-content relative">
+	{#if table != null}
+		<div class="absolute -top-7 left-0 z-10 dropdown">
+			<div tabindex="0" role="button" class="btn btn-xs">...</div>
+			<div class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
+				{#each tableColumns as column}
+					<div class="flex flex-row m-1">
+						<input
+							type="checkbox"
+							class="checkbox checkbox-xs"
+							bind:checked={column.state}
+							onchange={() =>
+							{
+								if (table != null)
+								{
+									table.getColumns().forEach((tableColumn: ColumnComponent) =>
+									{
+										if (tableColumn.getDefinition().field == column.definition.field)
+										{
+											tableColumn.toggle();
+										}
+									});
+								}
+							}}
+						/>
+						<div class="flex-grow text-center">{column.definition.title}</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
 	<div class="h-full" bind:this={tableContainer}></div>
 	<dialog
 		bind:this={fontsModal}
@@ -142,8 +182,8 @@
 			<div class="p-4">
 				<div class="flex flex-column justify-center items-center">
 					<div class="card card-bordered bg-base-100 shadow-xl p-4 flex-1" style="height: 80vh; width: 80vw">
-						<div class="card-title mb-4" style="height: 10%;">Game stats</div>
-						<div style="height: 90%;">
+						<div class="card-title mb-4" style="height: 10%">Game stats</div>
+						<div style="height: 90%">
 							<GameStatsTable
 								gameStats={selectedGameStats}
 								gameAnswerStats={selectedGameAnswerStats}
