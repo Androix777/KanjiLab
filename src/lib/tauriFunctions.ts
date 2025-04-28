@@ -28,3 +28,7 @@ export const GET_ANSWER_STATS_BY_GAME: string = `get_answer_stats_by_game`;
 export const GET_ALL_ANSWER_STATS: string = `get_all_answer_stats`;
 export const GET_USERNAME_BY_ID: string = `get_userdata_by_id`;
 export const GET_ALL_USERS: string = `get_all_users`;
+
+export const GET_DICTIONARIES: string = `get_dictionaries`;
+export const DELETE_DICTIONARY: string = `delete_dictionary`;
+export const IMPORT_DICTIONARY: string = `import_dictionary`;

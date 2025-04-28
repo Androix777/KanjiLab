@@ -2,11 +2,13 @@ import { getSettings } from "$lib/globalSettings.svelte";
 import {
 	ADD_ANSWER_STATS,
 	ADD_GAME_STATS,
+	DELETE_DICTIONARY,
 	GET_ALL_ANSWER_STATS,
 	GET_ALL_GAMES_STATS,
 	GET_ALL_USERS,
 	GET_ANSWER_STATS_BY_GAME,
 	GET_ANSWER_STREAKS,
+	GET_DICTIONARIES,
 	GET_FONT_ID,
 	GET_GAME_STATS,
 	GET_STATS,
@@ -15,8 +17,9 @@ import {
 	GET_WORD_PARTS,
 	GET_WORDS,
 	GET_WORDS_COUNT,
+	IMPORT_DICTIONARY,
 } from "$lib/tauriFunctions";
-import type { AnswerStats, AnswerStreaks, GameStats, User, WordInfo } from "$lib/types";
+import type { AnswerStats, AnswerStreaks, DictionaryInfo, GameStats, User, WordInfo } from "$lib/types";
 import type { StatsInfo } from "$lib/types";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -169,4 +172,23 @@ export async function getAllUsers(): Promise<User[]>
 {
 	const users: User[] = await invoke(GET_ALL_USERS);
 	return users;
+}
+
+export async function getDictionaries(): Promise<DictionaryInfo[]>
+{
+	const dictionaries: DictionaryInfo[] = await invoke(GET_DICTIONARIES);
+	return dictionaries;
+}
+
+export async function deleteDictionary(id: number): Promise<void>
+{
+	const x = await invoke(DELETE_DICTIONARY, {id});
+	console.log(x)
+}
+
+
+export async function importDictionary(dictPath: string): Promise<void>
+{
+	const x = await invoke(IMPORT_DICTIONARY, {dictPath});
+	console.log(x)
 }

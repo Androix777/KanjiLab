@@ -19,7 +19,7 @@ def load_json(file_path):
         return json.load(file)
 
 
-def insert_jmdict_data(conn, data, jmdict_id):
+def insert_jmdict_data(conn, data):
     cursor = conn.cursor()
 
     GLOSS_SEPARATOR = "␞"
@@ -59,8 +59,8 @@ def insert_jmdict_data(conn, data, jmdict_id):
                 )
             else:
                 cursor.execute(
-                    "INSERT INTO word (word, dictionary_id, meanings) VALUES (?, ?, ?)",
-                    (keb, jmdict_id, meanings_string),
+                    "INSERT INTO word (word, meanings) VALUES (?, ?)",
+                    (keb, meanings_string),
                 )
                 word_id = cursor.lastrowid
 
@@ -177,17 +177,14 @@ def main():
     furigana_data = load_json("./data/JmdictFurigana.json")
     freq_data = load_json("./data/frequency.json")
 
-    conn = sqlite3.connect("./data/words.db")
+    conn = sqlite3.connect("./data/dict.db")
 
     cursor = conn.cursor()
 
-    cursor.execute("INSERT OR IGNORE INTO dictionary (name) VALUES (?)", ("JMDict",))
+    cursor.execute("INSERT OR IGNORE INTO dictionary_info (name, guid) VALUES (?, ?)", ("JMDict", "a5ecf9a5-7a0e-4858-8122-62365f3f8965"))
     conn.commit()
 
-    cursor.execute("SELECT id FROM dictionary WHERE name = ?", ("JMDict",))
-    jmdict_id = cursor.fetchone()[0]
-
-    insert_jmdict_data(conn, xml_data, jmdict_id)
+    insert_jmdict_data(conn, xml_data)
     insert_furigana_data(conn, furigana_data)
     insert_freq_data(conn, freq_data)
 

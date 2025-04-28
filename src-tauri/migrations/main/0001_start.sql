@@ -1,7 +1,8 @@
 -- dictionary
 CREATE TABLE IF NOT EXISTS dictionary (
 	id INTEGER PRIMARY KEY NOT NULL,
-	name TEXT UNIQUE NOT NULL
+	guid TEXT UNIQUE NOT NULL,
+	name TEXT NOT NULL
 );
 -- font
 CREATE TABLE IF NOT EXISTS font (
@@ -11,7 +12,7 @@ CREATE TABLE IF NOT EXISTS font (
 -- word
 CREATE TABLE IF NOT EXISTS word (
 	id INTEGER PRIMARY KEY NOT NULL,
-	word TEXT UNIQUE NOT NULL,
+	word TEXT NOT NULL,
 	frequency INTEGER,
 	dictionary_id INTEGER NOT NULL,
 	meanings TEXT NOT NULL,
@@ -32,8 +33,10 @@ CREATE TABLE IF NOT EXISTS word_part_reading (
 	id INTEGER PRIMARY KEY NOT NULL,
 	word_part TEXT NOT NULL,
 	word_part_reading TEXT NOT NULL,
-	UNIQUE (word_part, word_part_reading)
+	dictionary_id INTEGER NOT NULL,
+	FOREIGN KEY(dictionary_id) REFERENCES dictionary(id)
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_word_part_reading_1 ON word_part_reading (word_part, word_part_reading, dictionary_id);
 -- word_reading_word_part_reading
 CREATE TABLE IF NOT EXISTS word_reading_word_part_reading (
 	word_reading_id INTEGER NOT NULL,
@@ -76,30 +79,28 @@ CREATE TABLE IF NOT EXISTS game_stats (
 	dictionary_id INTEGER NOT NULL,
 	timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	real_rounds_count INTEGER NOT NULL DEFAULT 0,
-    users_count INTEGER NOT NULL DEFAULT 0,
+	users_count INTEGER NOT NULL DEFAULT 0,
 	FOREIGN KEY(font_id) REFERENCES font(id)
 );
-
-CREATE TRIGGER IF NOT EXISTS update_real_rounds_count 
-AFTER INSERT ON answer_stats
-BEGIN
-    UPDATE game_stats 
-    SET real_rounds_count = (
-        SELECT MAX(round_index) + 1
-        FROM answer_stats
-        WHERE game_stats_id = NEW.game_stats_id
-    )
-    WHERE id = NEW.game_stats_id;
+CREATE TRIGGER IF NOT EXISTS update_real_rounds_count
+AFTER
+INSERT ON answer_stats BEGIN
+UPDATE game_stats
+SET real_rounds_count = (
+		SELECT MAX(round_index) + 1
+		FROM answer_stats
+		WHERE game_stats_id = NEW.game_stats_id
+	)
+WHERE id = NEW.game_stats_id;
 END;
-
-CREATE TRIGGER IF NOT EXISTS update_users_count 
-AFTER INSERT ON answer_stats
-BEGIN
-    UPDATE game_stats 
-    SET users_count = (
-        SELECT COUNT(DISTINCT user_id)
-        FROM answer_stats
-        WHERE game_stats_id = NEW.game_stats_id
-    )
-    WHERE id = NEW.game_stats_id;
+CREATE TRIGGER IF NOT EXISTS update_users_count
+AFTER
+INSERT ON answer_stats BEGIN
+UPDATE game_stats
+SET users_count = (
+		SELECT COUNT(DISTINCT user_id)
+		FROM answer_stats
+		WHERE game_stats_id = NEW.game_stats_id
+	)
+WHERE id = NEW.game_stats_id;
 END;

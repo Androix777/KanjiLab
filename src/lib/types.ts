@@ -1,5 +1,11 @@
 import type { SvelteMap } from "svelte/reactivity";
 
+export type DictionaryInfo = {
+	id: number,
+    guid: string,
+    name: string,
+}
+
 export type GameStats = {
 	id: number;
 	roundsCount: number;

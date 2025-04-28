@@ -4,11 +4,12 @@ use sqlx::{query_file_as, sqlite::SqlitePool};
 use std::sync::LazyLock;
 
 use crate::tools::get_executable_file_path;
+use sqlx::Acquire;
 
 static DB_POOL: LazyLock<SqlitePool> = LazyLock::new(|| {
     let path_str = get_executable_file_path()
         .unwrap()
-        .join("words.db")
+        .join("main.db")
         .into_os_string()
         .into_string()
         .unwrap();
@@ -17,12 +18,97 @@ static DB_POOL: LazyLock<SqlitePool> = LazyLock::new(|| {
 
 pub async fn init_db() {
     let pool = (*DB_POOL).to_owned();
-    sqlx::migrate!().run(&pool).await.unwrap();
+    sqlx::migrate!("./migrations/main")
+        .run(&pool)
+        .await
+        .unwrap();
 }
 
 pub async fn close_db() {
     let pool = (*DB_POOL).to_owned();
     pool.close().await;
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DictionaryInfo {
+    id: i64,
+    guid: String,
+    name: String,
+}
+
+#[tauri::command]
+pub async fn delete_dictionary(id: i64) -> Result<(), String> {
+    sqlx::query_file_as!(i64, "./queries/delete_dictionary.sql", id, id, id, id, id)
+        .execute(&*DB_POOL)
+        .await
+        .map_err(|e| format!("Failed to delete dictionary: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_dictionaries() -> Result<Vec<DictionaryInfo>, String> {
+    let data = sqlx::query_file_as!(DictionaryInfo, "./queries/get_all_dictionaries.sql")
+        .fetch_all(&*DB_POOL)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(data)
+}
+
+#[tauri::command]
+pub async fn import_dictionary(dict_path: &str) -> Result<(), String> {
+    let dict_pool = SqlitePool::connect(dict_path)
+        .await
+        .map_err(|e| format!("Failed to connect to dictionary database: {}", e))?;
+
+    sqlx::migrate!("./migrations/dict")
+        .run(&dict_pool)
+        .await
+        .map_err(|e| format!("Failed to migrate dictionary database: {}", e))?;
+
+    dict_pool.close().await;
+
+    let pool = (*DB_POOL).to_owned();
+
+    let mut conn = pool
+        .acquire()
+        .await
+        .map_err(|e| format!("Failed to acquire connection: {}", e))?;
+
+    sqlx::query("ATTACH DATABASE ? AS dict_db")
+        .bind(dict_path)
+        .execute(&mut *conn)
+        .await
+        .map_err(|e| format!("Failed to attach dictionary: {}", e))?;
+
+    let mut tx = conn
+        .begin()
+        .await
+        .map_err(|e| format!("Failed to begin transaction: {}", e))?;
+
+    let sql = include_str!("../queries/import_dictionary.sql");
+
+    let import_result = sqlx::query(sql).execute(&mut *tx).await;
+
+    let result = match import_result {
+        Ok(_) => tx
+            .commit()
+            .await
+            .map_err(|e| format!("Failed to commit transaction: {}", e)),
+        Err(e) => {
+            let _ = tx.rollback().await;
+            Err(format!("Import failed: {}", e))
+        }
+    };
+
+    sqlx::query("DETACH DATABASE dict_db")
+        .execute(&mut *conn)
+        .await
+        .map_err(|e| format!("Failed to detach dictionary: {}", e))?;
+
+    result
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -236,8 +322,8 @@ pub struct StatsInfo {
 }
 
 #[tauri::command]
-pub async fn get_overall_stats(user_key: &str,) -> Result<StatsInfo, String> {
-	let user_id = get_user_id(user_key, None).await?;
+pub async fn get_overall_stats(user_key: &str) -> Result<StatsInfo, String> {
+    let user_id = get_user_id(user_key, None).await?;
     let data = query_file_as!(StatsInfo, "./queries/get_overall_stats.sql", user_id)
         .fetch_one(&*DB_POOL)
         .await
@@ -279,18 +365,14 @@ pub async fn get_user_id(key: &str, last_name: Option<&str>) -> Result<i64, Stri
         .fetch_one(&*DB_POOL)
         .await
         .map_err(|e| e.to_string())?;
-        
+
         Ok(user_id.id)
     } else {
-        let userdata = sqlx::query_file_as!(
-            User,
-            "./queries/get_userdata_by_key.sql",
-            key
-        )
-        .fetch_optional(&*DB_POOL)
-        .await
-        .map_err(|e| e.to_string())?;
-        
+        let userdata = sqlx::query_file_as!(User, "./queries/get_userdata_by_key.sql", key)
+            .fetch_optional(&*DB_POOL)
+            .await
+            .map_err(|e| e.to_string())?;
+
         if let Some(user) = userdata {
             Ok(user.id)
         } else {
@@ -329,7 +411,7 @@ pub async fn add_answer_stats(
         word_reading,
         duration,
         is_correct,
-        round_index, // Added round_index to query parameters
+        round_index,
         font_id,
     )
     .fetch_one(&*DB_POOL)
@@ -555,7 +637,7 @@ pub async fn get_userdata_by_id(user_id: i64) -> Result<User, String> {
 
     if let Some(user) = data {
         Ok(User {
-			id: user_id,
+            id: user_id,
             username: user.username,
             key: user.key,
         })
@@ -563,7 +645,6 @@ pub async fn get_userdata_by_id(user_id: i64) -> Result<User, String> {
         Err(format!("User not found with id: {}", user_id))
     }
 }
-
 
 #[tauri::command]
 pub async fn get_all_users() -> Result<Vec<User>, String> {

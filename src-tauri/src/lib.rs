@@ -32,11 +32,14 @@ pub fn run() {
             db::get_all_answer_stats,
             db::get_userdata_by_id,
             db::get_all_users,
+            db::get_dictionaries,
+            db::delete_dictionary,
+            db::import_dictionary,
             crypto::sign_message,
             crypto::verify_signature,
             crypto::get_accounts,
             crypto::remove_account,
-			crypto::rename_account,
+            crypto::rename_account,
             crypto::create_account,
         ])
         .build(tauri::generate_context!())

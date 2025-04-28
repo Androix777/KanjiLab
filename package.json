@@ -10,10 +10,10 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "eslint .",
 		"tauri": "tauri",
-		"db:clean": "shx rm -f kanji_lab_loader/data/words.db",
-		"db:setup": "cd src-tauri && sqlx database setup",
+		"db:clean": "shx rm -f kanji_lab_loader/data/main.db && shx rm -f kanji_lab_loader/data/dict.db",
+		"db:setup": "cd src-tauri && sqlx database setup --source \"migrations/main\" --database-url \"sqlite://../kanji_lab_loader/data/main.db\" && sqlx database setup --source \"migrations/dict\" --database-url \"sqlite://../kanji_lab_loader/data/dict.db\"",
 		"db:load": "cd kanji_lab_loader && uv run loadData.py",
-		"db:copy-debug": "shx test -f kanji_lab_loader/data/words.db && shx cp kanji_lab_loader/data/words.db src-tauri/target/debug/words.db || echo File not exist",
+		"db:copy-debug": "shx test -f kanji_lab_loader/data/main.db && shx cp kanji_lab_loader/data/main.db src-tauri/target/debug/main.db || echo File not exist",
 		"db": "npm-run-all db:clean db:setup db:load db:copy-debug"
 	},
 	"devDependencies": {
