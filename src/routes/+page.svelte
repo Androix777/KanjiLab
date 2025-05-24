@@ -79,6 +79,19 @@
 				class="btn btn-square bg-base-100 border-0 p-1 mb-4 shadow-none hover:bg-transparent hover:scale-125 disabled:bg-transparent"
 				onclick={() =>
 				{
+					setScreen(`Dictionaries`);
+				}}
+				disabled={WebSocketClient.getInstance().gameStatus != `Off`}
+			>
+				<SvgIcon
+					iconName="KanjiCards"
+					disabled={WebSocketClient.getInstance().gameStatus != `Off`}
+				/>
+			</button>
+			<button
+				class="btn btn-square bg-base-100 border-0 p-1 mb-4 shadow-none hover:bg-transparent hover:scale-125 disabled:bg-transparent"
+				onclick={() =>
+				{
 					setScreen(`Settings`);
 				}}
 				disabled={WebSocketClient.getInstance().gameStatus != `Off`}
