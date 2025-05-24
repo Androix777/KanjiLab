@@ -2,9 +2,25 @@
 	import { deleteDictionary, getDictionaries, importDictionary } from "$lib/databaseTools";
     import type { DictionaryInfo } from "$lib/types";
 	import { onMount } from "svelte";
+	import { open } from '@tauri-apps/plugin-dialog';
 
 	let dictionaries: Array<DictionaryInfo> = $state([]);
 	let selectedDictionaryIndex: number = $state(-1);
+
+	async function selectFile(): Promise<string | string[] | null>
+	{
+		const selected = await open({
+			multiple: false,
+			filters: 
+			[
+				{
+					name: 'Database files',
+					extensions: ['db']
+				}
+			]
+		});
+		return selected;
+	}
 
 	onMount(async () =>
 	{
@@ -51,10 +67,13 @@
 						class="btn btn-success btn-outline my-auto mx-4 flex-1"
 						onclick={async () =>
 						{
-							let path = "C:\\Users\\Airplane\\Documents\\Projects\\KanjiLab\\kanji_lab_loader\\data\\dict.db";
-							await importDictionary(path);
-							dictionaries = await getDictionaries();
-							console.log("Finished import");
+							let path: string | string[] | null = await selectFile();
+							if (typeof (path) == `string`)
+							{
+								await importDictionary(path);
+								dictionaries = await getDictionaries();
+								console.log("Finished import");
+							}
 						}}
 					>Import</button>
 				</div>

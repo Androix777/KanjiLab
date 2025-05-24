@@ -46,7 +46,8 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@tauri-apps/api": "^2.0.3",
+		"@tauri-apps/api": "^2.5.0",
+		"@tauri-apps/plugin-dialog": "^2.2.2",
 		"@tauri-apps/plugin-fs": "^2.2.0",
 		"blockies": "^0.0.2",
 		"d3": "^7.9.0",
