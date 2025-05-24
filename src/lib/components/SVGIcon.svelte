@@ -17,7 +17,7 @@
 </script>
 
 <div class="flex h-full w-full items-center justify-center">
-	{#await getIcon(iconName as string)}
+	{#await getIcon(iconName)}
 		<span class="loading loading-ring loading-xs"></span>
 	{:then { icon }}
 		<div class="h-full w-full {disabled ? `bg-base-content` : `bg-primary`}" style="mask-image: url({icon}); mask-size: 100% 100%"></div>
