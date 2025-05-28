@@ -41,6 +41,7 @@ class WebSocketClient
 	public accountKey: string = $state(``);
 	public adminPassword: string = ``;
 	public fontsInfo: Array<FontInfo> = new Array<FontInfo>();
+	public isBusy: boolean = $state(false);
 
 	public onlineFirstFontName: string = $state(``);
 	public onlineFontsCount: number = $state(0);

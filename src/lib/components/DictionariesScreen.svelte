@@ -3,9 +3,11 @@
     import type { DictionaryInfo } from "$lib/types";
 	import { onMount } from "svelte";
 	import { open } from '@tauri-apps/plugin-dialog';
+    import WebSocketClient from "$lib/webSocketClient.svelte";
 
 	let dictionaries: Array<DictionaryInfo> = $state([]);
 	let selectedDictionaryIndex: number = $state(-1);
+	const webSocketClient: WebSocketClient = WebSocketClient.getInstance();
 
 	async function selectFile(): Promise<string | string[] | null>
 	{
@@ -57,10 +59,11 @@
 						onclick={async () =>
 						{
 							if (selectedDictionaryIndex < 0) return;
+							webSocketClient.isBusy = true;
 							await deleteDictionary(dictionaries[selectedDictionaryIndex].id);
 							selectedDictionaryIndex = -1;
 							dictionaries = await getDictionaries();
-							console.log("Finished delete");
+							webSocketClient.isBusy = false;
 						}}
 					>Delete</button>
 					<button
@@ -70,9 +73,10 @@
 							let path: string | string[] | null = await selectFile();
 							if (typeof (path) == `string`)
 							{
+								webSocketClient.isBusy = true;
 								await importDictionary(path);
 								dictionaries = await getDictionaries();
-								console.log("Finished import");
+								webSocketClient.isBusy = false;
 							}
 						}}
 					>Import</button>

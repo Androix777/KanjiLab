@@ -15,6 +15,7 @@
 
 	type ScreenType = `StartGame` | `Stats` | `Dictionaries` | `Fonts` | `Settings`;
 	let currentScreenType: ScreenType = $state(`StartGame`);
+	const client = WebSocketClient.getInstance();
 
 	function setScreen(screenType: ScreenType)
 	{
@@ -30,7 +31,6 @@
 			accounts = await getAccounts();
 		}
 
-		const client = WebSocketClient.getInstance();
 		client.accountKey = accounts[getSettings().currentAccount.get()].publicKey;
 		client.accountName = accounts[getSettings().currentAccount.get()].name;
 	}
@@ -46,6 +46,11 @@
 	});
 </script>
 
+{#if client.isBusy}
+  <div class="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
+    <span class="loading loading-bars loading-xl"></span>
+  </div>
+{/if}
 <div class="flex h-screen bg-base-300">
 	<div class="w-16 min-h-full text-center bg-base-100 z-10">
 		<ul class="">
