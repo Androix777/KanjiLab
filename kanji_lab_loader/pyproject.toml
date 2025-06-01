@@ -3,15 +3,18 @@ name = "kanji_lab_loader"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-	"regex",
-	"tqdm",
-	"wanakana-python",
+	"regex>=2024.11.6",
+	"rich>=14.0.0",
+	"wanakana-python>=1.2.2",
 ]
 
 [tool.uv]
 dev-dependencies = [
 	"ruff"
 ]
+
+[tool.ruff]
+line-length = 180
 
 [tool.ruff.lint]
 select = [
