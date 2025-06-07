@@ -40,7 +40,7 @@
 						{#each dictionaries as dictionary, index}	
 							<li class="list-row m-2 bg-base-100">
 								<button 
-									class="w-full h-full p-4 {selectedDictionaryIndex == index ? "border-info border-2" : ""}"
+									class="w-full h-full p-4 border-2 {selectedDictionaryIndex == index ? "border-info" : "border-transparent"}"
 									onclick={()=>
 									{
 										selectedDictionaryIndex = index;
