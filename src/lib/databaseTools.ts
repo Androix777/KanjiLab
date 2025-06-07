@@ -32,6 +32,7 @@ export async function getRandomWords(count: number): Promise<WordInfo[]>
 		wordPart: getSettings().wordPart.get() == `` ? null : getSettings().wordPart.get(),
 		wordPartReading: getSettings().wordPartReading.get() == `` ? null : getSettings().wordPartReading.get(),
 		examplesCount: 5,
+		dictionaryId: getSettings().selectedDictionaryId.get(),
 	});
 
 	return data;
@@ -44,6 +45,7 @@ export async function getWordsCount(): Promise<number>
 		maxFrequency: getSettings().usingMaxFrequency.get() ? getSettings().maxFrequency.get() : null,
 		wordPart: getSettings().wordPart.get() == `` ? null : getSettings().wordPart.get(),
 		wordPartReading: getSettings().wordPartReading.get() == `` ? null : getSettings().wordPartReading.get(),
+		dictionaryId: getSettings().selectedDictionaryId.get(),
 	});
 
 	return data;

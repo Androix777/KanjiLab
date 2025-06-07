@@ -74,6 +74,7 @@ const settings = {
 	wordPart: createStateVar(``),
 	wordPartReading: createStateVar(``),
 	selectedFonts: createStateVar(new Array<string>()),
+	selectedDictionaryId: createStateVar(1),
 	currentAccount: createStateVar(0),
 	avatars: createStateVar(0),
 	toggledColumns: createStateVar(['dictionary', 'font', 'realRoundsCount', 'usersCount', 'timestamp']),

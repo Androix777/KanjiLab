@@ -150,6 +150,7 @@ pub async fn get_words(
     word_part: Option<&str>,
     word_part_reading: Option<&str>,
     examples_count: i64,
+	dictionary_id: i64,
 ) -> Result<Vec<WordWithReadings>, String> {
     const GLOSS_SEPARATOR: &str = "␞";
     const SENSE_SEPARATOR: &str = "␝";
@@ -173,7 +174,8 @@ pub async fn get_words(
             min_frequency,
             max_frequency,
             part,
-            word_part_reading
+            word_part_reading,
+			dictionary_id
         )
         .fetch_all(&*DB_POOL)
         .await
@@ -184,7 +186,8 @@ pub async fn get_words(
             "./queries/get_words.sql",
             count,
             min_frequency,
-            max_frequency
+            max_frequency,
+			dictionary_id
         )
         .fetch_all(&*DB_POOL)
         .await
@@ -240,6 +243,7 @@ pub async fn get_words_count(
     max_frequency: Option<i64>,
     word_part: Option<&str>,
     word_part_reading: Option<&str>,
+	dictionary_id: i64,
 ) -> Result<i64, String> {
     #[allow(dead_code)]
     struct RawData {
@@ -252,7 +256,8 @@ pub async fn get_words_count(
         min_frequency,
         max_frequency,
         word_part,
-        word_part_reading
+        word_part_reading,
+		dictionary_id
     )
     .fetch_one(&*DB_POOL)
     .await

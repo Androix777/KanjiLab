@@ -16,6 +16,9 @@ FROM (
 				$3 IS NULL
 				OR frequency <= $3
 			)
+			AND (
+				dictionary_id = $4
+			)
 		ORDER BY RANDOM()
 		LIMIT $1
 	) AS w

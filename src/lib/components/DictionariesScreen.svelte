@@ -4,9 +4,11 @@
 	import { onMount } from "svelte";
 	import { open } from '@tauri-apps/plugin-dialog';
     import WebSocketClient from "$lib/webSocketClient.svelte";
+    import { getSettings } from "$lib/globalSettings.svelte";
 
 	let dictionaries: Array<DictionaryInfo> = $state([]);
 	let selectedDictionaryIndex: number = $state(-1);
+	let confirmedDictionaryIndex: number = $state(-1);
 	const webSocketClient: WebSocketClient = WebSocketClient.getInstance();
 
 	async function selectFile(): Promise<string | string[] | null>
@@ -27,6 +29,7 @@
 	onMount(async () =>
 	{
 		dictionaries = await getDictionaries();
+		confirmedDictionaryIndex = dictionaries.findIndex((dictionary: DictionaryInfo) => dictionary.id == getSettings().selectedDictionaryId.get());
 	});
 </script>
 
@@ -40,7 +43,7 @@
 						{#each dictionaries as dictionary, index}	
 							<li class="list-row m-2 bg-base-100">
 								<button 
-									class="w-full h-full p-4 border-2 {selectedDictionaryIndex == index ? "border-info" : "border-transparent"}"
+									class="w-full h-full p-4 border-2 {selectedDictionaryIndex == index ? "border-info" : "border-transparent"} {confirmedDictionaryIndex == index ? "bg-success bg-opacity-20" : ""}"
 									onclick={()=>
 									{
 										selectedDictionaryIndex = index;
@@ -53,7 +56,14 @@
 					</ul>
 				</div>
 				<div class="flex-none h-16 flex flex-row justify-center">
-					<button class="btn btn-info btn-outline my-auto mx-4 flex-1">Select</button>
+					<button
+						class="btn btn-info btn-outline my-auto mx-4 flex-1"
+						onclick={() =>
+						{
+							getSettings().selectedDictionaryId.set(dictionaries[selectedDictionaryIndex].id);
+							confirmedDictionaryIndex = dictionaries.findIndex((dictionary: DictionaryInfo) => dictionary.id == getSettings().selectedDictionaryId.get());
+						}}
+					>Select</button>
 					<button 
 						class="btn btn-error btn-outline my-auto mx-4 flex-1"
 						onclick={async () =>

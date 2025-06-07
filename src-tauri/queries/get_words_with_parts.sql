@@ -11,6 +11,9 @@ WITH filtered_words AS (
 			$3 IS NULL
 			OR frequency <= $3
 		)
+		AND (
+			dictionary_id = $6
+		)
 ),
 filtered_word_parts AS (
 	SELECT id
