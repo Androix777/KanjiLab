@@ -323,7 +323,7 @@ class WebSocketClient
 			getSettings().minFrequency.get(),
 			getSettings().maxFrequency.get(),
 			fontID,
-			1,
+			getSettings().selectedDictionaryId.get(),
 		);
 
 		this.gameStatus = `WaitingQuestion`;
