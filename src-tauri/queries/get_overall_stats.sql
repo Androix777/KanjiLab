@@ -11,4 +11,5 @@ SELECT SUM(
 		END
 	) AS "wrong_count!"
 FROM answer_stats
-WHERE user_id = ?;
+JOIN game_stats ON answer_stats.game_stats_id = game_stats.id
+WHERE user_id = $1 AND game_stats.dictionary_id = $2;

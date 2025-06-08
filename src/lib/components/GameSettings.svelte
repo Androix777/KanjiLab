@@ -71,10 +71,10 @@
 
 	async function refreshItems()
 	{
-		wordPartItems = await getWordParts();
+		wordPartItems = await getWordParts(getSettings().selectedDictionaryId.get());
 		if (getSettings().wordPart.get())
 		{
-			wordPartReadings = await getWordPartReadings(getSettings().wordPart.get());
+			wordPartReadings = await getWordPartReadings(getSettings().wordPart.get(), getSettings().selectedDictionaryId.get());
 		}
 	}
 

@@ -8,7 +8,7 @@ WITH source_parts AS (
 	FROM word_reading wr
 		JOIN word_reading_word_part_reading wrwpr ON wr.id = wrwpr.word_reading_id
 		JOIN word_part_reading wpr ON wrwpr.word_part_reading_id = wpr.id
-	WHERE wr.id = $1
+	WHERE wr.id = $1 AND wpr.dictionary_id = $3
 ),
 matching_words AS (
 	SELECT sp.part_id,
@@ -34,7 +34,7 @@ matching_words AS (
 			SELECT word_id
 			FROM word_reading
 			WHERE id = $1
-		)
+		) AND w.dictionary_id = $4
 ),
 ranked_words AS (
 	SELECT part_id,

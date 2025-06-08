@@ -104,10 +104,11 @@ export async function addGameStats(
 	return index;
 }
 
-export async function getOverallStats(userKey: string): Promise<StatsInfo>
+export async function getOverallStats(userKey: string, dictionaryId: number): Promise<StatsInfo>
 {
 	const data: StatsInfo = await invoke(GET_STATS, {
 		userKey: userKey,
+		dictionaryId: dictionaryId,
 	});
 	return data;
 }
@@ -117,6 +118,7 @@ export async function getAnswerStreaks(
 	maxFrequency: number,
 	count: number,
 	userKey: string,
+	dictionaryId: number,
 ): Promise<AnswerStreaks[]>
 {
 	const data: AnswerStreaks[] = await invoke(GET_ANSWER_STREAKS, {
@@ -124,25 +126,33 @@ export async function getAnswerStreaks(
 		maxFrequency: maxFrequency,
 		count: count,
 		userKey: userKey,
+		dictionaryId: dictionaryId,
 	});
 	return data;
 }
 
-export async function getWordParts(): Promise<string[]>
+export async function getWordParts(dictionaryId: number): Promise<string[]>
 {
-	const data: string[] = await invoke(GET_WORD_PARTS);
+	const data: string[] = await invoke(GET_WORD_PARTS, {
+		dictionaryId: dictionaryId,
+	});
 	return data;
 }
 
-export async function getWordPartReadings(wordPart: string): Promise<string[]>
+export async function getWordPartReadings(wordPart: string, dictionaryId: number): Promise<string[]>
 {
-	const data: string[] = await invoke(GET_WORD_PART_READINGS, { wordPart });
+	const data: string[] = await invoke(GET_WORD_PART_READINGS, { 
+        wordPart: wordPart,
+        dictionaryId: dictionaryId,
+    });
 	return data;
 }
 
-export async function getAllGamesStats(): Promise<GameStats[]>
+export async function getAllGamesStats(dictionaryId: number): Promise<GameStats[]>
 {
-	const data: GameStats[] = await invoke(GET_ALL_GAMES_STATS);
+	const data: GameStats[] = await invoke(GET_ALL_GAMES_STATS, {
+		dictionaryId: dictionaryId,
+	});
 	return data;
 }
 
@@ -158,9 +168,11 @@ export async function getAnswerStatsByGame(gameStatsId: number): Promise<AnswerS
 	return data;
 }
 
-export async function getAllAnswerStats(): Promise<AnswerStats[]>
+export async function getAllAnswerStats(dictionaryId: number): Promise<AnswerStats[]>
 {
-	const data: AnswerStats[] = await invoke(GET_ALL_ANSWER_STATS);
+	const data: AnswerStats[] = await invoke(GET_ALL_ANSWER_STATS, {
+		dictionaryId: dictionaryId,
+	});
 	return data;
 }
 
@@ -184,13 +196,12 @@ export async function getDictionaries(): Promise<DictionaryInfo[]>
 
 export async function deleteDictionary(id: number): Promise<void>
 {
-	const x = await invoke(DELETE_DICTIONARY, {id});
-	console.log(x)
+	const x = await invoke(DELETE_DICTIONARY, { id });
+	console.log(x);
 }
-
 
 export async function importDictionary(dictPath: string): Promise<void>
 {
-	const x = await invoke(IMPORT_DICTIONARY, {dictPath});
-	console.log(x)
+	const x = await invoke(IMPORT_DICTIONARY, { dictPath });
+	console.log(x);
 }

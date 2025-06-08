@@ -150,7 +150,7 @@ pub async fn get_words(
     word_part: Option<&str>,
     word_part_reading: Option<&str>,
     examples_count: i64,
-	dictionary_id: i64,
+    dictionary_id: i64,
 ) -> Result<Vec<WordWithReadings>, String> {
     const GLOSS_SEPARATOR: &str = "␞";
     const SENSE_SEPARATOR: &str = "␝";
@@ -175,7 +175,7 @@ pub async fn get_words(
             max_frequency,
             part,
             word_part_reading,
-			dictionary_id
+            dictionary_id
         )
         .fetch_all(&*DB_POOL)
         .await
@@ -187,7 +187,7 @@ pub async fn get_words(
             count,
             min_frequency,
             max_frequency,
-			dictionary_id
+            dictionary_id
         )
         .fetch_all(&*DB_POOL)
         .await
@@ -221,7 +221,7 @@ pub async fn get_words(
 
         let mut readings_with_parts = Vec::new();
         for (reading_id, reading) in reading_ids.into_iter().zip(readings.into_iter()) {
-            match get_reading_with_parts(reading_id, reading, examples_count).await {
+            match get_reading_with_parts(reading_id, reading, examples_count, dictionary_id).await {
                 Ok(reading_with_parts) => readings_with_parts.push(reading_with_parts),
                 Err(e) => eprintln!("Error getting reading with parts: {}", e),
             }
@@ -243,7 +243,7 @@ pub async fn get_words_count(
     max_frequency: Option<i64>,
     word_part: Option<&str>,
     word_part_reading: Option<&str>,
-	dictionary_id: i64,
+    dictionary_id: i64,
 ) -> Result<i64, String> {
     #[allow(dead_code)]
     struct RawData {
@@ -257,7 +257,7 @@ pub async fn get_words_count(
         max_frequency,
         word_part,
         word_part_reading,
-		dictionary_id
+        dictionary_id
     )
     .fetch_one(&*DB_POOL)
     .await
@@ -270,6 +270,7 @@ async fn get_reading_with_parts(
     reading_id: i64,
     reading: String,
     examples_count: i64,
+    dictionary_id: i64,
 ) -> Result<ReadingWithParts, String> {
     #[allow(dead_code)]
     struct RawPartData {
@@ -285,7 +286,9 @@ async fn get_reading_with_parts(
         RawPartData,
         "./queries/get_word_parts_examples.sql",
         reading_id,
-        examples_count
+        examples_count,
+        dictionary_id,
+        dictionary_id
     )
     .fetch_all(&*DB_POOL)
     .await
@@ -327,12 +330,17 @@ pub struct StatsInfo {
 }
 
 #[tauri::command]
-pub async fn get_overall_stats(user_key: &str) -> Result<StatsInfo, String> {
+pub async fn get_overall_stats(user_key: &str, dictionary_id: i64) -> Result<StatsInfo, String> {
     let user_id = get_user_id(user_key, None).await?;
-    let data = query_file_as!(StatsInfo, "./queries/get_overall_stats.sql", user_id)
-        .fetch_one(&*DB_POOL)
-        .await
-        .map_err(|e| e.to_string())?;
+    let data = query_file_as!(
+        StatsInfo,
+        "./queries/get_overall_stats.sql",
+        user_id,
+        dictionary_id
+    )
+    .fetch_one(&*DB_POOL)
+    .await
+    .map_err(|e| e.to_string())?;
 
     Ok(data)
 }
@@ -469,6 +477,7 @@ pub async fn get_answer_streaks(
     max_frequency: i64,
     count: i64,
     user_key: &str,
+    dictionary_id: i64,
 ) -> Result<Vec<AnswerStreaks>, String> {
     let user_id = get_user_id(user_key, None).await?;
     let data = sqlx::query_file_as!(
@@ -477,7 +486,8 @@ pub async fn get_answer_streaks(
         min_frequency,
         max_frequency,
         count,
-        user_id
+        user_id,
+        dictionary_id
     )
     .fetch_all(&*DB_POOL)
     .await
@@ -487,8 +497,8 @@ pub async fn get_answer_streaks(
 }
 
 #[tauri::command]
-pub async fn get_word_parts() -> Result<Vec<String>, String> {
-    let data = sqlx::query_file!("./queries/get_word_parts.sql")
+pub async fn get_word_parts(dictionary_id: i64) -> Result<Vec<String>, String> {
+    let data = sqlx::query_file!("./queries/get_word_parts.sql", dictionary_id)
         .map(|row| row.word_part)
         .fetch_all(&*DB_POOL)
         .await
@@ -498,12 +508,19 @@ pub async fn get_word_parts() -> Result<Vec<String>, String> {
 }
 
 #[tauri::command]
-pub async fn get_word_part_readings(word_part: String) -> Result<Vec<String>, String> {
-    let data = sqlx::query_file!("./queries/get_word_part_readings.sql", word_part)
-        .map(|row| row.word_part_reading)
-        .fetch_all(&*DB_POOL)
-        .await
-        .map_err(|e| e.to_string())?;
+pub async fn get_word_part_readings(
+    word_part: String,
+    dictionary_id: i64,
+) -> Result<Vec<String>, String> {
+    let data = sqlx::query_file!(
+        "./queries/get_word_part_readings.sql",
+        word_part,
+        dictionary_id
+    )
+    .map(|row| row.word_part_reading)
+    .fetch_all(&*DB_POOL)
+    .await
+    .map_err(|e| e.to_string())?;
 
     Ok(data)
 }
@@ -526,11 +543,15 @@ pub struct GameStats {
 }
 
 #[tauri::command]
-pub async fn get_all_games_stats() -> Result<Vec<GameStats>, String> {
-    let data = sqlx::query_file_as!(GameStats, "./queries/get_all_games_stats.sql")
-        .fetch_all(&*DB_POOL)
-        .await
-        .map_err(|e| e.to_string())?;
+pub async fn get_all_games_stats(dictionary_id: i64) -> Result<Vec<GameStats>, String> {
+    let data = sqlx::query_file_as!(
+        GameStats,
+        "./queries/get_all_games_stats.sql",
+        dictionary_id
+    )
+    .fetch_all(&*DB_POOL)
+    .await
+    .map_err(|e| e.to_string())?;
 
     Ok(data)
 }
@@ -616,11 +637,15 @@ pub async fn get_answer_stats_by_game(game_stats_id: i64) -> Result<Vec<AnswerSt
 }
 
 #[tauri::command]
-pub async fn get_all_answer_stats() -> Result<Vec<AnswerStats>, String> {
-    let data = sqlx::query_file_as!(AnswerStatsDB, "./queries/get_all_answer_stats.sql")
-        .fetch_all(&*DB_POOL)
-        .await
-        .map_err(|e| e.to_string())?;
+pub async fn get_all_answer_stats(dictionary_id: i64) -> Result<Vec<AnswerStats>, String> {
+    let data = sqlx::query_file_as!(
+        AnswerStatsDB,
+        "./queries/get_all_answer_stats.sql",
+        dictionary_id
+    )
+    .fetch_all(&*DB_POOL)
+    .await
+    .map_err(|e| e.to_string())?;
 
     Ok(data.into_iter().map(AnswerStats::from).collect())
 }

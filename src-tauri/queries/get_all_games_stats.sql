@@ -14,4 +14,5 @@ FROM game_stats
 LEFT JOIN font
 ON game_stats.font_id = font.id
 LEFT JOIN dictionary
-ON game_stats.dictionary_id = dictionary.id;
+ON game_stats.dictionary_id = dictionary.id
+WHERE game_stats.dictionary_id = $1;

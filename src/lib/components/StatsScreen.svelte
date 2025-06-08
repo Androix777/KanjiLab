@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getAllGamesStats, getAllUsers, getAnswerStatsByGame, getAnswerStreaks } from "$lib/databaseTools";
+	import { getSettings } from "$lib/globalSettings.svelte";
 	import type { AnswerStats, GameStats, User } from "$lib/types";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { onMount } from "svelte";
@@ -44,7 +45,7 @@
 				}
 				else
 				{
-					const streak = await getAnswerStreaks(min, max, 1, selectedUser.key);
+					const streak = await getAnswerStreaks(min, max, 1, selectedUser.key, getSettings().selectedDictionaryId.get());
 					row.push(streak.length > 0 ? streak[0].length : 0);
 				}
 			}
@@ -69,7 +70,7 @@
 
 	async function getGameStatsForPlayer(playerId: number)
 	{
-		const games: GameStats[] = await getAllGamesStats();
+		const games: GameStats[] = await getAllGamesStats(getSettings().selectedDictionaryId.get());
 		const filteredGames: GameStats[] = [];
 		for (let i = 0; i < games.length; i++)
 		{
@@ -118,7 +119,7 @@
 			thresholds={thresholds}
 		/>
 	</div>
-	<div class="grid grid-cols-2 lg:flex lg:flex-row w-full overflow-hidden flex-grow" style="min-height: min-content;">
+	<div class="grid grid-cols-2 lg:flex lg:flex-row w-full overflow-hidden flex-grow" style="min-height: min-content">
 		<div class="h-full col-span-2 aspect-square lg:flex-none lg:max-w-[50%]">
 			<Heatmap
 				bind:this={heatmap}

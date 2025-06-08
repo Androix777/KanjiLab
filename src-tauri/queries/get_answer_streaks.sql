@@ -15,6 +15,7 @@ WITH RankedAnswers AS (
 	WHERE gs.min_frequency = $1
 		AND gs.max_frequency >= $2
 		AND ans.user_id = $4
+		AND gs.dictionary_id = $5
 )
 SELECT game_id,
 	COUNT(*) AS length
