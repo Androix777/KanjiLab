@@ -87,7 +87,7 @@ export async function addGameStats(
 	roundsCount: number,
 	roundDuration: number,
 	minFrequency: number,
-	maxFrequency: number,
+	maxFrequency: number | null,
 	fontId: number | null,
 	dictionaryId: number,
 ): Promise<number>
@@ -115,7 +115,7 @@ export async function getOverallStats(userKey: string, dictionaryId: number): Pr
 
 export async function getAnswerStreaks(
 	minFrequency: number,
-	maxFrequency: number,
+	maxFrequency: number | null,
 	count: number,
 	userKey: string,
 	dictionaryId: number,

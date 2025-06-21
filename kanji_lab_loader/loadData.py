@@ -405,8 +405,9 @@ class FrequencyProcessor(BaseDataProcessor):
             task = progress_bar.add_task("[cyan]Preparing frequency data...", total=len(self.data))
             for item in self.data:
                 word_form = item[0]
+                freq_data_obj = item[2]
 
-                if not isinstance(word_form, str) or "㋕" in word_form:
+                if "㋕" in str(freq_data_obj):
                     progress_bar.update(task, advance=1)
                     continue
 

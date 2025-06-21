@@ -321,7 +321,7 @@ class WebSocketClient
 			customEvent.detail.gameSettings.roundsCount,
 			customEvent.detail.gameSettings.roundDuration * 1000,
 			getSettings().minFrequency.get(),
-			getSettings().maxFrequency.get(),
+			getSettings().usingMaxFrequency.get() ? getSettings().maxFrequency.get() : null,
 			fontID,
 			getSettings().selectedDictionaryId.get(),
 		);

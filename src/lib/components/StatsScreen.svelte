@@ -10,7 +10,7 @@
 	import type { HeatmapData } from "./Heatmap.svelte";
 	import MedalStats from "./MedalStats.svelte";
 
-	const frequencyValuesX = [0, 1000, 2500, 5000, 7500, 10000, 15000, 20000, 30000, 50000, 100000];
+	const frequencyValuesX = [0, 1000, 2500, 5000, 7500, 10000, 15000, 20000, 30000, 50000, 100000, Infinity];
 	const thresholds = [
 		{ value: 0, color: "#gray", points: 0 },
 		{ value: 5, color: "#cd7f32", points: 1 },
@@ -45,7 +45,8 @@
 				}
 				else
 				{
-					const streak = await getAnswerStreaks(min, max, 1, selectedUser.key, getSettings().selectedDictionaryId.get());
+					const maxValue = max === Infinity ? null : max;
+					const streak = await getAnswerStreaks(min, maxValue, 1, selectedUser.key, getSettings().selectedDictionaryId.get());
 					row.push(streak.length > 0 ? streak[0].length : 0);
 				}
 			}

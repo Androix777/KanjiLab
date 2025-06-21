@@ -78,7 +78,7 @@
             .attr("x", (_, i) => i * cellWidth + cellWidth / 2)
             .attr("text-anchor", "middle")
             .attr("fill", BASE_CONTENT)
-            .text(d => d.toString());
+            .text(d => d === Infinity ? "∞" : d.toString());
 
         g.append("g")
             .attr("transform", `translate(-10,0)`)
@@ -156,11 +156,13 @@
 
                     if (useTooltips) {
                         const showTooltip = (event: MouseEvent) => {
+                            const minDisplay = data.axisValues[i] === Infinity ? "∞" : data.axisValues[i].toString();
+                            const maxDisplay = data.axisValues[j] === Infinity ? "∞" : data.axisValues[j].toString();
                             tooltip
                                 ?.style("visibility", "visible")
                                 .html(`
-                                    Min: ${data.axisValues[i]}<br>
-                                    Max: ${data.axisValues[j]}<br>
+                                    Min: ${minDisplay}<br>
+                                    Max: ${maxDisplay}<br>
                                     Value: ${value}
                                 `)
                                 .style("left", `${event.pageX + 10}px`)

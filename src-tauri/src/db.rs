@@ -474,7 +474,7 @@ pub struct AnswerStreaks {
 #[tauri::command]
 pub async fn get_answer_streaks(
     min_frequency: i64,
-    max_frequency: i64,
+    max_frequency: Option<i64>,
     count: i64,
     user_key: &str,
     dictionary_id: i64,
