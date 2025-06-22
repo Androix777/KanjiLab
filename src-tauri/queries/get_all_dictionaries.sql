@@ -1,1 +1,1 @@
-SELECT id, guid, name FROM dictionary;
+SELECT id, guid, name, is_exist FROM dictionary;

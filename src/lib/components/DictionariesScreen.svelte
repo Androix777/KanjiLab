@@ -26,10 +26,16 @@
 		return selected;
 	}
 
+	async function loadDictionaries(): Promise<void>
+	{
+		const allDictionaries = await getDictionaries();
+		dictionaries = allDictionaries.filter(dict => dict.isExist);
+		confirmedDictionaryIndex = dictionaries.findIndex((dictionary: DictionaryInfo) => dictionary.id == getSettings().selectedDictionaryId.get());
+	}
+
 	onMount(async () =>
 	{
-		dictionaries = await getDictionaries();
-		confirmedDictionaryIndex = dictionaries.findIndex((dictionary: DictionaryInfo) => dictionary.id == getSettings().selectedDictionaryId.get());
+		await loadDictionaries();
 	});
 </script>
 
@@ -72,7 +78,7 @@
 							webSocketClient.isBusy = true;
 							await deleteDictionary(dictionaries[selectedDictionaryIndex].id);
 							selectedDictionaryIndex = -1;
-							dictionaries = await getDictionaries();
+							await loadDictionaries();
 							webSocketClient.isBusy = false;
 						}}
 					>Delete</button>
@@ -85,7 +91,7 @@
 							{
 								webSocketClient.isBusy = true;
 								await importDictionary(path);
-								dictionaries = await getDictionaries();
+								await loadDictionaries();
 								webSocketClient.isBusy = false;
 							}
 						}}

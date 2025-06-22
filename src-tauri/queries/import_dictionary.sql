@@ -65,11 +65,14 @@ WHERE dictionary_id = (
 		FROM dict_id
 	);
 -- Copy
-INSERT
-	OR REPLACE INTO main.dictionary (guid, name)
+INSERT INTO main.dictionary (guid, name, is_exist)
 SELECT guid,
-	name
-FROM dict_db.dictionary_info;
+	name,
+	true
+FROM dict_db.dictionary_info WHERE true
+ON CONFLICT(guid) DO UPDATE SET 
+	name = excluded.name,
+	is_exist = true;
 WITH dict_id AS (
 	SELECT id
 	FROM main.dictionary

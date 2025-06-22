@@ -19,5 +19,6 @@ WHERE word_id IN (
 DELETE FROM word
 WHERE dictionary_id = ?;
 
-DELETE FROM dictionary
+UPDATE dictionary 
+SET is_exist = false 
 WHERE id = ?;

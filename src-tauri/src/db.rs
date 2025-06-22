@@ -35,6 +35,7 @@ pub struct DictionaryInfo {
     id: i64,
     guid: String,
     name: String,
+    is_exist: bool,
 }
 
 #[tauri::command]

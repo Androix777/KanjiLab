@@ -4,6 +4,7 @@ export type DictionaryInfo = {
 	id: number,
     guid: string,
     name: string,
+    isExist: boolean,
 }
 
 export type GameStats = {
