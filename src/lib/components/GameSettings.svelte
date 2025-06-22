@@ -84,65 +84,64 @@
 <div class="flex flex-col flex-grow h-full">
 	<div class="h-full overflow-y-auto overflow-x-hidden relative">
 		<div class="card-title">Game settings</div>
-		<div class="flex flex-row mt-4">
-			<div class="flex-1 text-left my-auto">
-				Min frequency
-			</div>
-			<input
-				type="number"
-				step="1"
-				onchange={(event) =>
-				{
-					if (event.target instanceof HTMLInputElement && event.target.value)
-					{
-						getSettings().minFrequency.set(parseInt(event.target.value));
-					}
-				}}
-				value={getSettings().minFrequency.get()}
-				disabled={isSettingsLocked}
-				class="input input-bordered w-1/2 text-center input-sm"
-				style="-webkit-appearance: none"
-			/>
-		</div>
-
 		<div class="flex flex-row mt-4 items-center">
 			<div class="flex-1 text-left my-auto">
-				Max frequency
+				Frequency
 			</div>
-			<input
-				type="checkbox"
-				class="checkbox checkbox-primary flex-none m-2"
-				checked={getSettings().usingMaxFrequency.get()}
-				disabled={isSettingsLocked}
-				onchange={(event) =>
-				{
-					if (event.target instanceof HTMLInputElement)
+			<div class="flex flex-row w-1/2 join">
+				<input
+					type="number"
+					step="1"
+					placeholder="Min"
+					onchange={(event) =>
 					{
-						getSettings().usingMaxFrequency.set(event.target.checked);
-					}
-				}}
-			/>
-			<input
-				type="number"
-				step="1"
-				onchange={(event) =>
-				{
-					if (event.target instanceof HTMLInputElement)
+						if (event.target instanceof HTMLInputElement && event.target.value)
+						{
+							getSettings().minFrequency.set(parseInt(event.target.value));
+						}
+					}}
+					value={getSettings().minFrequency.get()}
+					disabled={isSettingsLocked}
+					class="input input-bordered text-center input-sm join-item min-w-0 w-[40%]"
+				/>
+				<input class="input input-bordered text-center input-sm join-item pointer-events-none w-[10%] min-w-8" disabled={isSettingsLocked} value="-"/>
+				<input
+					type="text"
+					placeholder="Max"
+					onchange={(event) =>
 					{
-						getSettings().maxFrequency.set(parseInt(event.target.value));
-					}
-				}}
-				value={getSettings().maxFrequency.get()}
-				disabled={isSettingsLocked}
-				class="input input-bordered w-1/2 text-center input-sm"
-			/>
+						if (event.target instanceof HTMLInputElement)
+						{
+							if (getSettings().usingMaxFrequency.get())
+							{
+								getSettings().maxFrequency.set(parseInt(event.target.value));
+							}
+						}
+					}}
+					value={getSettings().usingMaxFrequency.get() ? getSettings().maxFrequency.get() : "∞"}
+					disabled={isSettingsLocked || !getSettings().usingMaxFrequency.get()}
+					class="input input-bordered text-center input-sm join-item min-w-0 w-[40%]"
+				/>
+				<button
+					class="btn btn-sm join-item w-[10%] min-w-8"
+					class:btn-primary={getSettings().usingMaxFrequency.get()}
+					class:btn-outline={!getSettings().usingMaxFrequency.get()}
+					onclick={() =>
+					{
+						getSettings().usingMaxFrequency.set(!getSettings().usingMaxFrequency.get());
+					}}
+					disabled={isSettingsLocked}
+				>
+						∞
+				</button>
+			</div>
 		</div>
 		{#if !isAdmin}
 			<div class="flex flex-row mt-4">
 				<div class="flex-1 text-left my-auto">
 					Word part
 				</div>
-				<div class="w-1/2 flex flex-row text-center">
+				<div class="w-1/2 flex flex-row text-center gap-2">
 					<input
 						onchange={(event) =>
 						{
@@ -174,7 +173,7 @@
 				<div class="flex-1 text-left my-auto">
 					Word part
 				</div>
-				<div class="w-1/2 flex flex-row text-center">
+				<div class="w-1/2 flex flex-row text-center gap-2">
 					<div class="w-1/2 h-8 [&>*:nth-child(1)>:nth-child(1)]:select-sm">
 						<AutoComplete
 							items={wordPartItems}
