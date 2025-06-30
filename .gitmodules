@@ -1,0 +1,3 @@
+[submodule "src-tauri/kanjilab_server"]
+	path = src-tauri/kanjilab_server
+	url = https://github.com/Androix777/kanjilab-server

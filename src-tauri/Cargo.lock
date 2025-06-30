@@ -2091,7 +2091,6 @@ dependencies = [
 [[package]]
 name = "kanjilab_server"
 version = "0.1.0"
-source = "git+https://github.com/Androix777/kanjilab-server.git?rev=f210be357cb7aa01ada0175029d19c7621a63ee2#f210be357cb7aa01ada0175029d19c7621a63ee2"
 dependencies = [
  "base64 0.22.1",
  "ed25519-dalek",

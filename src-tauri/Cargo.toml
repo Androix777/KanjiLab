@@ -18,7 +18,7 @@ tauri-build = { version = "2.0.0-rc.0", features = [] }
 base64 = "0.22.1"
 chrono = { version = "0.4.38", features = ["serde"] }
 ed25519-dalek = { version = "2.1.1", features = ["rand_core", "serde"] }
-kanjilab_server = { git = "https://github.com/Androix777/kanjilab-server.git", rev = "f210be357cb7aa01ada0175029d19c7621a63ee2" }
+kanjilab_server = { path = "./kanjilab_server" }
 rand = "0.8.5"
 rusttype = "0.9.3"
 serde = { version = "1.0", features = ["derive"] }
