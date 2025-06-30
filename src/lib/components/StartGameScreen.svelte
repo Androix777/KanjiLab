@@ -19,10 +19,9 @@
 
 	async function runServer()
 	{
-		webSocketClient.adminPassword = await launchServer(getSettings().hostPort.get());
+		await launchServer(getSettings().hostPort.get());
 		webSocketClient.isConnectedToSelf = true;
 		await webSocketClient.connectToServer(`ws://127.0.0.1:${getSettings().hostPort.get()}`);
-		await webSocketClient.makeAdmin();
 	}
 
 	async function closeServer()

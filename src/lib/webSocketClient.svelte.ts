@@ -39,7 +39,6 @@ class WebSocketClient
 	public lastGameId: number = $state(0);
 	public accountName: string = $state(``);
 	public accountKey: string = $state(``);
-	public adminPassword: string = ``;
 	public fontsInfo: Array<FontInfo> = new Array<FontInfo>();
 	public isBusy: boolean = $state(false);
 
@@ -127,7 +126,7 @@ class WebSocketClient
 			this.id = payload.id;
 			if (!this.isConnectedToSelf)
 			{
-				this.setGameSettings(payload.gameSettings);
+				//this.setGameSettings(payload.gameSettings);
 			}
 			else
 			{
@@ -172,13 +171,7 @@ class WebSocketClient
 	{
 		await this.serverConnector.sendChatMessage(message);
 	}
-
-	public async makeAdmin()
-	{
-		await this.serverConnector.sendMakeAdmin(this.adminPassword, this.id);
-		this.isAdmin = true;
-	}
-
+    
 	public async startGame()
 	{
 		await this.serverConnector.sendStartGame(this.getGameSettings());

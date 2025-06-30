@@ -12,12 +12,11 @@ pub fn get_executable_file_path() -> Result<PathBuf, String> {
 }
 
 #[tauri::command]
-pub async fn launch_server(host_port: String) -> String {
-    kanjilab_server::call_launch_server(host_port).await;
-    kanjilab_server::get_admin_password()
+pub fn launch_server(host_port: String) -> Result<(), String> {
+    kanjilab_server::call_launch_server(host_port)
 }
 
 #[tauri::command]
-pub async fn stop_server() {
-    kanjilab_server::call_stop_server().await;
+pub fn stop_server() -> Result<(), String> {
+    kanjilab_server::call_stop_server()
 }
