@@ -14,8 +14,8 @@
 	const thresholds = [
 		{ value: 0, color: "#gray", points: 0 },
 		{ value: 5, color: "#cd7f32", points: 1 },
-		{ value: 10, color: "#c0c0c0", points: 2 },
-		{ value: 25, color: "#ffd700", points: 3 },
+		{ value: 15, color: "#c0c0c0", points: 2 },
+		{ value: 50, color: "#ffd700", points: 3 },
 		{ value: 100, color: "#b9f2ff", points: 5 },
 	];
 

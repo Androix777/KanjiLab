@@ -126,7 +126,7 @@ class WebSocketClient
 			this.id = payload.id;
 			if (!this.isConnectedToSelf)
 			{
-				//this.setGameSettings(payload.gameSettings);
+				// this.setGameSettings(payload.gameSettings);
 			}
 			else
 			{
@@ -171,7 +171,7 @@ class WebSocketClient
 	{
 		await this.serverConnector.sendChatMessage(message);
 	}
-    
+
 	public async startGame()
 	{
 		await this.serverConnector.sendStartGame(this.getGameSettings());
@@ -396,56 +396,62 @@ class WebSocketClient
 		this.currentRound++;
 	}
 
-	private async handleNotifRoundEnded(event: Event)
+	private async handleNotifRoundEnded(event: Event): Promise<void>
 	{
-		const customEvent: CustomEvent<OutNotifRoundEndedPayload> = <CustomEvent<OutNotifRoundEndedPayload>> event;
-		const lastRoundHistory: RoundHistory | undefined = this.gameHistory.at(-1);
+		const { question, answers } = (event as CustomEvent<OutNotifRoundEndedPayload>).detail;
 
-		if (lastRoundHistory == undefined)
+		const lastRound = this.gameHistory.at(-1);
+		if (!lastRound) return;
+
+		lastRound.question = question;
+
+		answers.forEach(a =>
+			lastRound.answers.set(a.id, {
+				answer: a.answer,
+				answerStatus: a.isCorrect ? "Correct" : "Incorrect",
+				answerTime: a.answerTime,
+			})
+		);
+
+		this.clientList.sort((c1, c2) =>
 		{
-			return;
-		}
-
-		lastRoundHistory.question = customEvent.detail.question;
-
-		customEvent.detail.answers.forEach((answer) =>
-		{
-			lastRoundHistory.answers.set(answer.id, {
-				answer: answer.answer,
-				answerStatus: answer.isCorrect ? `Correct` : `Incorrect`,
-				answerTime: answer.answerTime,
-			});
+			const score = (c: ClientInfo) =>
+				this.gameHistory.reduce(
+					(s, r) => s + (r.answers.get(c.id)?.answerStatus === "Correct" ? 1 : 0),
+					0,
+				);
+			return score(c2) - score(c1);
 		});
 
-		this.clientList.sort((e1, e2) =>
-		{
-			const e1Score = this.gameHistory.reduce((acc, round) => acc + (round.answers.get(e1.id)?.answerStatus == `Correct` ? 1 : 0), 0);
-			const e2Score = this.gameHistory.reduce((acc, round) => acc + (round.answers.get(e2.id)?.answerStatus == `Correct` ? 1 : 0), 0);
-			return (e1Score < e2Score) ? 1 : (e1Score > e2Score) ? -1 : 0;
-		});
+		const gameId = this.lastGameId;
+		const word = question.wordInfo.word;
+		const roundNumber = this.currentRound - 1;
+		const clients = [...this.clientList];
+		const answersMap = new Map(lastRound.answers);
 
-		const fontId = await getFontId(customEvent.detail.question.fontName);
+		const fontId = await getFontId(question.fontName);
 
-		this.clientList.forEach(async (client) =>
-		{
-			const answer = lastRoundHistory.answers.get(client.id);
-			if (answer)
+		await Promise.all(
+			clients.map(client =>
 			{
-				await addAnswerStats(
-					this.lastGameId,
+				const ans = answersMap.get(client.id);
+				if (!ans) return null;
+
+				return addAnswerStats(
+					gameId,
 					client.key,
 					client.name,
-					lastRoundHistory.question.wordInfo.word,
-					answer.answer,
-					answer.answerTime,
-					answer.answerStatus == `Correct`,
-					this.currentRound - 1,
+					word,
+					ans.answer,
+					ans.answerTime,
+					ans.answerStatus === "Correct",
+					roundNumber,
 					fontId,
 				);
-			}
-		});
+			}),
+		);
 
-		this.gameStatus = `WaitingQuestion`;
+		this.gameStatus = "WaitingQuestion";
 	}
 
 	private handleNotifClientAnswered(event: Event)
@@ -497,14 +503,16 @@ class WebSocketClient
 			if (answer)
 			{
 				await addAnswerStats(
-					this.lastGameId, 
-					client.key, client.name, 
-					lastRoundHistory.question.wordInfo.word, 
-					answer.answer, 
-					answer.answerTime, 
-					answer.answerStatus == `Correct`, 
+					this.lastGameId,
+					client.key,
+					client.name,
+					lastRoundHistory.question.wordInfo.word,
+					answer.answer,
+					answer.answerTime,
+					answer.answerStatus == `Correct`,
 					this.currentRound - 1,
-					fontId);
+					fontId,
+				);
 			}
 		});
 
