@@ -23,20 +23,82 @@ import type { AnswerStats, AnswerStreaks, DictionaryInfo, GameStats, User, WordI
 import type { StatsInfo } from "$lib/types";
 import { invoke } from "@tauri-apps/api/core";
 
-export async function getRandomWords(count: number): Promise<WordInfo[]>
+export const getRandomWord = (() =>
 {
-	const data: WordInfo[] = await invoke(GET_WORDS, {
-		count: count,
-		minFrequency: getSettings().minFrequency.get(),
-		maxFrequency: getSettings().usingMaxFrequency.get() ? getSettings().maxFrequency.get() : null,
-		wordPart: getSettings().wordPart.get() == `` ? null : getSettings().wordPart.get(),
-		wordPartReading: getSettings().wordPartReading.get() == `` ? null : getSettings().wordPartReading.get(),
-		examplesCount: 5,
-		dictionaryId: getSettings().selectedDictionaryId.get(),
-	});
+	const FIRST_BATCH_SIZE = 1;
+	const HIGH_MARK = 10;
+	const LOW_MARK = 5;
 
-	return data;
-}
+	let cache: WordInfo[] = [];
+	let lastSettingsKey: string | null = null;
+	let inFlight: Promise<void> | null = null;
+
+	const collectSettings = () => ({
+		minFrequency: getSettings().minFrequency.get(),
+		maxFrequency: getSettings().usingMaxFrequency.get() ?
+			getSettings().maxFrequency.get() :
+			null,
+		wordPart: getSettings().wordPart.get() || null,
+		wordPartReading: getSettings().wordPartReading.get() || null,
+		dictionaryId: getSettings().selectedDictionaryId.get(),
+		examplesCount: 5,
+	} as const);
+
+	const fetchBatch = async (settings: ReturnType<typeof collectSettings>, count: number) =>
+	{
+		const words: WordInfo[] = await invoke(GET_WORDS, {
+			...settings,
+			count,
+		});
+		cache.push(...words);
+	};
+
+	const ensurePrefetch = (settings: ReturnType<typeof collectSettings>) =>
+	{
+		if (inFlight || cache.length >= HIGH_MARK) return;
+
+		const need = HIGH_MARK - cache.length;
+		inFlight = fetchBatch(settings, need)
+			.finally(() =>
+			{
+				inFlight = null;
+			});
+	};
+
+	return async function getRandomWord(): Promise<WordInfo>
+	{
+		const settings = collectSettings();
+		const settingsKey = JSON.stringify(settings);
+
+		if (settingsKey !== lastSettingsKey)
+		{
+			cache = [];
+			lastSettingsKey = settingsKey;
+		}
+
+		if (cache.length === 0)
+		{
+			if (!inFlight)
+			{
+				inFlight = fetchBatch(settings, FIRST_BATCH_SIZE)
+					.finally(() =>
+					{
+						inFlight = null;
+					});
+			}
+			await inFlight;
+			ensurePrefetch(settings);
+		}
+		else if (cache.length < LOW_MARK)
+		{
+			ensurePrefetch(settings);
+		}
+
+		const idx = Math.floor(Math.random() * cache.length);
+		const [word] = cache.splice(idx, 1);
+		return word;
+	};
+})();
 
 export async function getWordsCount(): Promise<number>
 {
@@ -141,10 +203,10 @@ export async function getWordParts(dictionaryId: number): Promise<string[]>
 
 export async function getWordPartReadings(wordPart: string, dictionaryId: number): Promise<string[]>
 {
-	const data: string[] = await invoke(GET_WORD_PART_READINGS, { 
-        wordPart: wordPart,
-        dictionaryId: dictionaryId,
-    });
+	const data: string[] = await invoke(GET_WORD_PART_READINGS, {
+		wordPart: wordPart,
+		dictionaryId: dictionaryId,
+	});
 	return data;
 }
 

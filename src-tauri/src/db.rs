@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use sqlx::{query_file_as, sqlite::SqlitePool};
+use sqlx::{query_file_as, sqlite::{SqliteConnectOptions, SqlitePool}};
 use std::sync::LazyLock;
 
 use crate::tools::get_executable_file_path;
@@ -13,7 +13,12 @@ static DB_POOL: LazyLock<SqlitePool> = LazyLock::new(|| {
         .into_os_string()
         .into_string()
         .unwrap();
-    SqlitePool::connect_lazy(&path_str).unwrap()
+
+    let options = SqliteConnectOptions::new()
+        .filename(path_str)
+        .create_if_missing(true);
+    
+    SqlitePool::connect_lazy_with(options)
 });
 
 pub async fn init_db() {

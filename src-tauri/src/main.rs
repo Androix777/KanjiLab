@@ -3,7 +3,7 @@
 
 use tracing_subscriber::{
     filter::Targets,
-    fmt::{self, time::LocalTime},
+    fmt::{self, format::FmtSpan, time::LocalTime},
     prelude::*,
 };
 
@@ -26,6 +26,7 @@ pub fn setup_tracing() {
             fmt::layer()
                 .with_target(false)
                 .with_timer(time_fmt)
+                .with_span_events(FmtSpan::CLOSE)
                 .with_filter(filter),
         )
         .init();

@@ -1,7 +1,7 @@
 import { getSettings } from "$lib/globalSettings.svelte";
 import { ServerConnector } from "$lib/webSocketConnector";
 import { SvelteMap } from "svelte/reactivity";
-import { addAnswerStats, addGameStats, getAnswerStatsByGame, getFontId, getGameStats, getRandomWords } from "./databaseTools";
+import { addAnswerStats, addGameStats, getAnswerStatsByGame, getFontId, getGameStats, getRandomWord } from "./databaseTools";
 import { getDefaultFont, getFontInfo, getSVGText } from "./fontTools";
 import { getAccounts, signMessage } from "./networkTools";
 import type {
@@ -331,8 +331,7 @@ class WebSocketClient
 		{
 			try
 			{
-				const words = await getRandomWords(1);
-				const lastWord = words[0];
+				const lastWord = await getRandomWord();
 				let font: string;
 				if (getSettings().selectedFonts.get().length > 0)
 				{
