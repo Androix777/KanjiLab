@@ -58,7 +58,6 @@ export class ServerConnector extends EventTarget
 			if (typeof event.data == `string`)
 			{
 				const message: BaseMessage<object, MessageType> = <BaseMessage<object, MessageType>> JSON.parse(event.data);
-				console.log(`Received message: ` + event.data);
 				if (!message.correlationId) return;
 
 				const callback = this.messagePool.get(message.correlationId);

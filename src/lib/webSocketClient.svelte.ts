@@ -293,6 +293,7 @@ class WebSocketClient
 		const customEvent: CustomEvent<OutNotifGameStartedPayload> = <CustomEvent<OutNotifGameStartedPayload>> event;
 		this.currentRound = 0;
 		this.gameHistory.length = 0;
+        this.gameStatus = `WaitingQuestion`;
 
 		let fontID: number | null = null;
 		if (this.isConnectedToSelf)
@@ -318,8 +319,6 @@ class WebSocketClient
 			fontID,
 			getSettings().selectedDictionaryId.get(),
 		);
-
-		this.gameStatus = `WaitingQuestion`;
 	}
 
 	private async handleReqQuestion(event: Event)
@@ -431,6 +430,8 @@ class WebSocketClient
 
 		const fontId = await getFontId(question.fontName);
 
+        this.gameStatus = "WaitingQuestion";
+
 		await Promise.all(
 			clients.map(client =>
 			{
@@ -450,8 +451,6 @@ class WebSocketClient
 				);
 			}),
 		);
-
-		this.gameStatus = "WaitingQuestion";
 	}
 
 	private handleNotifClientAnswered(event: Event)
