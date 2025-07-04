@@ -1,11 +1,26 @@
 <script lang="ts">
 	import { getWordPartReadings, getWordParts } from "$lib/databaseTools";
+	import { getWordsCount } from "$lib/databaseTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import AutoComplete from "./AutoComplete.svelte";
 	import FontsScreen from "./FontsScreen.svelte";
 
 	let webSocketClient: WebSocketClient = $state(WebSocketClient.getInstance());
+
+	let wordsCount: number = $state(0);
+	let wordsLoading = $state(false);
+
+	async function refreshWordsCount()
+	{
+		if (!isAdmin)
+		{
+			return;
+		}
+		wordsLoading = true;
+		wordsCount = await getWordsCount();
+		wordsLoading = false;
+	}
 
 	type Props = {
 		startFunction: () => void;
@@ -33,6 +48,18 @@
 		if (!webSocketClient.isConnectedToSelf) return;
 
 		void webSocketClient.sendNewSettings();
+	});
+
+	$effect(() =>
+	{
+		getSettings().minFrequency.get();
+		getSettings().maxFrequency.get();
+		getSettings().usingMaxFrequency.get();
+		getSettings().wordPart.get();
+		getSettings().wordPartReading.get();
+		getSettings().selectedDictionaryId.get();
+
+		void refreshWordsCount();
 	});
 
 	function countFonts()
@@ -79,6 +106,7 @@
 	}
 
 	void refreshItems();
+	void refreshWordsCount();
 </script>
 
 <div class="flex flex-col flex-grow h-full">
@@ -104,7 +132,7 @@
 					disabled={isSettingsLocked}
 					class="input input-bordered text-center input-sm join-item min-w-0 w-[40%]"
 				/>
-				<input class="input input-bordered text-center input-sm join-item pointer-events-none w-[10%] min-w-8" disabled={isSettingsLocked} value="-"/>
+				<input class="input input-bordered text-center input-sm join-item pointer-events-none w-[10%] min-w-8" disabled={isSettingsLocked} value="-" />
 				<input
 					type="text"
 					placeholder="Max"
@@ -132,7 +160,7 @@
 					}}
 					disabled={isSettingsLocked}
 				>
-						∞
+					∞
 				</button>
 			</div>
 		</div>
@@ -286,14 +314,22 @@
 		</dialog>
 	</div>
 
-	<div class="text-center flex-grow relative min-h-16">
+	<div class="text-center flex-grow relative min-h-16 text-lg">
 		<div class="absolute bottom-0 left-0 right-0">
 			<button
 				class="btn btn-primary w-full"
 				onclick={startFunction}
-				disabled={!isAdmin}
+				disabled={!isAdmin || wordsCount === 0 || wordsLoading}
 			>
-				Start
+				{#if !isAdmin}
+					Start
+				{:else if wordsLoading}
+					Counting…
+				{:else if wordsCount === 0}
+					No words
+				{:else}
+					Start ({wordsCount.toLocaleString()} words)
+				{/if}
 			</button>
 		</div>
 	</div>
