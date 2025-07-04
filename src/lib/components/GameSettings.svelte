@@ -314,10 +314,10 @@
 		</dialog>
 	</div>
 
-	<div class="text-center flex-grow relative min-h-16 text-lg">
+	<div class="text-center flex-grow relative min-h-16">
 		<div class="absolute bottom-0 left-0 right-0">
 			<button
-				class="btn btn-primary w-full"
+				class="btn btn-primary w-full text-lg"
 				onclick={startFunction}
 				disabled={!isAdmin || wordsCount === 0 || wordsLoading}
 			>
