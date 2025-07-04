@@ -96,6 +96,7 @@
 			table = new Tabulator(tableContainer, {
 				data: tableData,
 				layout: "fitColumns",
+				height: tableContainer.clientHeight,
 				columns,
 			});
 			table.on("rowClick", async function(e, row)
