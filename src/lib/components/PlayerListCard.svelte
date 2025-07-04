@@ -67,8 +67,8 @@
 			<Avatar key={clientInfo.key} />
 			<div class="flex-grow flex flex-column flex-wrap">
 				<div class="flex flex-row h-8 w-full p-1">
-					<div class="flex-none w-16 font-bold text-lg text-base-content">
-						{correctCount} ({currentCombo})
+					<div class="flex-none w-24 font-bold text-lg text-base-content">
+						{correctCount} / {currentCombo}🔥
 					</div>
 					<div class="flex-grow font-semibold text-base text-primary}">
 						<span class="text-primary">{clientInfo.isAdmin ? `♔ ` : ``}</span>{clientInfo.name}
