@@ -6,6 +6,12 @@ KanjiLab is an open-source, portable desktop application designed to test and ch
 
 Please be aware that **KanjiLab is not designed to be a tool for learning Japanese**.
 
+🚧 Beta Warning
+
+Please note that KanjiLab is currently in the beta phase of development. While the core features are functional, you may still encounter bugs, performance issues, or unexpected behavior.
+
+Important: Breaking changes may be introduced in future updates. This could potentially lead to the reset of your game statistics and user profiles.
+
 ![preview](https://github.com/user-attachments/assets/ba2dc923-c6f9-49ea-aecc-d0afda37b6bc)
 
 ## ✨ Features!
@@ -39,7 +45,5 @@ Please be aware that **KanjiLab is not designed to be a tool for learning Japane
 *   🏆 **Skill & Record System:** Achieve the longest answer streaks (combos) within specific frequency ranges to earn a unique skill score. Compete for the top spot on the local leaderboards.
 
 *   👥 **Multiple User Profiles:** Create and switch between separate local profiles, each with its own independent statistics, records, and settings.
-
-*   🔐 **Decentralized Identity:** Verify your identity to others in multiplayer by signing a challenge message with your private key, proving ownership of your profile without a central authority.
 
 *   📦 **Fully Offline & Portable:** The application requires no internet connection for any of its features. It runs as a single, portable executable without installation, storing all user data locally in a SQLite database.
