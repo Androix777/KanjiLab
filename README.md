@@ -23,24 +23,20 @@ Important: Breaking changes may be introduced in future updates. This could pote
 
 *   🎮 **Kanji Reading Quiz:** A game to test your knowledge of Japanese word readings in a quiz format.
 
-*   🔗 **Learn Through Association:** After each answer, explore all possible readings of the word. Discover other words that use the same kanji with similar readings to help build stronger memory connections.
+*   📦 **Fully Offline & Portable:** The application requires no internet connection for any of its features. It runs as a single, portable executable without installation, storing all user data locally.
 
 *   👤 **Single-Player Mode:** Play solo anytime for self-assessment, practice, or casual gameplay.
 
 *   🌐 **P2P Multiplayer:** Challenge friends in real-time! One player hosts, and others connect directly over a local network or using VPN tools (e.g., Radmin VPN, Hamachi). Supports a virtually unlimited number of players.
 
-*   💬 **In-Game Chat:** Communicate with other players directly within the multiplayer lobby and during the game.
+*   🔗 **Learn Through Association:** After each answer, explore all possible readings of the word. Discover other words that use the same kanji with similar readings to help build stronger memory connections.
+
+*   📝 **Font Management:** Select from several built-in fonts or load your own. The chosen font can significantly alter the difficulty of reading, adding another layer to the challenge.
 
 *   🛠️ **Quiz Customization:** Tailor your games by:
     *   Selecting word frequency ranges.
     *   Filtering for words with specific kanji, kanji compounds, and even their specific readings.
     *   Setting the duration and number of rounds.
-
-*   🎨 **Visual Customization:** Personalize your experience with dozens of built-in themes to choose from.
-
-*   📝 **Font Management:** Select from several built-in fonts or load your own. The chosen font can significantly alter the difficulty of reading, adding another layer to the challenge.
-
-*   📚 **Custom Dictionaries (Beta):** Go beyond the default word list by creating and loading your own custom dictionaries for quizzes.
 
 *   📡 **Effortless Multiplayer Setup:** In a multiplayer game, only the host needs to have the custom fonts and dictionaries. All connected clients will automatically use the host's assets without any local configuration required.
 
@@ -48,6 +44,10 @@ Important: Breaking changes may be introduced in future updates. This could pote
 
 *   🏆 **Skill & Record System:** Achieve the longest answer streaks (combos) within specific frequency ranges to earn a unique skill score. Compete for the top spot on the local leaderboards.
 
+*   📚 **Custom Dictionaries (Beta):** Go beyond the default word list by creating and loading your own custom dictionaries for quizzes.
+
+*   💬 **In-Game Chat:** Communicate with other players directly within the multiplayer lobby and during the game.
+
 *   👥 **Multiple User Profiles:** Create and switch between separate local profiles, each with its own independent statistics, records, and settings.
 
-*   📦 **Fully Offline & Portable:** The application requires no internet connection for any of its features. It runs as a single, portable executable without installation, storing all user data locally in a SQLite database.
+*   🎨 **Visual Customization:** Personalize your experience with dozens of built-in themes to choose from.
