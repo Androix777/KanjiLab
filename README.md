@@ -1,8 +1,12 @@
 # KanjiLab
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/31555931-93b4-4db2-b639-eeded867ec80" alt="KanjiLab Logo" width="300">
+</p>
+
 A fun and challenging quiz game to test your knowledge of Japanese word readings.
 
-KanjiLab is an open-source, portable desktop application designed to test and challenge your knowledge of Japanese word readings (yomikata). Built with Rust and Svelte using the Tauri framework, it offers a fast and responsive experience for both solo play and peer-to-peer multiplayer sessions. All your data is stored locally in a SQLite database, ensuring complete privacy and offline functionality.
+KanjiLab is an open-source, portable desktop application designed to test and challenge your knowledge of Japanese word readings. Built with Rust and Svelte using the Tauri framework, it offers a fast and responsive experience for both solo play and peer-to-peer multiplayer sessions. All your data is stored locally in a SQLite database, ensuring complete privacy and offline functionality.
 
 Please be aware that **KanjiLab is not designed to be a tool for learning Japanese**.
 
