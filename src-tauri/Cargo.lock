@@ -75,32 +75,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
 
 [[package]]
-name = "app"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "chrono",
- "ed25519-dalek",
- "indexmap 2.10.0",
- "kanjilab_server",
- "rand 0.8.5",
- "rusttype",
- "serde",
- "serde_json",
- "sqlx",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "time",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "ttf-parser 0.25.1",
- "usvg",
-]
-
-[[package]]
 name = "arrayref"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2086,6 +2060,32 @@ dependencies = [
  "quote",
  "syn 2.0.99",
  "uuid",
+]
+
+[[package]]
+name = "kanjilab"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "chrono",
+ "ed25519-dalek",
+ "indexmap 2.10.0",
+ "kanjilab_server",
+ "rand 0.8.5",
+ "rusttype",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "time",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "ttf-parser 0.25.1",
+ "usvg",
 ]
 
 [[package]]
