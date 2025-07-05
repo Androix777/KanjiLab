@@ -12,9 +12,9 @@ export type GameStats = {
 	roundsCount: number;
 	roundDuration: number;
 	minFrequency: number;
-	maxFrequency?: number | null;
-	fontId?: number | null;
-	font?: string | null;
+	maxFrequency: number | null;
+	fontId: number | null;
+	font: string | null;
 	dictionaryId: number;
 	dictionary: string;
 	realRoundsCount: number,
@@ -29,7 +29,7 @@ export type AnswerStats = {
 	user: string;
 	word: string;
 	wordReading: string;
-	duration?: number | null;
+	duration: number | null;
 	isCorrect: boolean;
 	roundIndex: number;
 	timestamp: string;

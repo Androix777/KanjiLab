@@ -2,10 +2,10 @@
 	import type { AnswerStats, GameStats } from "$lib/types";
 	import { onMount } from "svelte";
 	import { TabulatorFull as Tabulator } from "tabulator-tables";
-	import type { ColumnDefinition } from "tabulator-tables";
 	import "tabulator-tables/dist/css/tabulator.min.css";
 	import { getAnswerStatsByGame } from "$lib/databaseTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
+	import type { CellComponent, ColumnDefinition } from "tabulator-tables";
 	import GameStatsTable from "./GameStatsTable.svelte";
 
 	type Props = {
@@ -27,7 +27,7 @@
 		id: number;
 		dictionary: string;
 		font: string;
-		maxFrequency: number;
+		maxFrequency: number | null;
 		minFrequency: number;
 		roundDuration: number;
 		roundsCount: number;
@@ -50,7 +50,7 @@
 				id: game.id,
 				dictionary: game.dictionary,
 				font: (typeof (game.font) == typeof ("") ? game.font as string : ""),
-				maxFrequency: (typeof (game.maxFrequency) == typeof (0) ? game.maxFrequency as number : -1),
+				maxFrequency: game.maxFrequency,
 				minFrequency: game.minFrequency,
 				roundDuration: game.roundDuration,
 				roundsCount: game.roundsCount,
@@ -66,8 +66,27 @@
 			{ title: "ID", field: "id", width: 50 },
 			{ title: "Dictionary", field: "dictionary", width: 100 },
 			{ title: "Font", field: "font", width: 100 },
-			{ title: "Max frequency", field: "maxFrequency", width: 100 },
 			{ title: "Min frequency", field: "minFrequency", width: 100 },
+			{
+				title: "Max frequency",
+				field: "maxFrequency",
+				width: 100,
+				formatter: (
+					cell: CellComponent,
+				): string =>
+				{
+					const value = cell.getValue() as number | null;
+					return value == null ? "∞" : String(value);
+				},
+				sorter: (
+					a: number | null,
+					b: number | null,
+				): number =>
+				{
+					const toNum = (v: number | null) => v == null ? Number.POSITIVE_INFINITY : v;
+					return toNum(a) - toNum(b);
+				},
+			},
 			{ title: "Round duration", field: "roundDuration", width: 100 },
 			{ title: "Number of rounds", field: "roundsCount", width: 100 },
 			{ title: "Rounds", field: "realRoundsCount", width: 100 },
