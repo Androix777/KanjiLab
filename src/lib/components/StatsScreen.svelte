@@ -19,8 +19,8 @@
 		{ value: 100, color: "#b9f2ff", points: 5 },
 	];
 
-	let heatmap: ReturnType<typeof FrequencyHeatmap>;
-	let medalStats: ReturnType<typeof MedalStats>;
+	let heatmap: ReturnType<typeof FrequencyHeatmap> | null = $state(null);
+	let medalStats: ReturnType<typeof MedalStats> | null = $state(null);
 	let data: HeatmapData = $state({ axisValues: [], intersectionMatrix: [], streaksData: [] });
 	let streaks: (number | null)[][] = $state([]);
 	let streaksData: (AnswerStreaks[] | null)[][] = $state([]);
@@ -66,9 +66,9 @@
 		};
 
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-		heatmap.redraw();
+		heatmap?.redraw();
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-		medalStats.redraw();
+		medalStats?.redraw();
 	}
 
 	async function redraw()
@@ -107,43 +107,54 @@
 </script>
 
 <div class="h-full flex flex-col overflow-y-auto">
-	<div class="flex-none relative">
-		<div class="absolute left-5 top-10 w-1/4">
-			<AutoComplete
-				items={usernames}
-				selectedIndex={selectedUserIndex}
-				maxOptions={10}
-				onSelect={async (selectedIndex: number) =>
-				{
-					selectedUserIndex = selectedIndex;
-					selectedUser = users[selectedUserIndex];
-					await redraw();
-				}}
-			/>
+	{#if selectedUser == undefined}
+		<div class="flex items-center justify-center h-full">
+			<div class="text-center p-8">
+				<div class="text-xl font-semibold text-gray-600 mb-4">
+					Statistics unavailable
+				</div>
+				<div class="text-gray-500">
+					Unable to display stats as no games have been played.
+				</div>
+			</div>
 		</div>
-		<MedalStats
-			bind:this={medalStats}
-			data={data}
-			thresholds={thresholds}
-		/>
-	</div>
-	<div class="grid grid-cols-2 lg:flex lg:flex-row w-full overflow-hidden flex-grow" style="min-height: min-content">
-		<div class="h-full col-span-2 aspect-square lg:flex-none lg:max-w-[50%]">
-			<FrequencyHeatmap
-				bind:this={heatmap}
+	{:else}
+		<div class="flex-none relative">
+			<div class="absolute left-5 top-10 w-1/4">
+				<AutoComplete
+					items={usernames}
+					selectedIndex={selectedUserIndex}
+					maxOptions={10}
+					onSelect={async (selectedIndex: number) =>
+					{
+						selectedUserIndex = selectedIndex;
+						selectedUser = users[selectedUserIndex];
+						await redraw();
+					}}
+				/>
+			</div>
+			<MedalStats
+				bind:this={medalStats}
 				data={data}
 				thresholds={thresholds}
 			/>
 		</div>
+		<div class="grid grid-cols-2 lg:flex lg:flex-row w-full overflow-hidden flex-grow" style="min-height: min-content">
+			<div class="h-full col-span-2 aspect-square lg:flex-none lg:max-w-[50%]">
+				<FrequencyHeatmap
+					bind:this={heatmap}
+					data={data}
+					thresholds={thresholds}
+				/>
+			</div>
 
-		<div class="p-4 pt-10 col-span-2 min-w-0 min-h-full max-h-[50%] lg:flex-grow lg:max-h-full lg:min-h-[85%]">
-			{#if selectedUser != undefined}
+			<div class="p-4 pt-10 col-span-2 min-w-0 min-h-full max-h-[50%] lg:flex-grow lg:max-h-full lg:min-h-[85%]">
 				{#await getGameStatsForPlayer(selectedUser.id)}
 					Loading games...
 				{:then games}
 					<GamesTable games={games} />
 				{/await}
-			{/if}
+			</div>
 		</div>
-	</div>
+	{/if}
 </div>
