@@ -1,7 +1,7 @@
 # KanjiLab
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/31555931-93b4-4db2-b639-eeded867ec80" alt="KanjiLab Logo" width="300">
+  <img src="https://github.com/user-attachments/assets/894ec4aa-62db-499a-835b-13083176d338" alt="KanjiLab Logo" width="300">
 </p>
 
 A fun and challenging quiz game to test your knowledge of Japanese word readings.
