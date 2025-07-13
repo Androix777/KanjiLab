@@ -65,14 +65,18 @@ WHERE dictionary_id = (
 		FROM dict_id
 	);
 -- Copy
-INSERT INTO main.dictionary (guid, name, is_exist)
+INSERT INTO main.dictionary (guid, name, is_exist, stats_config, description)
 SELECT guid,
 	name,
-	true
+	true,
+	stats_config,
+	description
 FROM dict_db.dictionary_info WHERE true
-ON CONFLICT(guid) DO UPDATE SET 
+ON CONFLICT(guid) DO UPDATE SET
 	name = excluded.name,
-	is_exist = true;
+	is_exist = true,
+	stats_config = excluded.stats_config,
+	description = excluded.description;
 WITH dict_id AS (
 	SELECT id
 	FROM main.dictionary

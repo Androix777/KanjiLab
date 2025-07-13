@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { getAllGamesStats, getAllUsers, getAnswerStatsByGame, getAnswerStreaks } from "$lib/databaseTools";
+	import { getAllGamesStats, getAllUsers, getAnswerStatsByGame, getAnswerStreaks, getDictionaryStatsConfig } from "$lib/databaseTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
-	import type { AnswerStats, AnswerStreaks, GameStats, User } from "$lib/types";
+	import type { AnswerStats, AnswerStreaks, GameStats, User, MedalThreshold } from "$lib/types";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { onMount } from "svelte";
 	import AutoComplete from "./AutoComplete.svelte";
@@ -10,14 +10,17 @@
 	import type { HeatmapData } from "./FrequencyHeatmap.svelte";
 	import MedalStats from "./MedalStats.svelte";
 
-	const frequencyValuesX = [0, 1000, 2500, 5000, 7500, 10000, 15000, 20000, 30000, 50000, 100000, Infinity];
-	const thresholds = [
+	const defaultFrequencyValues: number[] = [];
+	const defaultThresholds: MedalThreshold[] = [
 		{ value: 0, color: "#gray", points: 0 },
 		{ value: 5, color: "#cd7f32", points: 1 },
 		{ value: 15, color: "#c0c0c0", points: 2 },
 		{ value: 50, color: "#ffd700", points: 3 },
 		{ value: 100, color: "#b9f2ff", points: 5 },
 	];
+
+	let frequencyValuesX: number[] = $state(defaultFrequencyValues);
+	let thresholds: MedalThreshold[] = $state(defaultThresholds);
 
 	let heatmap: ReturnType<typeof FrequencyHeatmap> | null = $state(null);
 	let medalStats: ReturnType<typeof MedalStats> | null = $state(null);
@@ -30,17 +33,36 @@
 	let selectedUserIndex: number = $state(0);
 	let usernames: string[] = $state([]);
 
+	async function loadStatsConfig()
+	{
+		const config = await getDictionaryStatsConfig(getSettings().selectedDictionaryId.get());
+		if (config) {
+			if (config.frequencyValues.length > 0) {
+				frequencyValuesX = config.frequencyValues;
+			}
+			if (config.medals.length > 0) {
+				thresholds = config.medals;
+			}
+		}
+	}
+
 	async function getStreaks()
 	{
 		if (selectedUser == undefined) return;
 
+		const processedValues = [...new Set(frequencyValuesX)]
+			.filter(val => val !== 0 && val !== Infinity && !isNaN(val))
+			.sort((a, b) => a - b);
+		
+		const fullFrequencyValues = [0, ...processedValues, Infinity];
+
 		streaks = [];
 		streaksData = [];
-		for (const min of frequencyValuesX)
+		for (const min of fullFrequencyValues)
 		{
 			const row = [];
 			const streaksRow = [];
-			for (const max of frequencyValuesX)
+			for (const max of fullFrequencyValues)
 			{
 				if (min >= max)
 				{
@@ -60,7 +82,7 @@
 		}
 
 		data = {
-			axisValues: frequencyValuesX,
+			axisValues: fullFrequencyValues,
 			intersectionMatrix: streaks.map(row => row.map(value => value === null ? 0 : value)),
 			streaksData: streaksData,
 		};
@@ -93,6 +115,8 @@
 
 	onMount(async () =>
 	{
+		await loadStatsConfig();
+		
 		users = await getAllUsers();
 		selectedUserIndex = users.findIndex(x => x.key == WebSocketClient.getInstance().accountKey) || 0;
 		selectedUser = users[selectedUserIndex];
@@ -103,6 +127,17 @@
 		});
 
 		await redraw();
+	});
+
+	$effect(() => {
+		getSettings().selectedDictionaryId.get();
+		
+		void (async () => {
+			await loadStatsConfig();
+			if (selectedUser) {
+				await redraw();
+			}
+		})();
 	});
 </script>
 

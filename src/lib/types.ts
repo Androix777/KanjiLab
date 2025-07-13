@@ -1,10 +1,21 @@
 import type { SvelteMap } from "svelte/reactivity";
 
+export type RawDictionaryInfo = {
+	id: number;
+	guid: string;
+	name: string;
+	isExist: boolean;
+	statsConfig: string | null;
+	description: string | null;
+};
+
 export type DictionaryInfo = {
 	id: number,
     guid: string,
     name: string,
     isExist: boolean,
+    statsConfig: DictionaryStatsConfig | null,
+    description: string | null,
 }
 
 export type GameStats = {
@@ -68,6 +79,17 @@ export type StatsInfo = {
 export type AnswerStreaks = {
 	gameId: number;
 	length: number;
+};
+
+export type MedalThreshold = {
+	value: number;
+	color: string;
+	points: number;
+};
+
+export type DictionaryStatsConfig = {
+	frequencyValues: number[];
+	medals: MedalThreshold[];
 };
 
 export type User = {

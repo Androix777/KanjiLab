@@ -1,5 +1,10 @@
 -- dictionary_info
-CREATE TABLE IF NOT EXISTS dictionary_info (guid TEXT NOT NULL, name TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS dictionary_info (
+	guid TEXT NOT NULL,
+	name TEXT NOT NULL,
+	stats_config TEXT,
+	description TEXT
+);
 -- word
 CREATE TABLE IF NOT EXISTS word (
 	id INTEGER PRIMARY KEY NOT NULL,

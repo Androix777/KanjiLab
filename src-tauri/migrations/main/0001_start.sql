@@ -3,7 +3,9 @@ CREATE TABLE IF NOT EXISTS dictionary (
 	id INTEGER PRIMARY KEY NOT NULL,
 	guid TEXT UNIQUE NOT NULL,
 	name TEXT NOT NULL,
-    is_exist BOOLEAN NOT NULL
+    is_exist BOOLEAN NOT NULL,
+	stats_config TEXT,
+	description TEXT
 );
 -- font
 CREATE TABLE IF NOT EXISTS font (

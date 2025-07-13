@@ -19,7 +19,7 @@ import {
 	GET_WORDS_COUNT,
 	IMPORT_DICTIONARY,
 } from "$lib/tauriFunctions";
-import type { AnswerStats, AnswerStreaks, DictionaryInfo, GameStats, User, WordInfo } from "$lib/types";
+import type { AnswerStats, AnswerStreaks, DictionaryInfo, DictionaryStatsConfig, GameStats, RawDictionaryInfo, User, WordInfo } from "$lib/types";
 import type { StatsInfo } from "$lib/types";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -252,8 +252,28 @@ export async function getAllUsers(): Promise<User[]>
 
 export async function getDictionaries(): Promise<DictionaryInfo[]>
 {
-	const dictionaries: DictionaryInfo[] = await invoke(GET_DICTIONARIES);
-	return dictionaries;
+	const rawDictionaries: RawDictionaryInfo[] = await invoke(GET_DICTIONARIES);
+	
+	return rawDictionaries.map(dict => ({
+		...dict,
+		statsConfig: dict.statsConfig ?
+			(() => {
+				try {
+					return JSON.parse(dict.statsConfig) as DictionaryStatsConfig;
+				} catch (error) {
+					console.error("Failed to parse stats config for dictionary", dict.id, error);
+					return null;
+				}
+			})() : null
+	}));
+}
+
+export async function getDictionaryStatsConfig(dictionaryId: number): Promise<DictionaryStatsConfig | null>
+{
+	const dictionaries = await getDictionaries();
+	const dictionary = dictionaries.find(d => d.id === dictionaryId);
+	
+	return dictionary?.statsConfig || null;
 }
 
 export async function deleteDictionary(id: number): Promise<void>

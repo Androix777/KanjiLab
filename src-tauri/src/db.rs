@@ -41,6 +41,8 @@ pub struct DictionaryInfo {
     guid: String,
     name: String,
     is_exist: bool,
+    stats_config: Option<String>,
+    description: Option<String>,
 }
 
 #[tauri::command]

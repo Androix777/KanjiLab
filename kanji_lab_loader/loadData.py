@@ -456,10 +456,12 @@ class FrequencyProcessor(BaseDataProcessor):
 
 
 class DictionaryBuilder:
-    def __init__(self, db_path: str, dict_name: str, dict_guid: str):
+    def __init__(self, db_path: str, dict_name: str, dict_guid: str, stats_config: dict = None):
         self.db_path = db_path
         self.dict_name = dict_name
         self.dict_guid = dict_guid
+        self.stats_config = stats_config
+        self.description = None
         self.processors = []
 
     def add_processor(self, processor_instance: BaseDataProcessor, stage_name: str):
@@ -471,9 +473,12 @@ class DictionaryBuilder:
     def _initialize_dictionary_info(self, db_manager: DatabaseManager):
         log.info(f"Initializing dictionary metadata for: [bold magenta]{self.dict_name}[/bold magenta] (GUID: {self.dict_guid})")
         try:
+            import json
+            stats_config_json = json.dumps(self.stats_config) if self.stats_config else None
+            
             db_manager.execute(
-                "INSERT OR IGNORE INTO dictionary_info (name, guid) VALUES (?, ?)",
-                (self.dict_name, self.dict_guid),
+                "INSERT OR IGNORE INTO dictionary_info (name, guid, stats_config, description) VALUES (?, ?, ?, ?)",
+                (self.dict_name, self.dict_guid, stats_config_json, self.description),
             )
 
             db_manager.commit()
@@ -513,7 +518,20 @@ def main():
 
     console.rule("[bold #2E8B57]🚀 Dictionary Data Processing Engine Initialized 🚀[/bold #2E8B57]", style="#FFD700")
 
-    builder = DictionaryBuilder("./data/dict.db", "JMDict", "a5ecf9a5-7a0e-4858-8122-62365f3f8965")
+    # Default stats configuration
+    default_stats_config = {
+        "frequencyValues": [1000, 2500, 5000, 10000, 20000, 30000, 50000, 100000],
+        "medals": [
+            {"value": 0, "color": "#gray", "points": 0},
+            {"value": 5, "color": "#cd7f32", "points": 1},
+            {"value": 15, "color": "#c0c0c0", "points": 2},
+            {"value": 50, "color": "#ffd700", "points": 3},
+            {"value": 100, "color": "#b9f2ff", "points": 5}
+        ]
+    }
+
+    builder = DictionaryBuilder("./data/dict.db", "JMDict", "a5ecf9a5-7a0e-4858-8122-62365f3f8965", default_stats_config)
+    builder.description = "JMDict dictionary"
 
     builder.add_processor(
         JmdictProcessor(
