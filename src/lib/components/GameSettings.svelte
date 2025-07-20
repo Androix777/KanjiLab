@@ -1,15 +1,19 @@
 <script lang="ts">
-	import { getWordPartReadings, getWordParts } from "$lib/databaseTools";
+	import { getDictionaries, getWordPartReadings, getWordParts } from "$lib/databaseTools";
 	import { getWordsCount } from "$lib/databaseTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
+    import type { DictionaryInfo } from "$lib/types";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import AutoComplete from "./AutoComplete.svelte";
+    import DictionariesScreenMini from "./DictionariesScreenMini.svelte";
 	import FontsScreen from "./FontsScreen.svelte";
 
 	let webSocketClient: WebSocketClient = $state(WebSocketClient.getInstance());
 
 	let wordsCount: number = $state(0);
 	let wordsLoading = $state(false);
+
+	let dictionaries: Array<DictionaryInfo> = $state([])
 
 	async function refreshWordsCount()
 	{
@@ -33,6 +37,7 @@
 	}: Props = $props();
 
 	let fontsModal: HTMLDialogElement;
+	let dictionariesModal: HTMLDialogElement;
 
 	$effect(() =>
 	{
@@ -60,6 +65,13 @@
 		getSettings().selectedDictionaryId.get();
 
 		void refreshWordsCount();
+	});
+
+	$effect(() =>
+	{
+		getSettings().selectedDictionaryId.get();
+
+		void refreshDictionaries();
 	});
 
 	function countFonts()
@@ -105,8 +117,14 @@
 		}
 	}
 
+	async function refreshDictionaries()
+	{
+		dictionaries = await getDictionaries();
+	}
+
 	void refreshItems();
 	void refreshWordsCount();
+	void refreshDictionaries();
 </script>
 
 <div class="flex flex-col flex-grow h-full">
@@ -310,6 +328,42 @@
 			</form>
 			<div class="h-full w-full flex justify-center items-center">
 				<FontsScreen />
+			</div>
+		</dialog>
+		<div class="flex flex-row mt-4">
+			<div class="flex-1 text-left my-auto">
+				Selected dictionary
+			</div>
+			<div class="flex flex-row w-1/2 join">
+				<input
+					disabled={true}
+					class="input input-bordered input-disabled input-sm flex-grow text-center join-item"
+					value={dictionaries.length <= 0 ? "No dictionary" : dictionaries.find((dictionary: DictionaryInfo) => dictionary.id == getSettings().selectedDictionaryId.get())?.name}
+				>
+				<button
+					class="btn btn-primary btn-sm join-item"
+					onclick={() =>
+					{
+						dictionariesModal.showModal();
+					}}
+					disabled={isSettingsLocked}
+				>Edit</button>
+			</div>
+		</div>
+		<dialog
+			bind:this={dictionariesModal}
+			class="h-screen w-screen rounded-md bg-black bg-opacity-50"
+			style="min-height: 200vh; min-width: 200vw; margin-left: -50vw"
+		>
+			<form method="dialog">
+				<button
+					aria-label="modal-bg"
+					class="absolute top-0 left-0 hover:cursor-default"
+					style="min-height: 200vh; min-width: 200vw; margin-left: -50vw"
+				></button>
+			</form>
+			<div class="h-full w-full flex justify-center items-center">
+				<DictionariesScreenMini />
 			</div>
 		</dialog>
 	</div>
