@@ -75,7 +75,7 @@
 	});
 </script>
 
-<div class="dropdown w-full h-full z-10">
+<div class="dropdown w-full h-full">
 	<button
 		tabindex="0"
 		class="select select-bordered w-full items-center"
@@ -88,7 +88,7 @@
 		{selectedIndex == -1 ? `(no option)` : items[selectedIndex]}
 	</button>
 
-	<div class="dropdown-content w-full">
+	<div class="dropdown-content w-full z-10">
 		<input
 			class="input input-bordered w-full h-10"
 			placeholder="Search..."

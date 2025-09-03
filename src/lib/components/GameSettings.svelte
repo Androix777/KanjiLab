@@ -2,10 +2,10 @@
 	import { getDictionaries, getWordPartReadings, getWordParts } from "$lib/databaseTools";
 	import { getWordsCount } from "$lib/databaseTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
-    import type { DictionaryInfo } from "$lib/types";
+	import type { DictionaryInfo } from "$lib/types";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import AutoComplete from "./AutoComplete.svelte";
-    import DictionariesScreenMini from "./DictionariesScreenMini.svelte";
+	import DictionariesScreenMini from "./DictionariesScreenMini.svelte";
 	import FontsScreen from "./FontsScreen.svelte";
 
 	let webSocketClient: WebSocketClient = $state(WebSocketClient.getInstance());
@@ -13,7 +13,7 @@
 	let wordsCount: number = $state(0);
 	let wordsLoading = $state(false);
 
-	let dictionaries: Array<DictionaryInfo> = $state([])
+	let dictionaries: Array<DictionaryInfo> = $state([]);
 
 	async function refreshWordsCount()
 	{
@@ -105,15 +105,19 @@
 	$effect(() =>
 	{
 		getSettings().wordPart.get();
-		void refreshItems();
+		void refreshWordParts();
 	});
 
-	async function refreshItems()
+	async function refreshWordParts()
 	{
 		wordPartItems = await getWordParts(getSettings().selectedDictionaryId.get());
 		if (getSettings().wordPart.get())
 		{
 			wordPartReadings = await getWordPartReadings(getSettings().wordPart.get(), getSettings().selectedDictionaryId.get());
+		}
+		else
+		{
+			wordPartReadings = [];
 		}
 	}
 
@@ -122,7 +126,7 @@
 		dictionaries = await getDictionaries();
 	}
 
-	void refreshItems();
+	void refreshWordParts();
 	void refreshWordsCount();
 	void refreshDictionaries();
 </script>
@@ -147,10 +151,10 @@
 						}
 					}}
 					value={getSettings().minFrequency.get()}
-					disabled={isSettingsLocked}
+					disabled={isSettingsLocked || wordsLoading}
 					class="input input-bordered text-center input-sm join-item min-w-0 w-[40%]"
 				/>
-				<input class="input input-bordered text-center input-sm join-item pointer-events-none w-[10%] min-w-8" disabled={isSettingsLocked} value="-" />
+				<input class="input input-bordered text-center input-sm join-item pointer-events-none w-[10%] min-w-8" disabled={isSettingsLocked || wordsLoading} value="-" />
 				<input
 					type="text"
 					placeholder="Max"
@@ -165,7 +169,7 @@
 						}
 					}}
 					value={getSettings().usingMaxFrequency.get() ? getSettings().maxFrequency.get() : "∞"}
-					disabled={isSettingsLocked || !getSettings().usingMaxFrequency.get()}
+					disabled={isSettingsLocked || wordsLoading || !getSettings().usingMaxFrequency.get()}
 					class="input input-bordered text-center input-sm join-item min-w-0 w-[40%]"
 				/>
 				<button
@@ -176,7 +180,7 @@
 					{
 						getSettings().usingMaxFrequency.set(!getSettings().usingMaxFrequency.get());
 					}}
-					disabled={isSettingsLocked}
+					disabled={isSettingsLocked || wordsLoading}
 				>
 					∞
 				</button>
@@ -226,10 +230,10 @@
 							selectedIndex={wordPartItems.indexOf(getSettings().wordPart.get())}
 							onSelect={(selectedIndex, selectedItem: string | null) =>
 							{
-								void refreshItems();
+								void refreshWordParts();
 								getSettings().wordPart.set(selectedItem != null ? selectedItem : ``);
 							}}
-							disabled={isSettingsLocked}
+							disabled={isSettingsLocked || wordsLoading}
 							nullOptionEnabled={true}
 						/>
 					</div>
@@ -244,7 +248,7 @@
 									getSettings().wordPartReading.set(event.target.value);
 								}
 							}}
-							disabled={isSettingsLocked}
+							disabled={isSettingsLocked || wordsLoading}
 						>
 							<option value={``}>(no option)</option>
 							{#each wordPartReadings as readingOption}
@@ -334,20 +338,44 @@
 			<div class="flex-1 text-left my-auto">
 				Selected dictionary
 			</div>
-			<div class="flex flex-row w-1/2 join">
-				<input
-					disabled={true}
-					class="input input-bordered input-disabled input-sm flex-grow text-center join-item"
-					value={dictionaries.length <= 0 ? "No dictionary" : dictionaries.find((dictionary: DictionaryInfo) => dictionary.id == getSettings().selectedDictionaryId.get())?.name}
-				>
-				<button
-					class="btn btn-primary btn-sm join-item"
-					onclick={() =>
+			<div class="flex flex-row w-1/2 h-8 [&>*:nth-child(1)>:nth-child(1)]:select-sm">
+				<AutoComplete
+					items={dictionaries.map((dictionary: DictionaryInfo) =>
 					{
-						dictionariesModal.showModal();
+						return dictionary.name;
+					})}
+					selectedIndex={dictionaries.findIndex((dictionary: DictionaryInfo) =>
+					{
+						return dictionary.id == getSettings().selectedDictionaryId.get();
+					})}
+					onSelect={async (selectedIndex: number) =>
+					{
+						if (
+							selectedIndex != dictionaries.findIndex((dictionary: DictionaryInfo) =>
+							{
+								return dictionary.id == getSettings().selectedDictionaryId.get();
+							})
+						)
+						{
+							getSettings().wordPart.set(``);
+							getSettings().wordPartReading.set(``);
+						}
+						await refreshDictionaries();
+						await refreshWordParts();
+						if (selectedIndex == -1)
+						{
+							getSettings().selectedDictionaryId.set(-1);
+						}
+						else
+						{
+							let dictionaryInfo = dictionaries[selectedIndex];
+							getSettings().selectedDictionaryId.set(dictionaryInfo.id);
+						}
+						await refreshWordsCount();
 					}}
-					disabled={isSettingsLocked}
-				>Edit</button>
+					disabled={isSettingsLocked || wordsLoading}
+					nullOptionEnabled={true}
+				/>
 			</div>
 		</div>
 		<dialog
