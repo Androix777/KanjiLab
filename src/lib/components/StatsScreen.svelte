@@ -151,7 +151,7 @@
 </script>
 
 <div class="h-full flex flex-col overflow-y-auto">
-	{#if selectedUser == undefined}
+	{#if selectedUser == undefined || getSettings().selectedDictionaryId.get() == -1}
 		<div class="flex items-center justify-center h-full">
 			<div class="text-center p-8">
 				<div class="text-xl font-semibold text-gray-600 mb-4">
