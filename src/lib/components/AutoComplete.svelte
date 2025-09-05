@@ -79,9 +79,18 @@
 	<button
 		tabindex="0"
 		class="select select-bordered w-full items-center"
-		onclick={() =>
+		onmousedown={(event: MouseEvent) =>
 		{
-			inputElement.focus();
+			event.preventDefault();
+			if (document.activeElement == inputElement)
+			{
+				inputElement.blur();
+			}
+			else if (event.target)
+			{
+				(event.target as HTMLElement).focus();
+				inputElement.focus();
+			}
 		}}
 		disabled={disabled}
 	>
