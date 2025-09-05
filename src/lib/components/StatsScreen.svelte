@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { getAllGamesStats, getAllUsers, getAnswerStatsByGame, getAnswerStreaks, getDictionaryStatsConfig } from "$lib/databaseTools";
+	import { getAllGamesStats, getAllUsers, getAnswerStatsByGame, getAnswerStreaks, getDictionaryStatsConfig, getDictionaries } from "$lib/databaseTools";
 	import { getSettings } from "$lib/globalSettings.svelte";
-	import type { AnswerStats, AnswerStreaks, GameStats, User, MedalThreshold } from "$lib/types";
+	import type { AnswerStats, AnswerStreaks, GameStats, User, MedalThreshold, DictionaryInfo } from "$lib/types";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import { onMount } from "svelte";
 	import AutoComplete from "./AutoComplete.svelte";
@@ -32,6 +32,13 @@
 	let selectedUser: User | undefined = $state();
 	let selectedUserIndex: number = $state(0);
 	let usernames: string[] = $state([]);
+
+	let dictionaries: Array<DictionaryInfo> = $state([]);
+
+	async function refreshDictionaries()
+	{
+		dictionaries = await getDictionaries();
+	}
 
 	async function loadStatsConfig()
 	{
@@ -86,6 +93,8 @@
 			intersectionMatrix: streaks.map(row => row.map(value => value === null ? 0 : value)),
 			streaksData: streaksData,
 		};
+
+		await refreshDictionaries();
 
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		heatmap?.redraw();
@@ -155,7 +164,32 @@
 		</div>
 	{:else}
 		<div class="flex-none relative">
-			<div class="absolute left-5 top-10 w-1/4">
+			<div class="absolute left-5 top-5 w-1/4">
+				<AutoComplete
+					items={dictionaries.map((dictionary: DictionaryInfo) =>
+					{
+						return dictionary.name;
+					})}
+					selectedIndex={dictionaries.findIndex((dictionary: DictionaryInfo) =>
+					{
+						return dictionary.id == getSettings().selectedDictionaryId.get();
+					})}
+					onSelect={async (selectedIndex: number) =>
+					{
+						await refreshDictionaries();
+						if (selectedIndex == -1)
+						{
+							getSettings().selectedDictionaryId.set(-1);
+						}
+						else
+						{
+							let dictionaryInfo = dictionaries[selectedIndex];
+							getSettings().selectedDictionaryId.set(dictionaryInfo.id);
+						}
+					}}
+					disabled={false}
+					nullOptionEnabled={true}
+				/>
 				<AutoComplete
 					items={usernames}
 					selectedIndex={selectedUserIndex}
