@@ -15,6 +15,8 @@
 
 	let dictionaries: Array<DictionaryInfo> = $state([]);
 
+	let readingSelect: HTMLSelectElement | null = $state(null);
+
 	async function refreshWordsCount()
 	{
 		if (!isAdmin)
@@ -50,7 +52,7 @@
 		getSettings().roundsCount.get();
 		getSettings().selectedFonts.get();
 
-		if (!webSocketClient.isConnectedToSelf) return;
+		if (!webSocketClient.isConnectedToSelf || webSocketClient.gameStatus != `Lobby`) return;
 
 		void webSocketClient.sendNewSettings();
 	});
@@ -118,6 +120,11 @@
 		else
 		{
 			wordPartReadings = [];
+		}
+
+		if (readingSelect)
+		{
+			readingSelect.selectedIndex = 0;
 		}
 	}
 
@@ -239,6 +246,7 @@
 					</div>
 					<div class="w-1/2">
 						<select
+							bind:this={readingSelect}
 							class="select select-bordered w-full select-sm"
 							value={getSettings().wordPartReading.get()}
 							onchange={(event) =>

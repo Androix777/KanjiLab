@@ -75,6 +75,7 @@ export class ServerConnector extends EventTarget
 		this.webSocket.onclose = () =>
 		{
 			console.log(`socket close`);
+			rejectPromise(new Error(`connectionFailedError`));
 			this.dispatchEvent(new Event(`socketClosed`));
 			this.disconnect();
 		};
@@ -96,7 +97,7 @@ export class ServerConnector extends EventTarget
 			rejectPromise(new Error(`timeoutError`));
 		}, 5000);
 
-		await resultPromise;
+		return await resultPromise;
 	}
 
 	public disconnect()
