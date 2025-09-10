@@ -171,6 +171,7 @@ export type GameSettingsData = {
 	wordPartReading: string | null;
 	fontsCount: number;
 	firstFontName: string | null;
+	dictionaryName: string | null;
 };
 
 export type AnswerStatus = `Correct` | `Incorrect` | `Unknown`;

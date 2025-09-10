@@ -1,13 +1,14 @@
 import { getSettings } from "$lib/globalSettings.svelte";
 import { ServerConnector } from "$lib/webSocketConnector";
 import { SvelteMap } from "svelte/reactivity";
-import { addAnswerStats, addGameStats, getAnswerStatsByGame, getFontId, getGameStats, getRandomWord } from "./databaseTools";
+import { addAnswerStats, addGameStats, getAnswerStatsByGame, getDictionaries, getFontId, getGameStats, getRandomWord } from "./databaseTools";
 import { getDefaultFont, getFontInfo, getSVGText } from "./fontTools";
 import { getAccounts, signMessage } from "./networkTools";
 import type {
 	AnswerRecord,
 	AnswerStats,
 	ClientInfo,
+	DictionaryInfo,
 	FontInfo,
 	GameSettingsData,
 	GameStats,
@@ -44,6 +45,7 @@ class WebSocketClient
 
 	public onlineFirstFontName: string = $state(``);
 	public onlineFontsCount: number = $state(0);
+	public onlineDictionaryName: string = $state(`(no option)`);
 
 	private static instance: WebSocketClient | null;
 	private serverConnector: ServerConnector = new ServerConnector();
@@ -155,6 +157,7 @@ class WebSocketClient
 		this.gameHistory = [];
 		this.isConnectedToSelf = true;
 		this.lastGameId = 0;
+		this.onlineDictionaryName = `(no option)`;
 	}
 
 	public async sendPublicKeyMessage(key: string)
@@ -174,7 +177,7 @@ class WebSocketClient
 
 	public async startGame()
 	{
-		await this.serverConnector.sendStartGame(this.getGameSettings());
+		await this.serverConnector.sendStartGame(await this.getGameSettings());
 	}
 
 	public async sendAnswer(answer: string)
@@ -191,7 +194,7 @@ class WebSocketClient
 
 	public async sendNewSettings()
 	{
-		await this.serverConnector.sendNewSettings(this.getGameSettings());
+		await this.serverConnector.sendNewSettings(await this.getGameSettings());
 	}
 
 	public async getCurrentGameStats(): Promise<GameStats>
@@ -210,11 +213,16 @@ class WebSocketClient
 		return this.clientList.filter(client => client.id == id)[0];
 	}
 
-	private getGameSettings(): GameSettingsData
+	private async getGameSettings(): Promise<GameSettingsData>
 	{
 		const fontsCount = getSettings().selectedFonts.get().length;
 		const font = fontsCount == 0 ? null : getSettings().selectedFonts.get()[0];
 		const fontInfo: FontInfo | null = font ? getFontInfo(font) : null;
+
+		const dictionaries: Array<DictionaryInfo> = await getDictionaries();
+		console.log(dictionaries);
+		const selectedDictionary: DictionaryInfo | undefined = dictionaries.find((dictionaryInfo: DictionaryInfo) => dictionaryInfo.id == getSettings().selectedDictionaryId.get());
+		const selectedDictionaryName: string | null = selectedDictionary != null ? selectedDictionary.name : ``;
 
 		const data: GameSettingsData = {
 			minFrequency: getSettings().minFrequency.get(),
@@ -226,6 +234,7 @@ class WebSocketClient
 			wordPartReading: getSettings().wordPartReading.get() == `` ? null : getSettings().wordPartReading.get(),
 			fontsCount: fontsCount,
 			firstFontName: fontInfo?.fullName ?? null,
+			dictionaryName: selectedDictionaryName,
 		};
 
 		return data;
@@ -243,6 +252,7 @@ class WebSocketClient
 
 		this.onlineFirstFontName = gameSettings.firstFontName || ``;
 		this.onlineFontsCount = gameSettings.fontsCount;
+		this.onlineDictionaryName = gameSettings.dictionaryName || `(no option)`;
 	}
 
 	// Handlers

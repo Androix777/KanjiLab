@@ -351,45 +351,55 @@
 			<div class="flex-1 text-left my-auto">
 				Selected dictionary
 			</div>
-			<div class="flex flex-row w-1/2 h-8 [&>*:nth-child(1)>:nth-child(1)]:select-sm">
-				<AutoComplete
-					items={dictionaries.map((dictionary: DictionaryInfo) =>
-					{
-						return dictionary.name;
-					})}
-					selectedIndex={dictionaries.findIndex((dictionary: DictionaryInfo) =>
-					{
-						return dictionary.id == getSettings().selectedDictionaryId.get();
-					})}
-					onSelect={async (selectedIndex: number) =>
-					{
-						if (
-							selectedIndex != dictionaries.findIndex((dictionary: DictionaryInfo) =>
+			{#if !isAdmin}
+				<div class="flex flex-row w-1/2 h-8">
+					<input
+						value={webSocketClient.onlineDictionaryName}
+						disabled={isSettingsLocked}
+						class="input input-bordered w-full text-center input-sm"
+					/>
+				</div>
+			{:else}
+				<div class="flex flex-row w-1/2 h-8 [&>*:nth-child(1)>:nth-child(1)]:select-sm">
+					<AutoComplete
+						items={dictionaries.map((dictionary: DictionaryInfo) =>
+						{
+							return dictionary.name;
+						})}
+						selectedIndex={dictionaries.findIndex((dictionary: DictionaryInfo) =>
+						{
+							return dictionary.id == getSettings().selectedDictionaryId.get();
+						})}
+						onSelect={async (selectedIndex: number) =>
+						{
+							if (
+								selectedIndex != dictionaries.findIndex((dictionary: DictionaryInfo) =>
+								{
+									return dictionary.id == getSettings().selectedDictionaryId.get();
+								})
+							)
 							{
-								return dictionary.id == getSettings().selectedDictionaryId.get();
-							})
-						)
-						{
-							getSettings().wordPart.set(``);
-							getSettings().wordPartReading.set(``);
-						}
-						await refreshDictionaries();
-						await refreshWordParts();
-						if (selectedIndex == -1)
-						{
-							getSettings().selectedDictionaryId.set(-1);
-						}
-						else
-						{
-							let dictionaryInfo = dictionaries[selectedIndex];
-							getSettings().selectedDictionaryId.set(dictionaryInfo.id);
-						}
-						await refreshWordsCount();
-					}}
-					disabled={isSettingsLocked || wordsLoading}
-					nullOptionEnabled={true}
-				/>
-			</div>
+								getSettings().wordPart.set(``);
+								getSettings().wordPartReading.set(``);
+							}
+							await refreshDictionaries();
+							await refreshWordParts();
+							if (selectedIndex == -1)
+							{
+								getSettings().selectedDictionaryId.set(-1);
+							}
+							else
+							{
+								let dictionaryInfo = dictionaries[selectedIndex];
+								getSettings().selectedDictionaryId.set(dictionaryInfo.id);
+							}
+							await refreshWordsCount();
+						}}
+						disabled={isSettingsLocked || wordsLoading}
+						nullOptionEnabled={true}
+					/>
+				</div>
+			{/if}
 		</div>
 	</div>
 
