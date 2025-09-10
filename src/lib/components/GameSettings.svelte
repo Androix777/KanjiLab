@@ -5,7 +5,6 @@
 	import type { DictionaryInfo } from "$lib/types";
 	import WebSocketClient from "$lib/webSocketClient.svelte";
 	import AutoComplete from "./AutoComplete.svelte";
-	import DictionariesScreenMini from "./DictionariesScreenMini.svelte";
 	import FontsScreen from "./FontsScreen.svelte";
 
 	let webSocketClient: WebSocketClient = $state(WebSocketClient.getInstance());
@@ -39,7 +38,6 @@
 	}: Props = $props();
 
 	let fontsModal: HTMLDialogElement;
-	let dictionariesModal: HTMLDialogElement;
 
 	$effect(() =>
 	{
@@ -51,6 +49,7 @@
 		getSettings().roundDuration.get();
 		getSettings().roundsCount.get();
 		getSettings().selectedFonts.get();
+		getSettings().selectedDictionaryId.get();
 
 		if (!webSocketClient.isConnectedToSelf || webSocketClient.gameStatus != `Lobby`) return;
 
@@ -122,15 +121,20 @@
 			wordPartReadings = [];
 		}
 
-		if (readingSelect)
-		{
-			readingSelect.selectedIndex = 0;
-		}
+		resetReadingSelect();
 	}
 
 	async function refreshDictionaries()
 	{
 		dictionaries = await getDictionaries();
+	}
+
+	function resetReadingSelect()
+	{
+		if (readingSelect)
+		{
+			readingSelect.selectedIndex = 0;
+		}
 	}
 
 	void refreshWordParts();
@@ -207,7 +211,7 @@
 								getSettings().wordPart.set(event.target.value);
 							}
 						}}
-						value={getSettings().wordPart.get()}
+						value={getSettings().wordPart.get() != `` ? getSettings().wordPart.get() : `(no option)`}
 						disabled={isSettingsLocked}
 						class="input input-bordered w-1/2 text-center input-sm"
 					/>
@@ -219,7 +223,7 @@
 								getSettings().wordPartReading.set(event.target.value);
 							}
 						}}
-						value={getSettings().wordPartReading.get()}
+						value={getSettings().wordPartReading.get() != `` ? getSettings().wordPartReading.get() : `(no option)`}
 						disabled={isSettingsLocked}
 						class="input input-bordered w-1/2 text-center input-sm"
 					/>
@@ -238,6 +242,7 @@
 							onSelect={(selectedIndex, selectedItem: string | null) =>
 							{
 								void refreshWordParts();
+								getSettings().wordPartReading.set(``);
 								getSettings().wordPart.set(selectedItem != null ? selectedItem : ``);
 							}}
 							disabled={isSettingsLocked || wordsLoading}
@@ -386,22 +391,6 @@
 				/>
 			</div>
 		</div>
-		<dialog
-			bind:this={dictionariesModal}
-			class="h-screen w-screen rounded-md bg-black bg-opacity-50"
-			style="min-height: 200vh; min-width: 200vw; margin-left: -50vw"
-		>
-			<form method="dialog">
-				<button
-					aria-label="modal-bg"
-					class="absolute top-0 left-0 hover:cursor-default"
-					style="min-height: 200vh; min-width: 200vw; margin-left: -50vw"
-				></button>
-			</form>
-			<div class="h-full w-full flex justify-center items-center">
-				<DictionariesScreenMini />
-			</div>
-		</dialog>
 	</div>
 
 	<div class="text-center flex-grow relative min-h-16">
