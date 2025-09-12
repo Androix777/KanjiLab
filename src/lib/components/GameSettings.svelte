@@ -137,7 +137,6 @@
 		}
 	}
 
-	void refreshWordParts();
 	void refreshWordsCount();
 	void refreshDictionaries();
 </script>
@@ -204,26 +203,12 @@
 				</div>
 				<div class="w-1/2 flex flex-row text-center gap-2">
 					<input
-						onchange={(event) =>
-						{
-							if (event.target instanceof HTMLInputElement)
-							{
-								getSettings().wordPart.set(event.target.value);
-							}
-						}}
-						value={getSettings().wordPart.get() != `` ? getSettings().wordPart.get() : `(no option)`}
+						value={webSocketClient.onlineWordPart}
 						disabled={isSettingsLocked}
 						class="input input-bordered w-1/2 text-center input-sm"
 					/>
 					<input
-						onchange={(event) =>
-						{
-							if (event.target instanceof HTMLInputElement)
-							{
-								getSettings().wordPartReading.set(event.target.value);
-							}
-						}}
-						value={getSettings().wordPartReading.get() != `` ? getSettings().wordPartReading.get() : `(no option)`}
+						value={webSocketClient.onlineWordPartReading}
 						disabled={isSettingsLocked}
 						class="input input-bordered w-1/2 text-center input-sm"
 					/>
@@ -261,7 +246,7 @@
 									getSettings().wordPartReading.set(event.target.value);
 								}
 							}}
-							disabled={isSettingsLocked || wordsLoading}
+							disabled={isSettingsLocked || wordsLoading || getSettings().wordPart.get() == ``}
 						>
 							<option value={``}>(no option)</option>
 							{#each wordPartReadings as readingOption}

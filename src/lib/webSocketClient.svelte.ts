@@ -43,6 +43,8 @@ class WebSocketClient
 	public fontsInfo: Array<FontInfo> = new Array<FontInfo>();
 	public isBusy: boolean = $state(false);
 
+	public onlineWordPart: string = $state(`(no option)`)
+	public onlineWordPartReading: string = $state(`(no option)`)
 	public onlineFirstFontName: string = $state(``);
 	public onlineFontsCount: number = $state(0);
 	public onlineDictionaryName: string = $state(`(no option)`);
@@ -247,9 +249,9 @@ class WebSocketClient
 		getSettings().usingMaxFrequency.set(gameSettings.usingMaxFrequency);
 		getSettings().roundDuration.set(gameSettings.roundDuration);
 		getSettings().roundsCount.set(gameSettings.roundsCount);
-		getSettings().wordPart.set(gameSettings.wordPart || ``);
-		getSettings().wordPartReading.set(gameSettings.wordPartReading || ``);
 
+		this.onlineWordPart = gameSettings.wordPart || `(no option)`;
+		this.onlineWordPartReading = gameSettings.wordPartReading || `(no option)`;
 		this.onlineFirstFontName = gameSettings.firstFontName || ``;
 		this.onlineFontsCount = gameSettings.fontsCount;
 		this.onlineDictionaryName = gameSettings.dictionaryName || `(no option)`;
