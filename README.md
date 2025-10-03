@@ -4,7 +4,7 @@
   <img src="https://github.com/user-attachments/assets/894ec4aa-62db-499a-835b-13083176d338" alt="KanjiLab Logo" width="300">
 </p>
 
-A fun and challenging quiz game to test your knowledge of Japanese word readings.
+A quiz game to test your knowledge of Japanese word readings.
 
 KanjiLab is an open-source, portable desktop application designed to test and challenge your knowledge of Japanese word readings. Built with Rust and Svelte using the Tauri framework, it offers a fast and responsive experience for both solo play and peer-to-peer multiplayer sessions. All your data is stored locally in a SQLite database, ensuring complete privacy and offline functionality.
 
@@ -23,11 +23,11 @@ Important: Breaking changes may be introduced in future updates. This could pote
 
 *   🎮 **Kanji Reading Quiz:** A game to test your knowledge of Japanese word readings in a quiz format.
 
-*   📦 **Fully Offline & Portable:** The application requires no internet connection for any of its features. It runs as a single, portable executable without installation, storing all user data locally.
+*   📦 **Fully Offline & Portable:** The application requires no internet connection. It runs as a single, portable executable without installation, storing all user data locally.
 
 *   👤 **Single-Player Mode:** Play solo anytime for self-assessment, practice, or casual gameplay.
 
-*   🌐 **P2P Multiplayer:** Challenge friends in real-time! One player hosts, and others connect directly over a local network or using VPN tools (e.g., Radmin VPN, Hamachi). Supports a virtually unlimited number of players.
+*   🌐 **P2P Multiplayer:** Challenge friends in real-time! One player hosts, and others connect directly over a local network or using local network or VPN tools (e.g., Radmin VPN, Hamachi). Supports a virtually unlimited number of players.
 
 *   🔗 **Learn Through Association:** After each answer, explore all possible readings of the word. Discover other words that use the same kanji with similar readings to help build stronger memory connections.
 
@@ -35,7 +35,7 @@ Important: Breaking changes may be introduced in future updates. This could pote
 
 *   🛠️ **Quiz Customization:** Tailor your games by:
     *   Selecting word frequency ranges.
-    *   Filtering for words with specific kanji, kanji compounds, and even their specific readings.
+    *   Filtering for words with specific kanji and specific readings.
     *   Setting the duration and number of rounds.
 
 *   📡 **Effortless Multiplayer Setup:** In a multiplayer game, only the host needs to have the custom fonts and dictionaries. All connected clients will automatically use the host's assets without any local configuration required.

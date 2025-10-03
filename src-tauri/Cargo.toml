@@ -5,7 +5,7 @@ authors = ["Androix777", "Airpllane"]
 edition = "2024"
 license = ""
 repository = ""
-description = "A Tauri App"
+description = "A quiz game to test your knowledge of Japanese word readings"
 
 [lib]
 name = "app_lib"
