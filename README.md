@@ -27,7 +27,7 @@ Important: Breaking changes may be introduced in future updates. This could pote
 
 *   👤 **Single-Player Mode:** Play solo anytime for self-assessment, practice, or casual gameplay.
 
-*   🌐 **P2P Multiplayer:** Challenge friends in real-time! One player hosts, and others connect directly over a local network or using local network or VPN tools (e.g., Radmin VPN, Hamachi). Supports a virtually unlimited number of players.
+*   🌐 **P2P Multiplayer:** Challenge friends in real-time! One player hosts, and others connect directly over a local network or using VPN tools (e.g., Radmin VPN, Hamachi). Supports a virtually unlimited number of players.
 
 *   🔗 **Learn Through Association:** After each answer, explore all possible readings of the word. Discover other words that use the same kanji with similar readings to help build stronger memory connections.
 
