@@ -78,6 +78,8 @@ CREATE TABLE IF NOT EXISTS game_stats (
 	round_duration INTEGER NOT NULL,
 	min_frequency INTEGER NOT NULL,
 	max_frequency INTEGER,
+	word_part TEXT,
+	word_part_reading TEXT,
 	font_id INTEGER,
 	dictionary_id INTEGER NOT NULL,
 	timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,

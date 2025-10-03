@@ -29,6 +29,7 @@ WITH RankedAnswers AS (
         )
         AND ans.user_id = $4
         AND gs.dictionary_id = $5
+        AND gs.word_part IS NULL
 )
 SELECT game_id,
     COUNT(*) AS length

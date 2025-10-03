@@ -331,6 +331,8 @@ class WebSocketClient
 			customEvent.detail.gameSettings.roundDuration * 1000,
 			getSettings().minFrequency.get(),
 			getSettings().usingMaxFrequency.get() ? getSettings().maxFrequency.get() : null,
+			customEvent.detail.gameSettings.wordPart,
+			customEvent.detail.gameSettings.wordPartReading,
 			fontID,
 			getSettings().selectedDictionaryId.get(),
 		);

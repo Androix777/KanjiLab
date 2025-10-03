@@ -150,6 +150,8 @@ export async function addGameStats(
 	roundDuration: number,
 	minFrequency: number,
 	maxFrequency: number | null,
+	wordPart: string | null,
+	wordPartReading: string | null,
 	fontId: number | null,
 	dictionaryId: number,
 ): Promise<number>
@@ -159,6 +161,8 @@ export async function addGameStats(
 		roundDuration: roundDuration,
 		minFrequency: minFrequency,
 		maxFrequency: maxFrequency,
+		wordPart: wordPart,
+		wordPartReading: wordPartReading,
 		fontId: fontId,
 		dictionaryId: dictionaryId,
 	});

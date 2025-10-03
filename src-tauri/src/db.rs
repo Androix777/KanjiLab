@@ -448,6 +448,8 @@ pub async fn add_game_stats(
     round_duration: i64,
     min_frequency: i64,
     max_frequency: Option<i64>,
+    word_part: Option<String>,
+    word_part_reading: Option<String>,
     font_id: Option<i64>,
     dictionary_id: i64,
 ) -> Result<i64, String> {
@@ -462,6 +464,8 @@ pub async fn add_game_stats(
         round_duration,
         min_frequency,
         max_frequency,
+        word_part,
+        word_part_reading,
         font_id,
         dictionary_id
     )
