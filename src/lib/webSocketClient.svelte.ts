@@ -138,9 +138,12 @@ class WebSocketClient
 			}
 			this.clientList = await this.serverConnector.sendGetClientListMessage();
 		}
-		catch (e)
+		catch (e: any)
 		{
-			console.log(e);
+			if (e.message == `game already running`)
+			{
+				alert(`This game is already in progress.\nHot joining not supported.`);
+			}
 			this.disconnectFromServer();
 			return;
 		}
