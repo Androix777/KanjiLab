@@ -1,0 +1,18 @@
+-- card_fsrs
+CREATE TABLE IF NOT EXISTS card_fsrs (
+	id INTEGER PRIMARY KEY NOT NULL,
+	word TEXT NOT NULL,
+	due DATETIME NOT NULL,
+	stability REAL NOT NULL,
+	difficulty REAL NOT NULL,
+	elapsed_days INTEGER NOT NULL,
+	scheduled_days INTEGER NOT NULL,
+	reps INTEGER NOT NULL,
+	lapses INTEGER NOT NULL,
+	state INTEGER NOT NULL DEFAULT 0,
+	last_review DATETIME NOT NULL,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	UNIQUE(word)
+);
+CREATE INDEX idx_card_fsrs_1 ON card_fsrs (word);

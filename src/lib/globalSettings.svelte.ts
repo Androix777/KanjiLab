@@ -1,7 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { exists, readFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { getAllFonts } from "./fontTools";
-import { GET_EXECUTABLE_FILE_PATH } from "./tauriFunctions";
 
 type StateVar<T> = {
 	get: () => T;
@@ -13,7 +12,7 @@ let savingInProgress = false;
 
 async function getSettingsFilePath(): Promise<string>
 {
-	let path: string = await invoke(GET_EXECUTABLE_FILE_PATH);
+	let path: string = await invoke("get_executable_file_path");
 	path = path + "\\settings.json";
 	return path;
 }

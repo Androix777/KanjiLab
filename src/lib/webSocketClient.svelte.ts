@@ -1,7 +1,7 @@
 import { getSettings } from "$lib/globalSettings.svelte";
 import { ServerConnector } from "$lib/webSocketConnector";
 import { SvelteMap } from "svelte/reactivity";
-import { addAnswerStats, addGameStats, getAnswerStatsByGame, getDictionaries, getFontId, getGameStats, getRandomWord } from "./databaseTools";
+import { addAnswerStats, addGameStats, getAnswerStatsByGame, getDictionaries, getFontId, getGameStats, getRandomWord, updateCardFsrs } from "./databaseTools";
 import { getDefaultFont, getFontInfo, getSVGText } from "./fontTools";
 import { getAccounts, signMessage } from "./networkTools";
 import type {
@@ -450,12 +450,12 @@ class WebSocketClient
         this.gameStatus = "WaitingQuestion";
 
 		await Promise.all(
-			clients.map(client =>
+			clients.map(async client =>
 			{
 				const ans = answersMap.get(client.id);
 				if (!ans) return null;
 
-				return addAnswerStats(
+				await addAnswerStats(
 					gameId,
 					client.key,
 					client.name,
@@ -465,6 +465,11 @@ class WebSocketClient
 					ans.answerStatus === "Correct",
 					roundNumber,
 					fontId,
+				);
+
+				await updateCardFsrs(
+					word,
+					ans.answerStatus === "Correct",
 				);
 			}),
 		);
@@ -529,6 +534,11 @@ class WebSocketClient
 					this.currentRound - 1,
 					fontId,
 				);
+
+				// await updateCardFsrs(
+				// 	lastRoundHistory.question.wordInfo.word,
+				// 	answer.answerStatus == `Correct`,
+				// );
 			}
 		});
 

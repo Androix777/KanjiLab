@@ -1,4 +1,3 @@
-import { GET_ALL_FONTS_INFO, GET_FONT_LIST, GET_SVG_TEXT } from "$lib/tauriFunctions";
 import { invoke } from "@tauri-apps/api/core";
 import type { FontInfo } from "./types";
 import WebSocketClient from "./webSocketClient.svelte";
@@ -11,7 +10,7 @@ async function loadFonts(): Promise<void>
 	{
 		try
 		{
-			fontNames = await invoke(GET_FONT_LIST);
+			fontNames = await invoke("get_font_list");
 		}
 		catch (error)
 		{
@@ -60,10 +59,10 @@ export async function getAllFonts(): Promise<string[]>
 
 export async function getAllFontsInfo(): Promise<FontInfo[]>
 {
-	return await invoke(GET_ALL_FONTS_INFO);
+	return await invoke("get_all_fonts_info");
 }
 
 export async function getSVGText(text: string, fontFileName: string): Promise<string>
 {
-	return await invoke(GET_SVG_TEXT, { text: text, fontName: fontFileName });
+	return await invoke("get_svg_text", { text: text, fontName: fontFileName });
 }

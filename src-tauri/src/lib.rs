@@ -36,6 +36,7 @@ pub fn run() {
             db::get_dictionaries,
             db::delete_dictionary,
             db::import_dictionary,
+            db::update_card_fsrs,
             crypto::sign_message,
             crypto::verify_signature,
             crypto::get_accounts,

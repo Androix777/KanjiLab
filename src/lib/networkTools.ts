@@ -1,5 +1,4 @@
 import { invoke } from "@tauri-apps/api/core";
-import { CREATE_ACCOUNT, GET_ACCOUNTS, LAUNCH_SERVER, REMOVE_ACCOUNT, RENAME_ACCOUNT, SIGN_MESSAGE, STOP_SERVER, VERIFY_SIGNATURE } from "./tauriFunctions";
 
 export type AccountInfo = {
 	name: string;
@@ -9,40 +8,40 @@ export type AccountInfo = {
 
 export async function createAccount(name: string): Promise<AccountInfo>
 {
-	return await invoke(CREATE_ACCOUNT, { name });
+	return await invoke("create_account", { name });
 }
 
 export async function removeAccount(publicKey: string): Promise<void>
 {
-	await invoke(REMOVE_ACCOUNT, { publicKey });
+	await invoke("remove_account", { publicKey });
 }
 
 export async function getAccounts(): Promise<AccountInfo[]>
 {
-	return await invoke(GET_ACCOUNTS);
+	return await invoke("get_accounts");
 }
 
 export async function signMessage(publicKey: string, message: string): Promise<string>
 {
-	return await invoke(SIGN_MESSAGE, { publicKey, message });
+	return await invoke("sign_message", { publicKey, message });
 }
 
 export async function verifySignature(publicKey: string, message: string, signature: string): Promise<boolean>
 {
-	return await invoke(VERIFY_SIGNATURE, { publicKey, message, signature });
+	return await invoke("verify_signature", { publicKey, message, signature });
 }
 
 export async function renameAccount(publicKey: string, newName: string): Promise<void>
 {
-	await invoke(RENAME_ACCOUNT, { publicKey, newName });
+	await invoke("rename_account", { publicKey, newName });
 }
 
 export async function launchServer(hostPort: string): Promise<void>
 {
-	await invoke(LAUNCH_SERVER, { hostPort: hostPort });
+	await invoke("launch_server", { hostPort: hostPort });
 }
 
 export async function stopServer(): Promise<void>
 {
-	await invoke(STOP_SERVER);
+	await invoke("stop_server");
 }

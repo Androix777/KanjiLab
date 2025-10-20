@@ -1,7 +1,8 @@
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file_as, sqlite::{SqliteConnectOptions, SqlitePool}};
 use std::sync::LazyLock;
+use rs_fsrs::{FSRS, Card, Rating, State};
 
 use crate::tools::get_executable_file_path;
 use sqlx::Acquire;
@@ -695,4 +696,115 @@ pub async fn get_all_users() -> Result<Vec<User>, String> {
         .await
         .map_err(|e| e.to_string())?;
     Ok(users)
+}
+
+
+#[derive(Debug)]
+struct CardFsrsRecord {
+    id: Option<i64>,
+    word: String,
+    due: NaiveDateTime,
+    stability: f64,
+    difficulty: f64,
+    elapsed_days: i64,
+    scheduled_days: i64,
+    reps: i64,
+    lapses: i64,
+    state: i64,
+    last_review: NaiveDateTime,
+}
+
+impl From<CardFsrsRecord> for Card {
+    fn from(record: CardFsrsRecord) -> Self {
+        Card {
+            due: record.due.and_utc(),
+            stability: record.stability,
+            difficulty: record.difficulty,
+            elapsed_days: record.elapsed_days,
+            scheduled_days: record.scheduled_days,
+            reps: record.reps as i32,
+            lapses: record.lapses as i32,
+            state: match record.state {
+                0 => State::New,
+                1 => State::Learning,
+                2 => State::Review,
+                3 => State::Relearning,
+                _ => State::New,
+            },
+            last_review: record.last_review.and_utc(),
+        }
+    }
+}
+
+fn card_to_record(card: &Card, word: String, id: Option<i64>) -> CardFsrsRecord {
+    CardFsrsRecord {
+        id,
+        word,
+        due: card.due.naive_utc(),
+        stability: card.stability,
+        difficulty: card.difficulty,
+        elapsed_days: card.elapsed_days,
+        scheduled_days: card.scheduled_days,
+        reps: card.reps as i64,
+        lapses: card.lapses as i64,
+        state: match card.state {
+            State::New => 0,
+            State::Learning => 1,
+            State::Review => 2,
+            State::Relearning => 3,
+        },
+        last_review: card.last_review.naive_utc(),
+    }
+}
+
+#[tauri::command]
+pub async fn update_card_fsrs(
+    word: &str,
+    is_correct: bool,
+) -> Result<(), String> {
+    let existing_card = sqlx::query_file_as!(
+        CardFsrsRecord,
+        "./queries/get_card_fsrs.sql",
+        word
+    )
+    .fetch_optional(&*DB_POOL)
+    .await
+    .map_err(|e| format!("Failed to fetch card: {}", e))?;
+
+    let fsrs = FSRS::default();
+    let review_time = Utc::now();
+    let rating = if is_correct {
+        Rating::Good
+    } else {
+        Rating::Again
+    };
+
+    let card = if let Some(existing) = existing_card {
+        let card: Card = existing.into();
+        fsrs.repeat(card, review_time)[&rating].card.clone()
+    } else {
+        let card = Card::new();
+        fsrs.repeat(card, review_time)[&rating].card.clone()
+    };
+
+    let record = card_to_record(&card, word.to_string(), None);
+
+    sqlx::query_file!(
+        "./queries/upsert_card_fsrs.sql",
+        record.word,
+        record.due,
+        record.stability,
+        record.difficulty,
+        record.elapsed_days,
+        record.scheduled_days,
+        record.reps,
+        record.lapses,
+        record.state,
+        record.last_review
+    )
+    .execute(&*DB_POOL)
+    .await
+    .map_err(|e| format!("Failed to upsert card: {}", e))?;
+
+    Ok(())
 }

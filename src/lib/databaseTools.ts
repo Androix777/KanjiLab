@@ -1,24 +1,4 @@
 import { getSettings } from "$lib/globalSettings.svelte";
-import {
-	ADD_ANSWER_STATS,
-	ADD_GAME_STATS,
-	DELETE_DICTIONARY,
-	GET_ALL_ANSWER_STATS,
-	GET_ALL_GAMES_STATS,
-	GET_ALL_USERS,
-	GET_ANSWER_STATS_BY_GAME,
-	GET_ANSWER_STREAKS,
-	GET_DICTIONARIES,
-	GET_FONT_ID,
-	GET_GAME_STATS,
-	GET_STATS,
-	GET_USERNAME_BY_ID,
-	GET_WORD_PART_READINGS,
-	GET_WORD_PARTS,
-	GET_WORDS,
-	GET_WORDS_COUNT,
-	IMPORT_DICTIONARY,
-} from "$lib/tauriFunctions";
 import type { AnswerStats, AnswerStreaks, DictionaryInfo, DictionaryStatsConfig, GameStats, RawDictionaryInfo, User, WordInfo } from "$lib/types";
 import type { StatsInfo } from "$lib/types";
 import { invoke } from "@tauri-apps/api/core";
@@ -46,7 +26,7 @@ export const getRandomWord = (() =>
 
 	const fetchBatch = async (settings: ReturnType<typeof collectSettings>, count: number) =>
 	{
-		const words: WordInfo[] = await invoke(GET_WORDS, {
+		const words: WordInfo[] = await invoke("get_words", {
 			...settings,
 			count,
 		});
@@ -102,7 +82,7 @@ export const getRandomWord = (() =>
 
 export async function getWordsCount(): Promise<number>
 {
-	const data: number = await invoke(GET_WORDS_COUNT, {
+	const data: number = await invoke("get_words_count", {
 		minFrequency: getSettings().minFrequency.get(),
 		maxFrequency: getSettings().usingMaxFrequency.get() ? getSettings().maxFrequency.get() : null,
 		wordPart: getSettings().wordPart.get() == `` ? null : getSettings().wordPart.get(),
@@ -115,7 +95,7 @@ export async function getWordsCount(): Promise<number>
 
 export async function getFontId(name: string): Promise<number>
 {
-	return await invoke(GET_FONT_ID, {
+	return await invoke("get_font_id", {
 		name: name,
 	});
 }
@@ -132,7 +112,7 @@ export async function addAnswerStats(
 	fontId: number,
 ): Promise<void>
 {
-	await invoke(ADD_ANSWER_STATS, {
+	await invoke("add_answer_stats", {
 		gameStatsId: gameStatsId,
 		userKey: userKey,
 		userName: userName,
@@ -156,7 +136,7 @@ export async function addGameStats(
 	dictionaryId: number,
 ): Promise<number>
 {
-	const index: number = await invoke(ADD_GAME_STATS, {
+	const index: number = await invoke("add_game_stats", {
 		roundsCount: roundsCount,
 		roundDuration: roundDuration,
 		minFrequency: minFrequency,
@@ -172,7 +152,7 @@ export async function addGameStats(
 
 export async function getOverallStats(userKey: string, dictionaryId: number): Promise<StatsInfo>
 {
-	const data: StatsInfo = await invoke(GET_STATS, {
+	const data: StatsInfo = await invoke("get_overall_stats", {
 		userKey: userKey,
 		dictionaryId: dictionaryId,
 	});
@@ -187,7 +167,7 @@ export async function getAnswerStreaks(
 	dictionaryId: number,
 ): Promise<AnswerStreaks[]>
 {
-	const data: AnswerStreaks[] = await invoke(GET_ANSWER_STREAKS, {
+	const data: AnswerStreaks[] = await invoke("get_answer_streaks", {
 		minFrequency: minFrequency,
 		maxFrequency: maxFrequency,
 		count: count,
@@ -199,7 +179,7 @@ export async function getAnswerStreaks(
 
 export async function getWordParts(dictionaryId: number): Promise<string[]>
 {
-	const data: string[] = await invoke(GET_WORD_PARTS, {
+	const data: string[] = await invoke("get_word_parts", {
 		dictionaryId: dictionaryId,
 	});
 	return data;
@@ -207,7 +187,7 @@ export async function getWordParts(dictionaryId: number): Promise<string[]>
 
 export async function getWordPartReadings(wordPart: string, dictionaryId: number): Promise<string[]>
 {
-	const data: string[] = await invoke(GET_WORD_PART_READINGS, {
+	const data: string[] = await invoke("get_word_part_readings", {
 		wordPart: wordPart,
 		dictionaryId: dictionaryId,
 	});
@@ -216,7 +196,7 @@ export async function getWordPartReadings(wordPart: string, dictionaryId: number
 
 export async function getAllGamesStats(dictionaryId: number): Promise<GameStats[]>
 {
-	const data: GameStats[] = await invoke(GET_ALL_GAMES_STATS, {
+	const data: GameStats[] = await invoke("get_all_games_stats", {
 		dictionaryId: dictionaryId,
 	});
 	return data;
@@ -224,19 +204,19 @@ export async function getAllGamesStats(dictionaryId: number): Promise<GameStats[
 
 export async function getGameStats(id: number): Promise<GameStats>
 {
-	const data: GameStats = await invoke(GET_GAME_STATS, { id });
+	const data: GameStats = await invoke("get_game_stats", { id });
 	return data;
 }
 
 export async function getAnswerStatsByGame(gameStatsId: number): Promise<AnswerStats[]>
 {
-	const data: AnswerStats[] = await invoke(GET_ANSWER_STATS_BY_GAME, { gameStatsId });
+	const data: AnswerStats[] = await invoke("get_answer_stats_by_game", { gameStatsId });
 	return data;
 }
 
 export async function getAllAnswerStats(dictionaryId: number): Promise<AnswerStats[]>
 {
-	const data: AnswerStats[] = await invoke(GET_ALL_ANSWER_STATS, {
+	const data: AnswerStats[] = await invoke("get_all_answer_stats", {
 		dictionaryId: dictionaryId,
 	});
 	return data;
@@ -244,19 +224,19 @@ export async function getAllAnswerStats(dictionaryId: number): Promise<AnswerSta
 
 export async function getUserdataById(userId: number): Promise<User>
 {
-	const userdata: User = await invoke(GET_USERNAME_BY_ID, { userId });
+	const userdata: User = await invoke("get_userdata_by_id", { userId });
 	return userdata;
 }
 
 export async function getAllUsers(): Promise<User[]>
 {
-	const users: User[] = await invoke(GET_ALL_USERS);
+	const users: User[] = await invoke("get_all_users");
 	return users;
 }
 
 export async function getDictionaries(): Promise<DictionaryInfo[]>
 {
-	const rawDictionaries: RawDictionaryInfo[] = await invoke(GET_DICTIONARIES);
+	const rawDictionaries: RawDictionaryInfo[] = await invoke("get_dictionaries");
 	
 	return rawDictionaries.map(dict => ({
 		...dict,
@@ -282,12 +262,23 @@ export async function getDictionaryStatsConfig(dictionaryId: number): Promise<Di
 
 export async function deleteDictionary(id: number): Promise<void>
 {
-	const x = await invoke(DELETE_DICTIONARY, { id });
+	const x = await invoke("delete_dictionary", { id });
 	console.log(x);
 }
 
 export async function importDictionary(dictPath: string): Promise<void>
 {
-	const x = await invoke(IMPORT_DICTIONARY, { dictPath });
+	const x = await invoke("import_dictionary", { dictPath });
 	console.log(x);
+}
+
+export async function updateCardFsrs(
+	word: string,
+	isCorrect: boolean,
+): Promise<void>
+{
+	await invoke("update_card_fsrs", {
+		word: word,
+		isCorrect: isCorrect,
+	});
 }

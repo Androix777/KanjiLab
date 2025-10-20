@@ -34,3 +34,4 @@ indexmap = "2.10.0"
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["local-time"] }
 time = { version = "0.3.41", features = ["macros"] }
+rs-fsrs = "1.2.1"
