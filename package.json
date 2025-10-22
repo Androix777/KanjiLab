@@ -10,6 +10,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "eslint .",
 		"tauri": "tauri",
+		"migrate": "cd src-tauri && sqlx migrate run --source \"migrations/main\" --database-url \"sqlite://../kanji_lab_loader/data/main.db\" && sqlx migrate run --source \"migrations/dict\" --database-url \"sqlite://../kanji_lab_loader/data/dict.db\"",
 		"db:clean": "shx rm -f kanji_lab_loader/data/main.db && shx rm -f kanji_lab_loader/data/dict.db",
 		"db:setup": "cd src-tauri && sqlx database setup --source \"migrations/main\" --database-url \"sqlite://../kanji_lab_loader/data/main.db\" && sqlx database setup --source \"migrations/dict\" --database-url \"sqlite://../kanji_lab_loader/data/dict.db\"",
 		"db:load": "cd kanji_lab_loader && uv run loadData.py",
