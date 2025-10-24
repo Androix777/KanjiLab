@@ -63,14 +63,13 @@
 		});
 
 		const columns: ColumnDefinition[] = [
-			{ title: "ID", field: "id", width: 50 },
-			{ title: "Dictionary", field: "dictionary", width: 100 },
-			{ title: "Font", field: "font", width: 100 },
-			{ title: "Min frequency", field: "minFrequency", width: 100 },
+			{ title: "ID", field: "id" },
+			{ title: "Dictionary", field: "dictionary" },
+			{ title: "Font", field: "font" },
+			{ title: "Min frequency", field: "minFrequency" },
 			{
 				title: "Max frequency",
 				field: "maxFrequency",
-				width: 100,
 				formatter: (
 					cell: CellComponent,
 				): string =>
@@ -87,11 +86,11 @@
 					return toNum(a) - toNum(b);
 				},
 			},
-			{ title: "Round duration", field: "roundDuration", width: 100 },
-			{ title: "Number of rounds", field: "roundsCount", width: 100 },
-			{ title: "Rounds", field: "realRoundsCount", width: 100 },
-			{ title: "Users", field: "usersCount", width: 100 },
-			{ title: "Time", field: "timestamp", width: 100 },
+			{ title: "Round duration", field: "roundDuration" },
+			{ title: "Number of rounds", field: "roundsCount" },
+			{ title: "Rounds", field: "realRoundsCount" },
+			{ title: "Users", field: "usersCount" },
+			{ title: "Time", field: "timestamp" },
 		];
 
 		rows.reverse();
@@ -115,7 +114,6 @@
 			table = new Tabulator(tableContainer, {
 				data: tableData,
 				layout: "fitColumns",
-				height: tableContainer.clientHeight,
 				columns,
 			});
 			table.on("rowClick", async function(e, row)
