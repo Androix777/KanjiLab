@@ -185,6 +185,7 @@
 										toggledColumns.push(tableColumn.definition.field);
 									}
 									getSettings().toggledColumns.set(toggledColumns);
+									createTableData(games);
 								}
 							}}
 						/>
